@@ -1,0 +1,69 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+buildscript {
+    ext {
+        dagger_version = "2.8"
+        rx_version = "2.0.3"
+        rx_android_version = "2.0.1"
+        leak_canary_version = "1.5"
+        butterkinfe_version = "8.4.0"
+        support_version = "25.1.0"
+        target_sdk_version = 25
+    }
+}
+
+android {
+    compileSdkVersion target_sdk_version
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "com.minivac.mini"
+        minSdkVersion 21
+        targetSdkVersion target_sdk_version
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.1.1'
+    testCompile 'junit:junit:4.12'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    //Dagger
+    compile "com.google.dagger:dagger:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+
+    //Logs
+    compile 'com.jakewharton.timber:timber:4.3.1'
+
+    //Rx
+    compile "io.reactivex.rxjava2:rxjava:$rx_version"
+    compile "io.reactivex.rxjava2:rxandroid:$rx_android_version"
+
+    //Test
+    androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+}
+repositories {
+    mavenCentral()
+}
