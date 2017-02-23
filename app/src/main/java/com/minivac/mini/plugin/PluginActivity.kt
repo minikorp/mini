@@ -6,9 +6,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
 import android.view.MotionEvent
-import timber.log.Timber
+import com.minivac.mini.log.Grove
 import java.util.*
-import javax.inject.Inject
 
 
 private const val TAG = "PluginActivity"
@@ -28,7 +27,7 @@ abstract class PluginActivity : AppCompatActivity() {
     private val sharedKeyDownCallback: WrappedCallback<KeyEvent, Boolean>
     private val sharedKeyUpCallback: WrappedCallback<KeyEvent, Boolean>
     private val sharedBackEvent = WrappedCallback(null, null) { super.onBackPressed() }
-    private val onActivityResultCallback = WrappedCallback(ActivtyResult(0, 0, null), null)
+    private val onActivityResultCallback = WrappedCallback(ActivityResult(0, 0, null), null)
     private val onPermissionsResultCallback = WrappedCallback(RequestPermissionResult(0,
             emptyArray(), intArrayOf()), null)
 
@@ -82,7 +81,7 @@ abstract class PluginActivity : AppCompatActivity() {
         val pluginCount = pluginList.size
         val loadTimes = LongArray(pluginCount)
 
-        Timber.tag(LC_TAG).d("onCreate")
+        Grove.tag(LC_TAG).d { "onCreate" }
         for (i in 0..pluginCount - 1) {
             var state: Bundle? = null
             if (pluginSavedStates != null) state = pluginSavedStates[i]
@@ -91,24 +90,25 @@ abstract class PluginActivity : AppCompatActivity() {
             loadTimes[i] = System.nanoTime() - loadTimes[i] //Elapsed
         }
 
-        Timber.tag(LC_TAG).d("onCreateDynamicView")
+        Grove.tag(LC_TAG).d { "onCreateDynamicView" }
         for (i in 0..pluginCount - 1) {
             pluginList[i].onCreateDynamicView()
         }
 
         val elapsed = System.currentTimeMillis() - now
-        Timber.tag(LC_TAG).d("┌ Activity with %2d plugins loaded in %3d ms", pluginCount, elapsed)
-        Timber.tag(LC_TAG).d("├──────────────────────────────────────────")
+        Grove.tag(LC_TAG).d { "┌ Activity with $pluginCount plugins loaded in $elapsed ms" }
+        Grove.tag(LC_TAG).d { "├──────────────────────────────────────────" }
         for (i in 0..pluginCount - 1) {
             val plugin = pluginList[i]
             var boxChar = "├"
             if (plugin === pluginList[pluginCount - 1]) {
                 boxChar = "└"
             }
-            Timber.tag(LC_TAG).d("%s %s - %d ms",
-                    boxChar,
-                    plugin.javaClass.simpleName,
-                    loadTimes[i] / 10000000)
+            Grove.tag(LC_TAG)
+                    .d {
+                        "$boxChar %${plugin.javaClass.simpleName} " +
+                                "- %${loadTimes[i] / 10000000} ms"
+                    }
         }
     }
 
@@ -118,7 +118,7 @@ abstract class PluginActivity : AppCompatActivity() {
 
     public override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
-        Timber.tag(LC_TAG).d("onPostCreate")
+        Grove.tag(LC_TAG).d { "onPostCreate" }
         for (plugin in pluginList) {
             plugin.onPostCreate()
         }
@@ -127,31 +127,31 @@ abstract class PluginActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        Timber.tag(LC_TAG).d("onStart")
+        Grove.tag(LC_TAG).d { "onStart" }
         pluginList.forEach(Plugin::onStart)
     }
 
     override fun onResume() {
         super.onResume()
-        Timber.tag(LC_TAG).d("onResume")
+        Grove.tag(LC_TAG).d { "onResume" }
         pluginList.forEach(Plugin::onResume)
     }
 
     override fun onPause() {
         super.onPause()
-        Timber.tag(LC_TAG).d("onPause")
+        Grove.tag(LC_TAG).d { "onPause" }
         for (plugin in pluginList) plugin.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        Timber.tag(LC_TAG).d("onStop")
+        Grove.tag(LC_TAG).d { "onStop" }
         for (plugin in pluginList) plugin.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        Timber.tag(LC_TAG).d("onSaveInstanceState")
+        Grove.tag(LC_TAG).d { "onSaveInstanceState" }
         val states = ArrayList<Bundle>(pluginList.size)
         pluginList.forEach { plugin ->
             val pluginBundle = Bundle()
@@ -163,20 +163,20 @@ abstract class PluginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Timber.tag(LC_TAG).d("onDestroy")
+        Grove.tag(LC_TAG).d { "onDestroy" }
         pluginList.forEach(Plugin::onDestroy)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        Timber.tag(LC_TAG).d("onDestroyDynamicView")
+        Grove.tag(LC_TAG).d { "onDestroyDynamicView" }
         pluginList.forEach(Plugin::onDestroyDynamicView)
 
-        Timber.tag(LC_TAG).d("onConfigurationChanged")
+        Grove.tag(LC_TAG).d { "onConfigurationChanged" }
         pluginList.forEach { it.onConfigurationChanged(newConfig) }
 
-        Timber.tag(LC_TAG).d("onCreateDynamicView")
+        Grove.tag(LC_TAG).d { "onCreateDynamicView" }
         pluginList.forEach(Plugin::onCreateDynamicView)
     }
 
@@ -186,7 +186,7 @@ abstract class PluginActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        onActivityResultCallback.set(ActivtyResult(requestCode, resultCode, data), null)
+        onActivityResultCallback.set(ActivityResult(requestCode, resultCode, data), null)
         pluginList.forEach { it.onActivityResult(onActivityResultCallback) }
     }
 
@@ -201,7 +201,7 @@ abstract class PluginActivity : AppCompatActivity() {
     ////////////////////////////////////////////////////////
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        Timber.tag(TAG).d("onKeyUp [%s]", event)
+        Grove.tag(TAG).d { "onKeyUp [%$event]" }
         sharedKeyUpCallback.set(event, false)
         for (plugin in pluginList) {
             plugin.onKeyUp(sharedKeyUpCallback)
@@ -212,7 +212,7 @@ abstract class PluginActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        Timber.tag(TAG).d("onKeyDown [%s]", event)
+        Grove.tag(TAG).d { "onKeyDown [$event]" }
         sharedKeyDownCallback.set(event, false)
         for (plugin in pluginList) {
             plugin.onKeyDown(sharedKeyDownCallback)
@@ -231,7 +231,7 @@ abstract class PluginActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        Timber.tag(TAG).d("onBackPressed")
+        Grove.tag(TAG).d { "onBackPressed" }
         sharedBackEvent.set(null, null)
         for (plugin in pluginBackList) {
             plugin.onBackPressed(sharedBackEvent)
@@ -239,9 +239,9 @@ abstract class PluginActivity : AppCompatActivity() {
         if (!sharedBackEvent.consumed) super.onBackPressed()
     }
 
-    data class ActivtyResult(val requestCode: Int,
-                             val resultCode: Int,
-                             val data: Intent?)
+    data class ActivityResult(val requestCode: Int,
+                              val resultCode: Int,
+                              val data: Intent?)
 
     @Suppress("ArrayInDataClass")
     data class RequestPermissionResult(val requestCode: Int,

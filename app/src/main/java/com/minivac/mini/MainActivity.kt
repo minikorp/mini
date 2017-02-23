@@ -7,7 +7,6 @@ import com.minivac.mini.flux.Dispatcher
 import com.minivac.mini.log.DebugTree
 import com.minivac.mini.log.Grove
 import io.reactivex.schedulers.Schedulers
-import timber.log.Timber
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -18,7 +17,6 @@ class MainActivity : AppCompatActivity() {
 
         val dummyAction = DummyAction()
         dummyAction.tags
-        Timber.d("TAGS: %s", Arrays.toString(dummyAction.tags))
 
         Dispatcher.subscribe(tag = DummyAction::class, fn = { a ->
             a.tags;

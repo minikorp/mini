@@ -6,7 +6,8 @@ import android.os.Bundle
 import android.support.annotation.CallSuper
 import com.minivac.mini.BuildConfig
 import com.minivac.mini.flux.OnActivityLifeCycle.ActivityStage.*
-import timber.log.Timber
+import com.minivac.mini.log.DebugTree
+import com.minivac.mini.log.Grove
 
 abstract class FluxApp : Application() {
 
@@ -15,7 +16,7 @@ abstract class FluxApp : Application() {
         super.onCreate()
 
         if(BuildConfig.DEBUG){
-            Timber.plant(Timber.DebugTree())
+            Grove.plant(DebugTree())
         }
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {

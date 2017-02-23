@@ -1,8 +1,7 @@
 package com.minivac.mini.plugin
 
 
-import android.view.KeyEvent
-import timber.log.Timber
+import com.minivac.mini.log.Grove
 
 /**
  * Function wrapper with parameter P and return type R.
@@ -47,7 +46,7 @@ open class WrappedCallback<P, R>(
             }
         }
 
-        Timber.d("Event Consumed: %s", parameters)
+        Grove.d { "Event Consumed: $parameters" }
         consumed = true
         this.returnValue = returns
         return parameters

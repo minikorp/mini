@@ -79,7 +79,7 @@ interface Plugin {
 
     /** [Activity.onActivityResult] */
     fun onActivityResult(onActivityResultCallback:
-                         WrappedCallback<PluginActivity.ActivtyResult, Nothing?>)
+                         WrappedCallback<PluginActivity.ActivityResult, Nothing?>)
 
     /** [Activity.onRequestPermissionsResult] */
     fun onRequestPermissionsResult(onPermissionsResultCallback:
