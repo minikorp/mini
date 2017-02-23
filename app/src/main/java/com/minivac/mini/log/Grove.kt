@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 object Grove {
 
     val defaultTag = "Grove"
-    private var forest: Array<Tree> = emptyArray()
+    var forest: Array<Tree> = emptyArray()
     private var explicitTag = ThreadLocal<String>()
 
     fun plant(tree: Tree) {
@@ -23,37 +23,28 @@ object Grove {
         forest = forest.filter { it != tree }.toTypedArray()
     }
 
-    fun tag(tag: String): Grove {
-        explicitTag.set(tag)
-        return this
+    inline fun v(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.VERBOSE, throwable, msg)
     }
 
-    fun v(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.VERBOSE, throwable, msg)
+    inline fun d(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.DEBUG, throwable, msg)
     }
 
-    fun d(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.DEBUG, throwable, msg)
+    inline fun i(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.INFO, throwable, msg)
     }
 
-    fun i(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.INFO, throwable, msg)
+    inline fun w(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.WARN, throwable, msg)
     }
 
-    fun w(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.WARN, throwable, msg)
+    inline fun e(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.ERROR, throwable, msg)
     }
 
-    fun e(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.ERROR, throwable, msg)
-    }
-
-    fun wtf(throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(Log.ASSERT, throwable, msg)
-    }
-
-    fun log(priority: Int, throwable: Throwable? = null, msg: (() -> String)? = null) {
-        doLog(priority, throwable, msg)
+    inline fun wtf(throwable: Throwable? = null, msg: (() -> String)) {
+        log(Log.ASSERT, throwable, msg)
     }
 
     inline fun <T> timed(msg: String, fn: () -> T): T {
@@ -64,28 +55,25 @@ object Grove {
         return r
     }
 
-
-    private fun doLog(priority: Int, throwable: Throwable?, msg: (() -> String)?) {
+    inline fun log(priority: Int, throwable: Throwable? = null, msg: (() -> String)) {
         val tag = consumeTag()
-        if (msg == null && throwable == null) return
-        var message: String? = null
-        forest.forEach {
-            if (!it.isLoggable(tag, priority)) return@forEach
-
-            if (message == null) { //Only once
-                if (msg == null) {
-                    message = getStackTraceString(throwable!!)
-                } else {
-                    message = msg()
-                    if (throwable != null) message += "\n${getStackTraceString(throwable)}"
-                }
+        var message: String? = null //Lazy evaluation
+        for (tree in forest) {
+            if (!tree.isLoggable(tag, priority)) continue
+            if (message == null) {
+                message = msg()
+                if (throwable != null) message += "\n${getStackTraceString(throwable)}"
             }
-
-            it.log(priority, tag, message.orEmpty())
+            tree.log(priority, tag, message.orEmpty())
         }
     }
 
-    private fun consumeTag(): String {
+    fun tag(tag: String): Grove {
+        explicitTag.set(tag)
+        return this
+    }
+
+    fun consumeTag(): String {
         val tag = explicitTag.get()
         if (tag != null) {
             explicitTag.remove()
@@ -93,7 +81,7 @@ object Grove {
         return tag ?: defaultTag
     }
 
-    private fun getStackTraceString(t: Throwable): String {
+    fun getStackTraceString(t: Throwable): String {
         // Don't replace this with Log.getStackTraceString() - it hides
         // UnknownHostException, which is not what we want.
         val sw = StringWriter(256)
@@ -170,7 +158,7 @@ class DebugTree : Tree {
 
     companion object {
         private const val MAX_LOG_LENGTH = 4000
-        private const val CALL_STACK_INDEX = 5
+        private const val CALL_STACK_INDEX = 1
         private val ANONYMOUS_CLASS = Pattern.compile("(\\$\\d+)+$")
     }
 }
