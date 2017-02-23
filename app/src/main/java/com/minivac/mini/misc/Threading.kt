@@ -34,4 +34,3 @@ inline fun onUiSync(crossinline fn: () -> Unit) {
     }
     sem.acquireUninterruptibly()
 }
-

@@ -1,5 +1,6 @@
 package com.minivac.mini.plugin
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -26,36 +27,23 @@ abstract class PluginActivity : AppCompatActivity() {
     private val sharedTouchCallback: WrappedCallback<MotionEvent, Boolean>
     private val sharedKeyDownCallback: WrappedCallback<KeyEvent, Boolean>
     private val sharedKeyUpCallback: WrappedCallback<KeyEvent, Boolean>
-    private val sharedBackEvent: WrappedCallback<Nothing?, Nothing?>
+    private val sharedBackEvent = WrappedCallback(null, null) { super.onBackPressed() }
+    private val onActivityResultCallback = WrappedCallback(ActivtyResult(0, 0, null), null)
+    private val onPermissionsResultCallback = WrappedCallback(RequestPermissionResult(0,
+            emptyArray(), intArrayOf()), null)
 
     init {
         val dummyMotionEvent = MotionEvent.obtain(0, 0, 0, 0.0f, 0.0f, 0)
         val dummyKeyEvent = KeyEvent(0, 0)
-        //val DUMMY_KEY_EVENT = KeyEvent
 
-        sharedTouchCallback = object : WrappedCallback<MotionEvent, Boolean>(dummyMotionEvent, false) {
-            override fun call() {
-                onTouchEvent(parameters)
-            }
-        }
+        sharedTouchCallback = WrappedCallback<MotionEvent, Boolean>(dummyMotionEvent, false)
+        { super.dispatchTouchEvent(it) }
 
-        sharedKeyDownCallback = object : WrappedCallback<KeyEvent, Boolean>(dummyKeyEvent, false) {
-            override fun call() {
-                onKeyDown(parameters.keyCode, parameters)
-            }
-        }
+        sharedKeyDownCallback = WrappedCallback(dummyKeyEvent, false)
+        { super.onKeyDown(it.keyCode, it) }
 
-        sharedKeyUpCallback = object : WrappedCallback<KeyEvent, Boolean>(dummyKeyEvent, false) {
-            override fun call() {
-                onKeyUp(parameters.keyCode, parameters)
-            }
-        }
-
-        sharedBackEvent = object : WrappedCallback<Nothing?, Nothing?>(null, null) {
-            override fun call() {
-                onBackPressed()
-            }
-        }
+        sharedKeyUpCallback = WrappedCallback(dummyKeyEvent, false)
+        { super.onKeyUp(it.keyCode, it) }
 
         dummyMotionEvent.recycle()
     }
@@ -75,11 +63,14 @@ abstract class PluginActivity : AppCompatActivity() {
 
         //Sort by priority
         Collections.sort(pluginList) { o1, o2 ->
-            Integer.compare(o1.properties.lifecyclePriority, o2.properties.lifecyclePriority) }
+            Integer.compare(o1.properties.lifecyclePriority, o2.properties.lifecyclePriority)
+        }
         Collections.sort(pluginBackList) { o1, o2 ->
-            Integer.compare(o1.properties.backPriority, o2.properties.backPriority) }
+            Integer.compare(o1.properties.backPriority, o2.properties.backPriority)
+        }
         Collections.sort(pluginTouchList) { o1, o2 ->
-            Integer.compare(o1.properties.touchPriority, o2.properties.touchPriority) }
+            Integer.compare(o1.properties.touchPriority, o2.properties.touchPriority)
+        }
 
         //Restore plugin states
         var pluginSavedStates: ArrayList<Bundle>? = null
@@ -131,48 +122,38 @@ abstract class PluginActivity : AppCompatActivity() {
         for (plugin in pluginList) {
             plugin.onPostCreate()
         }
-        for (plugin in pluginList) {
-            plugin.onPluginsCreated()
-        }
+        pluginList.forEach(Plugin::onPluginsCreated)
     }
 
     override fun onStart() {
         super.onStart()
         Timber.tag(LC_TAG).d("onStart")
-        for (plugin in pluginList) {
-            plugin.onStart()
-        }
+        pluginList.forEach(Plugin::onStart)
     }
 
     override fun onResume() {
         super.onResume()
         Timber.tag(LC_TAG).d("onResume")
-        for (plugin in pluginList) {
-            plugin.onResume()
-        }
+        pluginList.forEach(Plugin::onResume)
     }
 
     override fun onPause() {
         super.onPause()
         Timber.tag(LC_TAG).d("onPause")
-        for (plugin in pluginList) {
-            plugin.onPause()
-        }
+        for (plugin in pluginList) plugin.onPause()
     }
 
     override fun onStop() {
         super.onStop()
         Timber.tag(LC_TAG).d("onStop")
-        for (plugin in pluginList) {
-            plugin.onStop()
-        }
+        for (plugin in pluginList) plugin.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         Timber.tag(LC_TAG).d("onSaveInstanceState")
         val states = ArrayList<Bundle>(pluginList.size)
-        for (plugin in pluginList) {
+        pluginList.forEach { plugin ->
             val pluginBundle = Bundle()
             plugin.onSaveInstanceState(pluginBundle)
             states.add(pluginBundle)
@@ -183,28 +164,36 @@ abstract class PluginActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Timber.tag(LC_TAG).d("onDestroy")
-        for (plugin in pluginList) {
-            plugin.onDestroy()
-        }
+        pluginList.forEach(Plugin::onDestroy)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
         Timber.tag(LC_TAG).d("onDestroyDynamicView")
-        for (plugin in pluginList) {
-            plugin.onDestroyDynamicView()
-        }
+        pluginList.forEach(Plugin::onDestroyDynamicView)
 
         Timber.tag(LC_TAG).d("onConfigurationChanged")
-        for (plugin in pluginList) {
-            plugin.onConfigurationChanged(newConfig)
-        }
+        pluginList.forEach { it.onConfigurationChanged(newConfig) }
 
         Timber.tag(LC_TAG).d("onCreateDynamicView")
-        for (plugin in pluginList) {
-            plugin.onCreateDynamicView()
-        }
+        pluginList.forEach(Plugin::onCreateDynamicView)
+    }
+
+    ////////////////////////////////////////////////////////
+    // Results
+    ////////////////////////////////////////////////////////
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        onActivityResultCallback.set(ActivtyResult(requestCode, resultCode, data), null)
+        pluginList.forEach { it.onActivityResult(onActivityResultCallback) }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onPermissionsResultCallback.set(RequestPermissionResult(requestCode, permissions, grantResults), null)
+        pluginList.forEach { it.onRequestPermissionsResult(onPermissionsResultCallback) }
     }
 
     ////////////////////////////////////////////////////////
@@ -249,4 +238,13 @@ abstract class PluginActivity : AppCompatActivity() {
         }
         if (!sharedBackEvent.consumed) super.onBackPressed()
     }
+
+    data class ActivtyResult(val requestCode: Int,
+                             val resultCode: Int,
+                             val data: Intent?)
+
+    @Suppress("ArrayInDataClass")
+    data class RequestPermissionResult(val requestCode: Int,
+                                       val permissions: Array<out String>,
+                                       val grantResults: IntArray)
 }

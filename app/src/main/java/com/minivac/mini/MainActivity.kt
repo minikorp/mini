@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.minivac.mini.flux.Action
 import com.minivac.mini.flux.Dispatcher
+import com.minivac.mini.log.DebugTree
+import com.minivac.mini.log.Grove
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.util.*
@@ -35,6 +37,17 @@ class MainActivity : AppCompatActivity() {
         }.dispose()
 
         Dispatcher.dispatch(dummyAction)
+
+        Grove.plant(DebugTree())
+
+        Grove.timed("something") {
+            Grove.v { "Debug" }
+            Grove.d { "Debug" }
+            Grove.i { "Debug" }
+            Grove.w { "Debug" }
+            Grove.e { "Debug" }
+            Grove.wtf { "Debug" }
+        }
     }
 
     class DummyAction : Action

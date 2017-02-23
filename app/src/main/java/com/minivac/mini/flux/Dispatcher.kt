@@ -96,7 +96,7 @@ object Dispatcher {
     internal fun <T : Any> unregisterInternal(subscription: Subscription<T>) {
         synchronized(this) {
             val set = Dispatcher.subscriptionMap[subscription.tag] as? TreeSet<*>
-            set?.remove(this)
+            set?.remove(subscription)
         }
     }
 }

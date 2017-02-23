@@ -9,15 +9,16 @@ import timber.log.Timber
  */
 private const val DEBUG_TRACES = false
 
-abstract class WrappedCallback<P, R>(
+open class WrappedCallback<P, R>(
         var parameters: P,
-        var returnValue: R) {
+        var returnValue: R,
+        private val function: (P) -> Unit = {}) {
 
     private var trace: Exception? = null
     var consumed = false
 
     /**
-     * Reset the parameters, only the owner should call this method to reuse it.
+     * Reset the parameters, only the owner should function this method to reuse it.
      */
     fun set(params: P, returnValue: R) {
         this.parameters = params
@@ -33,7 +34,7 @@ abstract class WrappedCallback<P, R>(
             throw IllegalStateException(
                     """
                     This parameters was already consumed.
-                    See the exception cause for trace call where the original take was made.""", trace)
+                    See the exception cause for trace function where the original take was made.""", trace)
         }
 
         if (DEBUG_TRACES) {
@@ -52,5 +53,7 @@ abstract class WrappedCallback<P, R>(
         return parameters
     }
 
-    abstract fun call()
+    fun call() {
+        this.function(parameters)
+    }
 }

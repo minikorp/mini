@@ -19,9 +19,7 @@ interface Plugin {
      */
     val properties: PluginProperties
 
-    /**
-     * [Activity.onCreate].
-     */
+    /** [Activity.onCreate] */
     fun onCreate(savedInstanceState: Bundle?)
 
     /**
@@ -31,77 +29,59 @@ interface Plugin {
      */
     fun onCreateDynamicView()
 
-    /**
-     * [Activity.onPostCreate].
-     */
+    /** [Activity.onPostCreate] */
     fun onPostCreate()
 
-    /**
-     * All the components have completed their onCreate method, it's safe to reference external views.
-     */
+    /** All the components have completed their onCreate method, it's safe to reference external views. */
     fun onPluginsCreated()
 
     /**
      * [Activity.onSaveInstanceState].
-     *
-     *
      * Every plugin has its own bundle to avoid key collisions.
      */
     fun onSaveInstanceState(outState: Bundle)
 
-    /**
-     * [Activity.onDestroy].
-     */
+    /** [Activity.onDestroy] */
     fun onDestroy()
 
-    /**
-     * [Activity.onStart].
-     */
+    /** [Activity.onStart] */
     fun onStart()
 
-    /**
-     * [Activity.onResume].
-     */
+    /** [Activity.onResume] */
     fun onResume()
 
-    /**
-     * [Activity.onPause].
-     */
+    /** [Activity.onPause] */
     fun onPause()
 
-    /**
-     * [Activity.onStop].
-     */
+    /** [Activity.onStop] */
     fun onStop()
 
-    /**
-     * [Activity.onBackPressed].
-     */
+    /** [Activity.onBackPressed] */
     fun onBackPressed(cb: WrappedCallback<Nothing?, Nothing?>)
 
-    /**
-     * [Activity.dispatchTouchEvent].
-     */
+    /** [Activity.dispatchTouchEvent] */
     fun onDispatchTouchEvent(cb: WrappedCallback<MotionEvent, Boolean>)
 
-    /**
-     * [Activity.onKeyDown].
-     */
+    /** [Activity.onKeyDown] */
     fun onKeyDown(cb: WrappedCallback<KeyEvent, Boolean>)
 
-    /**
-     * [Activity.onKeyUp].
-     */
+    /** [Activity.onKeyUp] */
     fun onKeyUp(cb: WrappedCallback<KeyEvent, Boolean>)
 
-    /**
-     * [Activity.onConfigurationChanged].
-     */
+    /** [Activity.onConfigurationChanged] */
     fun onConfigurationChanged(newConfig: Configuration)
 
     /**
-     * Called during [.onConfigurationChanged], this call is always
+     * Called during [.onConfigurationChanged], this function is always
      * followed by a [.onCreateDynamicView].
      */
     fun onDestroyDynamicView()
+
+    /** [Activity.onActivityResult] */
+    fun onActivityResult(onActivityResultCallback:
+                         WrappedCallback<PluginActivity.ActivtyResult, Nothing?>)
+
+    /** [Activity.onRequestPermissionsResult] */
+    fun onRequestPermissionsResult(onPermissionsResultCallback:
+                                   WrappedCallback<PluginActivity.RequestPermissionResult, Nothing?>)
 }
