@@ -1,5 +1,6 @@
 package com.minivac.mini.flux
 
+import android.support.annotation.CallSuper
 import io.reactivex.Flowable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
@@ -55,12 +56,12 @@ abstract class Store<S : Any> : Disposable {
         disposables.add(this)
     }
 
+    @CallSuper
     override fun dispose() {
         disposables.clear()
     }
 
     override fun isDisposed() = disposables.isDisposed
-
 }
 
 data class StoreProperties(
