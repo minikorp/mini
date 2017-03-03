@@ -4,7 +4,7 @@ apply plugin: 'kotlin-kapt'
 
 buildscript {
     ext {
-        dagger_version = "2.8"
+        dagger_version = "2.10-rc1"
         rx_version = "2.0.3"
         rx_android_version = "2.0.1"
         leak_canary_version = "1.5"

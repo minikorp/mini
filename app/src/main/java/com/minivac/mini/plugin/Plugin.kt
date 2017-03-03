@@ -22,13 +22,6 @@ interface Plugin {
     /** [Activity.onCreate] */
     fun onCreate(savedInstanceState: Bundle?)
 
-    /**
-     * Called after [.onCreate] or during a configuration change.
-     * Most components can ignore this method if they ignore configuration changes and
-     * do every logic during [.onCreate]
-     */
-    fun onCreateDynamicView()
-
     /** [Activity.onPostCreate] */
     fun onPostCreate()
 
@@ -70,12 +63,6 @@ interface Plugin {
 
     /** [Activity.onConfigurationChanged] */
     fun onConfigurationChanged(newConfig: Configuration)
-
-    /**
-     * Called during [.onConfigurationChanged], this function is always
-     * followed by a [.onCreateDynamicView].
-     */
-    fun onDestroyDynamicView()
 
     /** [Activity.onActivityResult] */
     fun onActivityResult(onActivityResultCallback:

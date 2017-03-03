@@ -65,14 +65,16 @@ class LogController(
      * This operation may block, consider executing it in another thread.
      *
      * Current log file wont be deleted.
+     *
+     * @return Deleted files count.
      */
     fun deleteOldLogs(maxAge: Long, maxCount: Int = Int.MAX_VALUE): Int {
         var deleted = 0
         val files = logsFolder?.listFiles()
-        files?.apply {
+        files?.sortedByDescending(File::lastModified)?.apply {
             for ((i, file) in this.withIndex()) {
-                val lastModified = System.currentTimeMillis() - file.lastModified()
-                if (lastModified > maxAge || i > maxCount) {
+                val age = System.currentTimeMillis() - file.lastModified()
+                if (age > maxAge || i > maxCount) {
                     val isCurrentLogFile = _currentFileTree?.file?.absolutePath == file.absolutePath
                     if (!isCurrentLogFile && file.delete()) deleted++
                 }

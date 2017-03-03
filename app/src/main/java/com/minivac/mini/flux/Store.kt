@@ -28,7 +28,7 @@ abstract class Store<S : Any> : Disposable {
         }
 
     @Suppress("UNCHECKED_CAST")
-    protected fun initialState(): S {
+    protected open fun initialState(): S {
         try {
             val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
                     as Class<S>

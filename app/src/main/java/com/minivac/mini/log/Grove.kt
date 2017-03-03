@@ -2,6 +2,7 @@ package com.minivac.mini.log
 
 import android.support.v4.util.Pools
 import android.util.Log
+import android.util.Log.*
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,29 +30,23 @@ object Grove {
         forest = forest.filter { it != tree }.toTypedArray()
     }
 
-    inline fun v(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.VERBOSE, throwable, msg)
-    }
+    inline fun v(throwable: Throwable? = null, msg: (() -> String)) = log(VERBOSE, throwable, msg)
+    fun v(throwable: Throwable) = log(VERBOSE, throwable, { "Error" })
 
-    inline fun d(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.DEBUG, throwable, msg)
-    }
+    inline fun d(throwable: Throwable? = null, msg: (() -> String)) = log(DEBUG, throwable, msg)
+    fun d(throwable: Throwable) = log(DEBUG, throwable, { "Error" })
 
-    inline fun i(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.INFO, throwable, msg)
-    }
+    inline fun i(throwable: Throwable? = null, msg: (() -> String)) = log(INFO, throwable, msg)
+    fun i(throwable: Throwable) = log(INFO, throwable, { "Error" })
 
-    inline fun w(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.WARN, throwable, msg)
-    }
+    inline fun w(throwable: Throwable? = null, msg: (() -> String)) = log(WARN, throwable, msg)
+    fun w(throwable: Throwable) = log(WARN, throwable, { "Error" })
 
-    inline fun e(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.ERROR, throwable, msg)
-    }
+    inline fun e(throwable: Throwable? = null, msg: (() -> String)) = log(ERROR, throwable, msg)
+    fun e(throwable: Throwable) = log(ERROR, throwable, { "Error" })
 
-    inline fun wtf(throwable: Throwable? = null, msg: (() -> String)) {
-        log(Log.ASSERT, throwable, msg)
-    }
+    inline fun wtf(throwable: Throwable? = null, msg: (() -> String)) = log(ASSERT, throwable, msg)
+    fun wtf(throwable: Throwable) = log(ASSERT, throwable, { "Error" })
 
     inline fun <T> timed(msg: String, fn: () -> T): T {
         val start = System.nanoTime()
@@ -139,10 +134,10 @@ class DebugTree : Tree {
      */
     override fun log(priority: Int, tag: String, message: String) {
         if (message.length < MAX_LOG_LENGTH) {
-            if (priority == Log.ASSERT) {
-                Log.wtf(tag, message)
+            if (priority == ASSERT) {
+                wtf(tag, message)
             } else {
-                Log.println(priority, tag, message)
+                println(priority, tag, message)
             }
             return
         }
@@ -156,10 +151,10 @@ class DebugTree : Tree {
             do {
                 val end = Math.min(newline, i + MAX_LOG_LENGTH)
                 val part = message.substring(i, end)
-                if (priority == Log.ASSERT) {
-                    Log.wtf(tag, part)
+                if (priority == ASSERT) {
+                    wtf(tag, part)
                 } else {
-                    Log.println(priority, tag, part)
+                    println(priority, tag, part)
                 }
                 i = end
             } while (i < newline)
@@ -304,10 +299,10 @@ class FileTree
             val lines = message!!.split("\n".toRegex()).dropLastWhile(String::isEmpty).toTypedArray()
             val levelString: String
             when (level) {
-                Log.DEBUG -> levelString = "D"
-                Log.INFO -> levelString = "I"
-                Log.WARN -> levelString = "W"
-                Log.ERROR -> levelString = "E"
+                DEBUG -> levelString = "D"
+                INFO -> levelString = "I"
+                WARN -> levelString = "W"
+                ERROR -> levelString = "E"
                 else -> levelString = "V"
             }
 

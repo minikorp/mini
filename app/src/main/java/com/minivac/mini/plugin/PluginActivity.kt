@@ -90,11 +90,6 @@ abstract class PluginActivity : AppCompatActivity() {
             loadTimes[i] = System.nanoTime() - loadTimes[i] //Elapsed
         }
 
-        Grove.tag(LC_TAG).d { "onCreateDynamicView" }
-        for (i in 0..pluginCount - 1) {
-            pluginList[i].onCreateDynamicView()
-        }
-
         val elapsed = System.currentTimeMillis() - now
         Grove.tag(LC_TAG).d { "┌ Activity with $pluginCount plugins loaded in $elapsed ms" }
         Grove.tag(LC_TAG).d { "├──────────────────────────────────────────" }
@@ -169,15 +164,8 @@ abstract class PluginActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-
-        Grove.tag(LC_TAG).d { "onDestroyDynamicView" }
-        pluginList.forEach(Plugin::onDestroyDynamicView)
-
         Grove.tag(LC_TAG).d { "onConfigurationChanged" }
         pluginList.forEach { it.onConfigurationChanged(newConfig) }
-
-        Grove.tag(LC_TAG).d { "onCreateDynamicView" }
-        pluginList.forEach(Plugin::onCreateDynamicView)
     }
 
     ////////////////////////////////////////////////////////
