@@ -56,3 +56,10 @@ open class WrappedCallback<P, R>(
         this.function(parameters)
     }
 }
+
+/**
+ * Nullable take.
+ */
+fun <T, R> WrappedCallback<T, R?>.take() {
+    take(null)
+}

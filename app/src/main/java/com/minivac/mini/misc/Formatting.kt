@@ -10,22 +10,22 @@ import android.annotation.SuppressLint
  * @param shorter Include decimal values (1.3MB or 1.34MB)
  */
 @SuppressLint("DefaultLocale")
-fun humanFileSize(bytes: Long, shorter: Boolean): String {
+fun humanFileSize(bytes: Long, shorter: Boolean = false): String {
     if (bytes < 0) return "??B"
 
     var result = bytes.toFloat()
     var suffix = "B"
     if (result > 900) {
         suffix = "K"
-        result = result / 1024
+        result /= 1024
     }
     if (result > 900) {
         suffix = "M"
-        result = result / 1024
+        result /= 1024
     }
     if (result > 900) {
         suffix = "G"
-        result = result / 1024
+        result /= 1024
     }
     val value: String
     if (result < 1) {

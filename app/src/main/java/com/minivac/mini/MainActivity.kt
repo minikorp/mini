@@ -35,6 +35,12 @@ class MainActivity : AppCompatActivity() {
 
         Dispatcher.dispatch(dummyAction)
 
+        try {
+            throw NullPointerException()
+        } catch (e: Exception) {
+            Grove.e(e)
+        }
+
         Grove.plant(DebugTree())
 
         Grove.timed("something") {
