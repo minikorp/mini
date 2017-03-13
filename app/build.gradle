@@ -2,6 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+
 buildscript {
     ext {
         dagger_version = "2.10-rc1"
@@ -17,6 +23,7 @@ buildscript {
 android {
     compileSdkVersion target_sdk_version
     buildToolsVersion "25.0.2"
+
     defaultConfig {
         applicationId "com.minivac.mini"
         minSdkVersion 21
@@ -25,6 +32,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -36,8 +44,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility "1.7"
+        targetCompatibility "1.7"
     }
 }
 
@@ -48,6 +56,7 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.1.1'
     testCompile 'junit:junit:4.12'
+
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
@@ -69,3 +78,5 @@ dependencies {
 repositories {
     mavenCentral()
 }
+
+

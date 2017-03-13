@@ -10,6 +10,7 @@ import io.reactivex.processors.PublishProcessor
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 
 interface Action {
@@ -17,20 +18,72 @@ interface Action {
         get() = arrayOf(Any::class.java, this.javaClass)
 }
 
+/**
+ * Observes, modifies, and potentially short-circuits actions going through the dispatcher.
+ */
+interface Interceptor {
+    /**
+     * Intercept and return the new action.
+     * @throws Exception
+     */
+    fun proceed(action: Action, chain: Chain): Action
+}
+
+/**
+ * A chain of interceptors. Call [.proceed] with
+ * the intercepted action or directly handle it.
+ */
+interface Chain {
+    fun proceed(action: Action): Action
+}
+
+
 object Dispatcher {
     val DEFAULT_PRIORITY: Int = 100
     private var subscriptionCounter = AtomicInteger()
-
     private val subscriptionMap = HashMap<Class<*>, TreeSet<Subscription<Any>>?>()
 
-    fun dispatch(action: Action) {
-        assertOnUiThread()
-        synchronized(this) {
+    private val interceptors = ArrayList<Interceptor>()
+    private val rootChain: Chain = object : Chain {
+        override fun proceed(action: Action): Action {
             action.tags.forEach { tag ->
                 subscriptionMap[tag]?.let { set ->
                     set.forEach { it.cb.invoke(action) }
                 }
             }
+            return action
+        }
+    }
+    private var chain = rootChain
+    private fun buildChain(): Chain {
+        return interceptors.fold(rootChain)
+        { chain, interceptor ->
+            object : Chain {
+                override fun proceed(action: Action): Action {
+                    return interceptor.proceed(action, chain)
+                }
+            }
+        }
+    }
+
+    fun addInterceptor(interceptor: Interceptor) {
+        synchronized(this) {
+            interceptors += interceptor
+            chain = buildChain()
+        }
+    }
+
+    fun removeInterceptor(interceptor: Interceptor) {
+        synchronized(this) {
+            interceptors -= interceptor
+            chain = buildChain()
+        }
+    }
+
+    fun dispatch(action: Action) {
+        assertOnUiThread()
+        synchronized(this) {
+            chain.proceed(action)
         }
     }
 
@@ -141,6 +194,3 @@ sealed class Subscription<T : Any>(val id: Int,
         }
     }
 }
-
-
-
