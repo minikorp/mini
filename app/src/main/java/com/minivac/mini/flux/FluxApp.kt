@@ -10,13 +10,8 @@ import com.minivac.mini.flux.OnActivityLifeCycle.ActivityStage.*
 import com.minivac.mini.log.DebugTree
 import com.minivac.mini.log.Grove
 import com.minivac.mini.misc.collectDeviceBuildInformation
-import java.util.*
 
 abstract class FluxApp : Application() {
-
-    protected lateinit var stores: List<Store<*>>
-
-    abstract fun createStores(): List<Store<*>>
 
     @CallSuper
     override fun onCreate() {
@@ -57,46 +52,12 @@ abstract class FluxApp : Application() {
             defaultHandler.uncaughtException(thread, throwable)
         }
 
-        stores = createStores()
-        initStores(stores)
+        Grove.d { collectDeviceBuildInformation(this) }
     }
 
     @CallSuper
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         Dispatcher.dispatch(OnTrimMemoryAction(level))
-    }
-
-    fun initStores(stores: List<Store<*>>) {
-        val now = System.currentTimeMillis()
-
-        Collections.sort(stores) { o1, o2 ->
-            Integer.compare(
-                    o1.properties.initOrder,
-                    o2.properties.initOrder)
-        }
-
-        val initTimes = LongArray(stores.size)
-
-        for (i in 0..stores.size - 1) {
-            val start = System.currentTimeMillis()
-            stores[i].init()
-            stores[i].state //Create initial state
-            initTimes[i] += System.currentTimeMillis() - start
-        }
-
-        Grove.d { collectDeviceBuildInformation(this) }
-        val elapsed = System.currentTimeMillis() - now
-
-        Grove.d { "┌ Application with ${stores.size} stores loaded in $elapsed ms" }
-        Grove.d { "├────────────────────────────────────────────" }
-        for (i in 0..stores.size - 1) {
-            val store = stores[i]
-            var boxChar = "├"
-            if (store === stores[stores.size - 1]) {
-                boxChar = "└"
-            }
-            Grove.d { "$boxChar ${store.javaClass.simpleName} - ${initTimes[i]} ms" }
-        }
     }
 }

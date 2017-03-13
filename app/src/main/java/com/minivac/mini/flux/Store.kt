@@ -1,11 +1,13 @@
 package com.minivac.mini.flux
 
 import android.support.annotation.CallSuper
+import com.minivac.mini.log.Grove
 import io.reactivex.Flowable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import java.lang.reflect.ParameterizedType
+import java.util.*
 
 abstract class Store<S : Any> : Disposable {
 
@@ -69,5 +71,37 @@ data class StoreProperties(
 ) {
     companion object {
         val DEFAULT_INIT_PRIORITY = 100
+    }
+}
+
+fun initStores(stores: List<Store<*>>) {
+    val now = System.currentTimeMillis()
+
+    Collections.sort(stores) { o1, o2 ->
+        Integer.compare(
+                o1.properties.initOrder,
+                o2.properties.initOrder)
+    }
+
+    val initTimes = LongArray(stores.size)
+
+    for (i in 0..stores.size - 1) {
+        val start = System.currentTimeMillis()
+        stores[i].init()
+        stores[i].state //Create initial state
+        initTimes[i] += System.currentTimeMillis() - start
+    }
+
+    val elapsed = System.currentTimeMillis() - now
+
+    Grove.d { "┌ Application with ${stores.size} stores loaded in $elapsed ms" }
+    Grove.d { "├────────────────────────────────────────────" }
+    for (i in 0..stores.size - 1) {
+        val store = stores[i]
+        var boxChar = "├"
+        if (store === stores[stores.size - 1]) {
+            boxChar = "└"
+        }
+        Grove.d { "$boxChar ${store.javaClass.simpleName} - ${initTimes[i]} ms" }
     }
 }
