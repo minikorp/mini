@@ -11,8 +11,9 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.minivac.mini.MainActivity">
 
-    <TextView
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+    <ProgressBar
+        android:indeterminate="true"
+        android:layout_height="56dp"
+        android:layout_width="56dp"
         android:text="Hello World!"/>
 </RelativeLayout>

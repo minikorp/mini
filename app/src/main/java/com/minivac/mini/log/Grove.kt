@@ -48,14 +48,6 @@ object Grove {
     inline fun wtf(throwable: Throwable? = null, msg: (() -> String)) = log(ASSERT, throwable, msg)
     fun wtf(throwable: Throwable) = log(ASSERT, throwable, { "Error" })
 
-    inline fun <T> timed(msg: String, fn: () -> T): T {
-        val start = System.nanoTime()
-        val r = fn()
-        val elapsed = (System.nanoTime() - start) / 1000000
-        i { "[$elapsed ms] - $msg" }
-        return r
-    }
-
     inline fun log(priority: Int, throwable: Throwable? = null, msg: (() -> String)) {
         val tag = consumeTag()
         var message: String? = null //Lazy evaluation
@@ -80,10 +72,25 @@ object Grove {
             explicitTag.remove()
             return tag
         } else if (debugTags) {
-            return createDebugTag(1)
+            return createDebugTag(2)
         } else {
             return defaultTag
         }
+    }
+
+    private fun createDebugTag(stackIndex: Int): String {
+        val stackTrace = Throwable().stackTrace
+        if (stackTrace.size <= stackIndex) {
+            throw IllegalStateException(
+                    "Synthetic stacktrace didn't have enough elements: are you using proguard?")
+        }
+        var i = stackIndex
+        do {
+            val tag = createStackElementTag(stackTrace[i])
+            if (tag != "Grove") return tag
+            i++
+        } while (i < stackTrace.size)
+        return "Grove"
     }
 
     fun getStackTraceString(t: Throwable): String {
@@ -94,15 +101,6 @@ object Grove {
         t.printStackTrace(pw)
         pw.flush()
         return sw.toString()
-    }
-
-    private fun createDebugTag(stackIndex: Int): String {
-        val stackTrace = Throwable().stackTrace
-        if (stackTrace.size <= stackIndex) {
-            throw IllegalStateException(
-                    "Synthetic stacktrace didn't have enough elements: are you using proguard?")
-        }
-        return createStackElementTag(stackTrace[stackIndex])
     }
 
     private fun createStackElementTag(element: StackTraceElement): String {
@@ -173,7 +171,6 @@ class FileTree
  * any incoming logs as long as the level is at least `minLevel`.
 
  * @param file     The file this logger will write.
- * *
  * @param minLevel The minimum message level that will be written (inclusive).
  */
 (val file: File, private val minLevel: Int) : Tree {
@@ -210,6 +207,13 @@ class FileTree
             }
 
         }
+    }
+
+    /**
+     * Close the file and exit. This method does not block.
+     */
+    fun exit() {
+        this.backgroundThread.interrupt()
     }
 
     override fun log(priority: Int, tag: String, message: String) {
@@ -253,13 +257,6 @@ class FileTree
         closeSilently()
     }
 
-    /**
-     * Close the file and exit. This method does not block.
-     */
-    fun exit() {
-        this.backgroundThread.interrupt()
-    }
-
     private fun closeSilently() {
         if (writer != null) {
             try {
@@ -295,23 +292,22 @@ class FileTree
             level = 0
         }
 
-        internal fun format(): Array<String> {
-            val lines = message!!.split("\n".toRegex()).dropLastWhile(String::isEmpty).toTypedArray()
-            val levelString: String
-            when (level) {
-                DEBUG -> levelString = "D"
-                INFO -> levelString = "I"
-                WARN -> levelString = "W"
-                ERROR -> levelString = "E"
-                else -> levelString = "V"
+        internal fun format(): List<String> {
+            message?.let {
+                val lines = it.split('\n').dropLastWhile(String::isEmpty)
+                val levelString: String
+                when (level) {
+                    DEBUG -> levelString = "D"
+                    INFO -> levelString = "I"
+                    WARN -> levelString = "W"
+                    ERROR -> levelString = "E"
+                    else -> levelString = "V"
+                }
+                //[29-04-1993 01:02:34.567 D/SomeTag: The value to Log]
+                val prelude = "[${LOG_FILE_DATE_FORMAT.format(date)}] $levelString/$tag"
+                return lines.map { "$prelude $it \r\n" }
             }
-
-            //[29-04-1993 01:02:34.567 D/SomeTag: The value to Log]
-            val prelude = String.format(Locale.US, "[%s] %s/%s: ", LOG_FILE_DATE_FORMAT.format(date), levelString, tag)
-            for (i in lines.indices) {
-                lines[i] = prelude + lines[i] + "\r\n"
-            }
-            return lines
+            return emptyList()
         }
     }
 }

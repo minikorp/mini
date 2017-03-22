@@ -21,15 +21,15 @@ fun assertOnUiThread() {
     }
 }
 
-inline fun onUi(crossinline fn: () -> Unit) {
-    uiHandler.post { fn() }
+inline fun onUi(crossinline block: () -> Unit) {
+    uiHandler.post { block() }
 }
 
-inline fun onUiSync(crossinline fn: () -> Unit) {
+inline fun onUiSync(crossinline block: () -> Unit) {
     assertNotOnUiThread()
     val sem = Semaphore(0)
     onUi {
-        fn()
+        block()
         sem.release()
     }
     sem.acquireUninterruptibly()

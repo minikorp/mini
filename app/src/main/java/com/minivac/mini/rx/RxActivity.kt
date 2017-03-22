@@ -1,11 +1,11 @@
-package com.minivac.mini.flux
+package com.minivac.mini.rx
 
 import android.app.Activity
 import android.support.annotation.CallSuper
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 
-class FluxActivity : Activity() {
+class RxActivity : Activity() {
 
     private val disposables = CompositeDisposable()
 

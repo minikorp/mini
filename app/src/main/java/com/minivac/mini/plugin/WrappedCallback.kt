@@ -30,10 +30,9 @@ open class WrappedCallback<P, R>(
      */
     fun take(returns: R): P {
         if (consumed) {
-            throw IllegalStateException(
-                    """
-                    This parameters was already consumed.
-                    See the exception cause for trace function where the original take was made.""", trace)
+            throw IllegalStateException("This parameters was already consumed" +
+                    "See the exception cause for trace function where the " +
+                    "original take was made.", trace)
         }
 
         if (DEBUG_TRACES) {

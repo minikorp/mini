@@ -1,5 +1,6 @@
 package com.minivac.mini.flux
 
+import com.minivac.mini.misc.assertNotOnUiThread
 import com.minivac.mini.misc.assertOnUiThread
 import com.minivac.mini.misc.onUi
 import com.minivac.mini.misc.onUiSync
@@ -38,10 +39,12 @@ interface Chain {
 }
 
 
-object Dispatcher {
+class Dispatcher(private val verifyThreads: Boolean = true) {
     val DEFAULT_PRIORITY: Int = 100
-    private var subscriptionCounter = AtomicInteger()
+
     private val subscriptionMap = HashMap<Class<*>, TreeSet<Subscription<Any>>?>()
+    private var subscriptionCounter = AtomicInteger()
+    val subscriptionCount: Int get() = subscriptionCounter.get()
 
     private val interceptors = ArrayList<Interceptor>()
     private val rootChain: Chain = object : Chain {
@@ -81,7 +84,7 @@ object Dispatcher {
     }
 
     fun dispatch(action: Action) {
-        assertOnUiThread()
+        if (verifyThreads) assertOnUiThread()
         synchronized(this) {
             chain.proceed(action)
         }
@@ -92,15 +95,20 @@ object Dispatcher {
     }
 
     fun dispatchOnUiSync(action: Action) {
+        if (verifyThreads) assertNotOnUiThread()
         onUiSync { dispatch(action) }
     }
+
+    fun <T : Any> subscribeObservable(tag: KClass<T>, fn: (Observable<T>) -> Unit)
+            = subscribeObservable(DEFAULT_PRIORITY, tag, fn)
 
     fun <T : Any> subscribeObservable(priority: Int = DEFAULT_PRIORITY,
                                       tag: KClass<T>,
                                       fn: (Observable<T>) -> Unit): Subscription<T> {
         val subject = PublishSubject.create<T>()
         val subscription = Subscription.ObservableSubscription(
-                subscriptionCounter.andIncrement,
+                this,
+                subscriptionCounter.getAndIncrement(),
                 priority,
                 tag.java,
                 subject)
@@ -108,12 +116,16 @@ object Dispatcher {
         return registerInternal(subscription)
     }
 
-    fun <T : Any> subscribeFlowable(priority: Int = DEFAULT_PRIORITY,
+    fun <T : Any> subscribeFlowable(tag: KClass<T>, fn: (Flowable<T>) -> Unit)
+            = subscribeFlowable(DEFAULT_PRIORITY, tag, fn)
+
+    fun <T : Any> subscribeFlowable(priority: Int,
                                     tag: KClass<T>,
                                     fn: (Flowable<T>) -> Unit): Subscription<T> {
         val processor = PublishProcessor.create<T>()
         val subscription = Subscription.FlowableSubscription(
-                subscriptionCounter.andIncrement,
+                this,
+                subscriptionCounter.getAndIncrement(),
                 priority,
                 tag.java,
                 processor)
@@ -121,11 +133,15 @@ object Dispatcher {
         return registerInternal(subscription)
     }
 
-    fun <T : Any> subscribe(priority: Int = DEFAULT_PRIORITY,
+    fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit)
+            = subscribe(DEFAULT_PRIORITY, tag, fn)
+
+    fun <T : Any> subscribe(priority: Int,
                             tag: KClass<T>,
                             fn: (T) -> Unit): Subscription<T> {
         val subscription = Subscription.CallbackSubscription(
-                subscriptionCounter.andIncrement,
+                this,
+                subscriptionCounter.getAndIncrement(),
                 priority,
                 tag.java,
                 fn)
@@ -148,46 +164,46 @@ object Dispatcher {
 
     internal fun <T : Any> unregisterInternal(subscription: Subscription<T>) {
         synchronized(this) {
-            val set = Dispatcher.subscriptionMap[subscription.tag] as? TreeSet<*>
+            val set = subscriptionMap[subscription.tag] as? TreeSet<*>
             set?.remove(subscription)
         }
     }
 }
 
-sealed class Subscription<T : Any>(val id: Int,
-                                   val priority: Int,
-                                   val tag: Class<T>,
-                                   val cb: (T) -> Unit) : Disposable {
+sealed class Subscription<T : Any>(internal val dispatcher: Dispatcher,
+                                   internal val id: Int,
+                                   internal val priority: Int,
+                                   internal val tag: Class<T>,
+                                   internal val cb: (T) -> Unit) : Disposable {
 
     private var disposed = false
     override fun isDisposed(): Boolean = disposed
 
     protected fun disposeInternal() {
-        Dispatcher.unregisterInternal(this)
+        dispatcher.unregisterInternal(this)
         disposed = true
     }
 
     class CallbackSubscription<T : Any>
-    (id: Int, priority: Int, tag: Class<T>, cb: (T) -> Unit)
-        : Subscription<T>(id, priority, tag, cb) {
+    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, cb: (T) -> Unit)
+        : Subscription<T>(dispatcher, id, priority, tag, cb) {
         override fun dispose() {
             disposeInternal()
         }
     }
 
     class FlowableSubscription<T : Any>
-    (id: Int, priority: Int, tag: Class<T>, val flowable: PublishProcessor<T>)
-        : Subscription<T>(id, priority, tag, { a -> flowable.onNext(a) }) {
+    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, val flowable: PublishProcessor<T>)
+        : Subscription<T>(dispatcher, id, priority, tag, { a -> flowable.onNext(a) }) {
         override fun dispose() {
             flowable.onComplete()
             disposeInternal()
         }
     }
 
-
     class ObservableSubscription<T : Any>
-    (id: Int, priority: Int, tag: Class<T>, val subject: PublishSubject<T>)
-        : Subscription<T>(id, priority, tag, { a -> subject.onNext(a) }) {
+    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, val subject: PublishSubject<T>)
+        : Subscription<T>(dispatcher, id, priority, tag, { a -> subject.onNext(a) }) {
         override fun dispose() {
             subject.onComplete()
             disposeInternal()
