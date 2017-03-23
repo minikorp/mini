@@ -19,16 +19,8 @@ interface Action {
         get() = arrayOf(Any::class.java, this.javaClass)
 }
 
-/**
- * Observes, modifies, and potentially short-circuits actions going through the dispatcher.
- */
-interface Interceptor {
-    /**
-     * Intercept and return the new action.
-     * @throws Exception
-     */
-    fun proceed(action: Action, chain: Chain): Action
-}
+
+typealias Interceptor = (Action, Chain) -> Action
 
 /**
  * A chain of interceptors. Call [.proceed] with
@@ -63,7 +55,7 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
         { chain, interceptor ->
             object : Chain {
                 override fun proceed(action: Action): Action {
-                    return interceptor.proceed(action, chain)
+                    return interceptor(action, chain)
                 }
             }
         }

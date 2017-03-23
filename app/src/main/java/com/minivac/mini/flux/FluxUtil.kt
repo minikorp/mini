@@ -7,22 +7,22 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import com.minivac.mini.log.Grove
-import java.util.*
+
+/**
+ * Handy alias to use with dagger
+ */
+typealias StoreMap = Map<Class<*>, Store<*>>
+
 
 /**
  * Sort and create Stores initial state.
  */
-fun initStores(stores: List<Store<*>>) {
+fun initStores(uninitializedStores: List<Store<*>>) {
     val now = System.currentTimeMillis()
 
-    Collections.sort(stores) { o1, o2 ->
-        Integer.compare(
-                o1.properties.initOrder,
-                o2.properties.initOrder)
-    }
+    val stores = uninitializedStores.sortedBy { it.properties.initOrder }
 
     val initTimes = LongArray(stores.size)
-
     for (i in 0..stores.size - 1) {
         val start = System.currentTimeMillis()
         stores[i].init()

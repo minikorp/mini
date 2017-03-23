@@ -1,12 +1,9 @@
 package com.minivac.mini.log
 
-import android.support.v4.util.Pools
 import android.util.Log
 import android.util.Log.*
-import java.io.*
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.ArrayBlockingQueue
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.util.regex.Pattern
 
 /** Logging for lazy people.
@@ -119,7 +116,7 @@ interface Tree {
 }
 
 /** A [Tree] for debug builds. Automatically infers the tag from the calling class.  */
-class DebugTree : Tree {
+class DebugTree(val useSystemOut: Boolean = false) : Tree {
 
     private val MAX_LOG_LENGTH = 4000
 
@@ -149,165 +146,18 @@ class DebugTree : Tree {
             do {
                 val end = Math.min(newline, i + MAX_LOG_LENGTH)
                 val part = message.substring(i, end)
-                if (priority == ASSERT) {
-                    wtf(tag, part)
+                if (useSystemOut) {
+                    System.out.println("$tag: $part")
                 } else {
-                    println(priority, tag, part)
+                    if (priority == ASSERT) {
+                        wtf(tag, part)
+                    } else {
+                        println(priority, tag, part)
+                    }
                 }
                 i = end
             } while (i < newline)
             i++
-        }
-    }
-}
-
-/**
- * Logger that writes asynchronously to a file.
- * Automatically infers the tag from the calling class.
- */
-class FileTree
-/**
- * Create a new FileTree instance that will write in a background thread
- * any incoming logs as long as the level is at least `minLevel`.
-
- * @param file     The file this logger will write.
- * @param minLevel The minimum message level that will be written (inclusive).
- */
-(val file: File, private val minLevel: Int) : Tree {
-    private val queue = ArrayBlockingQueue<LogLine>(100)
-    private val pool = Pools.SynchronizedPool<LogLine>(20)
-
-    private val backgroundThread: Thread
-    private val writer: Writer?
-
-    init {
-        var writer: Writer?
-        this.backgroundThread = Thread(Runnable { this.loop() })
-        try {
-            //Not buffered, we want to write on the spot
-            writer = FileWriter(file.absolutePath, true)
-            this.backgroundThread.start()
-        } catch (e: IOException) {
-            writer = null
-            Grove.e(e) { "Failed to create writer, nothing will be done" }
-        }
-
-        this.writer = writer
-    }
-
-    /**
-     * Flush the file, this call is required before application dies or the file will be empty.
-     */
-    fun flush() {
-        if (writer != null) {
-            try {
-                writer.flush()
-            } catch (e: IOException) {
-                Grove.e(e) { "Flush failed" }
-            }
-
-        }
-    }
-
-    /**
-     * Close the file and exit. This method does not block.
-     */
-    fun exit() {
-        this.backgroundThread.interrupt()
-    }
-
-    override fun log(priority: Int, tag: String, message: String) {
-        enqueueLog(priority, tag, message)
-    }
-
-    private fun enqueueLog(priority: Int, tag: String, message: String) {
-        var logLine: LogLine? = pool.acquire()
-        if (logLine == null) {
-            logLine = LogLine()
-        }
-
-        logLine.tag = tag
-        logLine.message = message
-        logLine.level = priority
-        logLine.date.time = System.currentTimeMillis()
-
-        queue.offer(logLine)
-    }
-
-    private fun loop() {
-        while (true) {
-            try {
-                val logLine = queue.take()
-                if (writer != null) {
-                    val lines = logLine.format()
-                    for (line in lines) {
-                        writer.write(line)
-                    }
-                }
-                logLine.clear()
-                pool.release(logLine)
-            } catch (e: InterruptedException) {
-                break //We are done
-            } catch (e: IOException) {
-                Grove.e(e) { "Failed to write line" }
-                break
-            }
-
-        }
-        closeSilently()
-    }
-
-    private fun closeSilently() {
-        if (writer != null) {
-            try {
-                writer.flush()
-                writer.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-        }
-    }
-
-    override fun toString(): String {
-        return "FileTree{" +
-                "file=" + file.absolutePath +
-                '}'
-    }
-
-    private class LogLine {
-        companion object {
-            private val LOG_FILE_DATE_FORMAT = SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS", Locale.US)
-        }
-
-        internal val date = Date()
-        internal var level: Int = 0
-        internal var message: String? = null
-        internal var tag: String? = null
-
-        internal fun clear() {
-            message = null
-            tag = null
-            date.time = 0
-            level = 0
-        }
-
-        internal fun format(): List<String> {
-            message?.let {
-                val lines = it.split('\n').dropLastWhile(String::isEmpty)
-                val levelString: String
-                when (level) {
-                    DEBUG -> levelString = "D"
-                    INFO -> levelString = "I"
-                    WARN -> levelString = "W"
-                    ERROR -> levelString = "E"
-                    else -> levelString = "V"
-                }
-                //[29-04-1993 01:02:34.567 D/SomeTag: The value to Log]
-                val prelude = "[${LOG_FILE_DATE_FORMAT.format(date)}] $levelString/$tag"
-                return lines.map { "$prelude $it \r\n" }
-            }
-            return emptyList()
         }
     }
 }

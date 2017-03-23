@@ -6,10 +6,13 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import java.lang.reflect.ParameterizedType
+import javax.inject.Inject
+import kotlin.reflect.KClass
 
-abstract class Store<S : Any> : Disposable {
+abstract class Store<S : Any> : AutoCloseable {
 
     open val properties: StoreProperties = StoreProperties()
+    @Inject protected lateinit var dispatcher: Dispatcher
 
     private val disposables = CompositeDisposable()
     private var _state: S? = null
@@ -40,11 +43,6 @@ abstract class Store<S : Any> : Disposable {
         }
     }
 
-    /**
-     * Initialize the store. Called after all stores constructors ar
-     */
-    abstract fun init()
-
     fun flowable(): Flowable<S> {
         return processor.startWith { s ->
             s.onNext(state)
@@ -57,11 +55,23 @@ abstract class Store<S : Any> : Disposable {
     }
 
     @CallSuper
-    override fun dispose() {
-        disposables.clear()
+    override fun close() {
+        disposables.dispose()
     }
 
-    override fun isDisposed() = disposables.isDisposed
+    /**
+     * Initialize the store. Called after all stores constructors ar
+     */
+    abstract fun init()
+}
+
+/**
+ * Type safe store lookup.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T : Store<*>> StoreMap.find(clazz: KClass<T>): T {
+    val java: Class<Store<*>> = (clazz.java) as Class<Store<*>>
+    return this[java]!! as T
 }
 
 data class StoreProperties(val initOrder: Int = DEFAULT_INIT_PRIORITY) {

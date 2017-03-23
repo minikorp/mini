@@ -3,9 +3,9 @@ package com.minivac.mini.plugin
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.minivac.mini.flux.FluxActivity
 import com.minivac.mini.log.Grove
 import java.util.*
 
@@ -14,7 +14,7 @@ private const val TAG = "PluginActivity"
 private const val LC_TAG = "LifeCycle"
 private const val ARG_PLUGIN_SAVED_STATES = "pluginStates"
 
-abstract class PluginActivity : AppCompatActivity() {
+abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
 
     // Plugins
     private lateinit var pluginMap: Map<Class<*>, Plugin>

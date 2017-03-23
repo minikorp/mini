@@ -15,7 +15,7 @@ class DispatcherTest : Spek({
         var called = false
         dispatcher.subscribe(DummyAction::class) {
             called = true
-            assert(it.value == 3)
+            assertThat(it.value, equalTo(3))
         }
         dispatcher.dispatch(DummyAction(3))
         assert(called)
@@ -33,6 +33,28 @@ class DispatcherTest : Spek({
         assertThat(dispatcher.subscriptionCount, equalTo(3))
         assertThat(callOrder, equalTo(listOf(1, 2, 3)))
     }
+
+    it("interceptors are called") {
+        val dispatcher = Dispatcher(verifyThreads = false)
+
+        dispatcher.addInterceptor { action, chain ->
+            val intercepted = when (action) {
+                is DummyAction -> InterceptedAction(action.value + 1)
+                else -> action
+            }
+            chain.proceed(intercepted)
+        }
+
+        var called = false
+        dispatcher.subscribe(InterceptedAction::class) {
+            called = true
+            assertThat(it.value, equalTo(3))
+        }
+
+        dispatcher.dispatch(DummyAction(2))
+        assert(called)
+    }
 })
 
 data class DummyAction(val value: Int) : Action
+data class InterceptedAction(val value: Int) : Action
