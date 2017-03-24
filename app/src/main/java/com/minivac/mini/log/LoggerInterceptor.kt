@@ -1,0 +1,57 @@
+package com.minivac.mini.log
+
+import com.minivac.mini.flux.Action
+import com.minivac.mini.flux.Chain
+import com.minivac.mini.flux.Interceptor
+import com.minivac.mini.flux.Store
+
+internal class LoggerInterceptor constructor(stores: Collection<Store<*>>) : Interceptor {
+    private var firstPass = true
+    private val stores = stores.toList()
+    private var states: Array<Any?> = arrayOfNulls(stores.size)
+    private var lastActionTime = System.currentTimeMillis()
+    @Volatile private var actionCounter: Long = 0
+
+    override fun invoke(action: Action, chain: Chain): Action {
+        val start = System.currentTimeMillis()
+        val timeSinceLastAction = Math.min(start - lastActionTime, 9999)
+        lastActionTime = start
+        actionCounter++
+
+        if (firstPass) { //First pass
+            firstPass = false
+            states = arrayOfNulls<Any>(stores.size)
+            for (i in states.indices) {
+                states[i] = stores[i].state
+            }
+        }
+
+        //Process the action
+        val out = chain.proceed(action)
+        val processTime = System.currentTimeMillis() - start
+
+        val sb = StringBuilder()
+        sb.append("┌────────────────────────────────────────────\n")
+        sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
+                action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
+                .append("\n")
+
+
+        stores.forEachIndexed { index, store ->
+            val oldState = states[index]
+            val newState = store.state
+            if (oldState !== newState) {
+                sb.append(String.format("│   %s", store.toString())).append("\n")
+            }
+            states[index] = newState
+        }
+
+        for (i in states.indices) {
+
+        }
+        sb.append("└────────────────────────────────────────────").append("\n")
+        Grove.tag("LoggerStore").i { sb.toString() }
+
+        return out
+    }
+}

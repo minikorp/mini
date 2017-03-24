@@ -5,7 +5,7 @@ import android.app.Activity
 
 data class OnTrimMemoryAction(val level: Int) : Action
 
-data class OnActivityLifeCycle(val activity: Activity, val stage: ActivityStage) : Action {
+data class OnActivityLifeCycleAction(val activity: Activity, val stage: ActivityStage) : Action {
     enum class ActivityStage {
         CREATED,
         STARTED,

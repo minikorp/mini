@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.minivac.mini.R
+import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.flux.Action
+import com.minivac.mini.flux.app
 import com.minivac.mini.log.Grove
 
 class MainActivity : AppCompatActivity() {
@@ -18,6 +20,9 @@ class MainActivity : AppCompatActivity() {
         goSecond.setOnClickListener {
             startActivity(Intent(this, SecondActivity::class.java))
         }
+
+        val appComponent = app.findComponent<AppComponent>(AppComponent.NAME)
+        appComponent.dispatcher().dispatch(DummyAction(3))
     }
 
     override fun onDestroy() {

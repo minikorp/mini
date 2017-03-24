@@ -2,6 +2,8 @@ package com.minivac.mini.log
 
 import android.app.Application
 import com.minivac.mini.dagger.AppScope
+import com.minivac.mini.flux.LazyStoreMap
+import com.minivac.mini.flux.OnActivityLifeCycleAction
 import com.minivac.mini.flux.Store
 import dagger.Binds
 import dagger.Module
@@ -11,14 +13,29 @@ import javax.inject.Inject
 
 
 @AppScope
-class LoggerStore @Inject constructor(val context: Application) : Store<LoggerState>() {
-    override fun initialState() = LoggerState(FileLogController(context))
-    override fun init() {
+class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: LazyStoreMap) : Store<LoggerState>() {
 
+    private val fileLogController = FileLogController(context)
+
+    override fun initialState() = LoggerState()
+    override fun init() {
+        val fileTree = fileLogController.newFileTree()
+        if (fileTree != null) {
+            Grove.plant(fileTree)
+        }
+
+        dispatcher.subscribe(OnActivityLifeCycleAction::class) {
+            if (it.stage == OnActivityLifeCycleAction.ActivityStage.PAUSED
+                    && it.activity.isFinishing) {
+                fileTree?.flush()
+            }
+        }
+        dispatcher.addInterceptor(LoggerInterceptor(lazyStoreMap.get().values))
     }
 }
 
-data class LoggerState(val fileLogController: FileLogController)
+class LoggerState
+
 
 @Module
 abstract class LoggerStoreModule {
