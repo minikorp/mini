@@ -8,10 +8,10 @@ import com.minivac.mini.log.Grove
 import com.minivac.mini.misc.collectDeviceBuildInformation
 import kotlin.properties.Delegates
 
-private var _app: FluxApp by Delegates.notNull<FluxApp>()
-val app: FluxApp get() = _app
+private var _app: App by Delegates.notNull<App>()
+val app: App get() = _app
 
-class FluxApp : Application(), ComponentManager by DefaultComponentManager() {
+class App : Application(), ComponentManager by DefaultComponentManager() {
 
     override fun onCreate() {
         super.onCreate()
@@ -21,7 +21,7 @@ class FluxApp : Application(), ComponentManager by DefaultComponentManager() {
             Grove.d { collectDeviceBuildInformation(this) }
         }
 
-        registerComponent(object : ComponentHolder<AppComponent> {
+        registerComponent(object : ComponentFactory<AppComponent> {
             override fun createComponent(): AppComponent {
                 return DaggerAppComponent.builder()
                         .appModule(AppModule(app))
@@ -32,8 +32,14 @@ class FluxApp : Application(), ComponentManager by DefaultComponentManager() {
             override val componentName: String = AppComponent.NAME
         })
         val stores = AppComponent.get().stores()
+
         initStores(stores.values.toList())
         registerSystemCallbacks(AppComponent.get().dispatcher(), this)
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        trimComponents(level)
     }
 }
 

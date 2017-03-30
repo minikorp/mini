@@ -1,5 +1,6 @@
 package com.minivac.mini.flux
 
+import com.minivac.mini.log.Grove
 import com.minivac.mini.misc.assertNotOnUiThread
 import com.minivac.mini.misc.assertOnUiThread
 import com.minivac.mini.misc.onUi
@@ -36,7 +37,7 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
 
     private val subscriptionMap = HashMap<Class<*>, TreeSet<Subscription<Any>>?>()
     private var subscriptionCounter = AtomicInteger()
-    val subscriptionCount: Int get() = subscriptionCounter.get()
+    val subscriptionCount: Int get() = subscriptionMap.values.map { it?.size ?: 0 }.sum()
 
     private val interceptors = ArrayList<Interceptor>()
     private val rootChain: Chain = object : Chain {
@@ -157,7 +158,10 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
     internal fun <T : Any> unregisterInternal(subscription: Subscription<T>) {
         synchronized(this) {
             val set = subscriptionMap[subscription.tag] as? TreeSet<*>
-            set?.remove(subscription)
+            val removed = set?.remove(subscription) ?: false
+            if (!removed) {
+                Grove.w { "Failed to remove subscription, multiple dispose calls?" }
+            }
         }
     }
 }

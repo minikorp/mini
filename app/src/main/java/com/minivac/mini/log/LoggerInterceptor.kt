@@ -41,14 +41,11 @@ internal class LoggerInterceptor constructor(stores: Collection<Store<*>>) : Int
             val oldState = states[index]
             val newState = store.state
             if (oldState !== newState) {
-                sb.append(String.format("│   %s", store.toString())).append("\n")
+                sb.append(String.format("│   %s", store.state.toString())).append("\n")
             }
             states[index] = newState
         }
 
-        for (i in states.indices) {
-
-        }
         sb.append("└────────────────────────────────────────────").append("\n")
         Grove.tag("LoggerStore").i { sb.toString() }
 

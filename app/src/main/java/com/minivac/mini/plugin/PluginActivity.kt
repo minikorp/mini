@@ -14,7 +14,7 @@ private const val TAG = "PluginActivity"
 private const val LC_TAG = "LifeCycle"
 private const val ARG_PLUGIN_SAVED_STATES = "pluginStates"
 
-abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
+abstract class PluginActivity<T : Any> : FluxActivity<T>() {
 
     // Plugins
     private lateinit var pluginMap: Map<Class<*>, Plugin>
@@ -114,9 +114,7 @@ abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
     public override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
         Grove.tag(LC_TAG).d { "onPostCreate" }
-        for (plugin in pluginList) {
-            plugin.onPostCreate()
-        }
+        pluginList.forEach(Plugin::onPostCreate)
         pluginList.forEach(Plugin::onPluginsCreated)
     }
 
@@ -135,13 +133,13 @@ abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
     override fun onPause() {
         super.onPause()
         Grove.tag(LC_TAG).d { "onPause" }
-        for (plugin in pluginList) plugin.onPause()
+        pluginList.forEach(Plugin::onPause)
     }
 
     override fun onStop() {
         super.onStop()
         Grove.tag(LC_TAG).d { "onStop" }
-        for (plugin in pluginList) plugin.onStop()
+        pluginList.forEach(Plugin::onStop)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

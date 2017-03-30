@@ -30,7 +30,7 @@ class FileLogController(
     val currentFileTree: FileTree
         get() = _currentFileTree!!
 
-    private val logsFolder: File? = run {
+    private val logsFolder: File? by lazy {
         var root = context.getExternalFilesDir(null)
         if (root == null) {
             //Fall back to private directory
@@ -40,10 +40,10 @@ class FileLogController(
         if (!logRootDirectory.exists()) {
             if (!logRootDirectory.mkdir()) {
                 Grove.e { "Unable to create log directory, nothing will be written on disk" }
-                return@run null
+                return@lazy null
             }
         }
-        return@run logRootDirectory
+        return@lazy logRootDirectory
     }
 
     /**

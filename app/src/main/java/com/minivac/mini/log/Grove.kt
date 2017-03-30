@@ -6,6 +6,8 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.regex.Pattern
 
+typealias MsgFn = () -> Any?
+
 /** Logging for lazy people.
  * Adapted from Jake Wharton's Timber
  * [https://github.com/JakeWharton/timber]
@@ -27,31 +29,31 @@ object Grove {
         forest = forest.filter { it != tree }.toTypedArray()
     }
 
-    inline fun v(throwable: Throwable? = null, msg: (() -> String)) = log(VERBOSE, throwable, msg)
+    inline fun v(throwable: Throwable? = null, msg: MsgFn) = log(VERBOSE, throwable, msg)
     fun v(throwable: Throwable) = log(VERBOSE, throwable, { "Error" })
 
-    inline fun d(throwable: Throwable? = null, msg: (() -> String)) = log(DEBUG, throwable, msg)
+    inline fun d(throwable: Throwable? = null, msg: MsgFn) = log(DEBUG, throwable, msg)
     fun d(throwable: Throwable) = log(DEBUG, throwable, { "Error" })
 
-    inline fun i(throwable: Throwable? = null, msg: (() -> String)) = log(INFO, throwable, msg)
+    inline fun i(throwable: Throwable? = null, msg: MsgFn) = log(INFO, throwable, msg)
     fun i(throwable: Throwable) = log(INFO, throwable, { "Error" })
 
-    inline fun w(throwable: Throwable? = null, msg: (() -> String)) = log(WARN, throwable, msg)
+    inline fun w(throwable: Throwable? = null, msg: MsgFn) = log(WARN, throwable, msg)
     fun w(throwable: Throwable) = log(WARN, throwable, { "Error" })
 
-    inline fun e(throwable: Throwable? = null, msg: (() -> String)) = log(ERROR, throwable, msg)
+    inline fun e(throwable: Throwable? = null, msg: MsgFn) = log(ERROR, throwable, msg)
     fun e(throwable: Throwable) = log(ERROR, throwable, { "Error" })
 
-    inline fun wtf(throwable: Throwable? = null, msg: (() -> String)) = log(ASSERT, throwable, msg)
+    inline fun wtf(throwable: Throwable? = null, msg: MsgFn) = log(ASSERT, throwable, msg)
     fun wtf(throwable: Throwable) = log(ASSERT, throwable, { "Error" })
 
-    inline fun log(priority: Int, throwable: Throwable? = null, msg: (() -> String)) {
+    inline fun log(priority: Int, throwable: Throwable? = null, msg: MsgFn) {
         val tag = consumeTag()
         var message: String? = null //Lazy evaluation
         for (tree in forest) {
             if (!tree.isLoggable(tag, priority)) continue
             if (message == null) {
-                message = msg()
+                message = msg().toString()
                 if (throwable != null) message += "\n${getStackTraceString(throwable)}"
             }
             tree.log(priority, tag, message.orEmpty())

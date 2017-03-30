@@ -21,6 +21,14 @@ class DispatcherTest : Spek({
         assert(called)
     }
 
+    it("should remove subscriptions") {
+        val dispatcher = Dispatcher(verifyThreads = false)
+        val subscription = dispatcher.subscribe(DummyAction::class) {}
+        assertThat(dispatcher.subscriptionCount, equalTo(1))
+        subscription.dispose()
+        assertThat(dispatcher.subscriptionCount, equalTo(0))
+    }
+
     it("subscriptions should be ordered") {
         val dispatcher = Dispatcher(verifyThreads = false)
         val callOrder = ArrayList<Int>()

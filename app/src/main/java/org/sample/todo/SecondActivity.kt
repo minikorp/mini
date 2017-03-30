@@ -1,11 +1,19 @@
 package org.sample.todo
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import com.minivac.mini.dagger.ComponentFactory
+import com.minivac.mini.dagger.DestroyStrategy
+import com.minivac.mini.flux.FluxActivity
 import com.minivac.mini.log.Grove
 
-class SecondActivity : AppCompatActivity() {
+class SecondActivity : FluxActivity<FakeDaggerComponent>() {
+
+    override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
+        override fun createComponent() = FakeDaggerComponent()
+        override val destroyStrategy = DestroyStrategy.REF_COUNT
+        override val componentName: String = "dummy"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

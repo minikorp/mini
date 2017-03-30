@@ -2,15 +2,22 @@ package org.sample.todo
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.minivac.mini.R
 import com.minivac.mini.dagger.AppComponent
+import com.minivac.mini.dagger.ComponentFactory
+import com.minivac.mini.dagger.DestroyStrategy
 import com.minivac.mini.flux.Action
+import com.minivac.mini.flux.FluxActivity
 import com.minivac.mini.flux.app
-import com.minivac.mini.log.Grove
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FluxActivity<FakeDaggerComponent>() {
+
+    override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
+        override fun createComponent() = FakeDaggerComponent()
+        override val destroyStrategy = DestroyStrategy.REF_COUNT
+        override val componentName: String = "dummy"
+    }
 
     val goSecond: View by lazy { findViewById(R.id.goSecondButton) }
 
@@ -23,12 +30,6 @@ class MainActivity : AppCompatActivity() {
 
         val appComponent = app.findComponent<AppComponent>(AppComponent.NAME)
         appComponent.dispatcher().dispatch(DummyAction(3))
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Grove.d { "Destroyed, finishing $isFinishing" }
-
     }
 
     data class DummyAction(val x: Int = 3) : Action

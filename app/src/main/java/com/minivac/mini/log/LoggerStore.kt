@@ -13,7 +13,8 @@ import javax.inject.Inject
 
 
 @AppScope
-class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: LazyStoreMap) : Store<LoggerState>() {
+class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: LazyStoreMap)
+    : Store<LoggerState>() {
 
     private val fileLogController = FileLogController(context)
 
@@ -25,8 +26,7 @@ class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: La
         }
 
         dispatcher.subscribe(OnActivityLifeCycleAction::class) {
-            if (it.stage == OnActivityLifeCycleAction.ActivityStage.PAUSED
-                    && it.activity.isFinishing) {
+            if (it.stage == OnActivityLifeCycleAction.ActivityStage.PAUSED) {
                 fileTree?.flush()
             }
         }
@@ -38,7 +38,7 @@ class LoggerState
 
 
 @Module
-abstract class LoggerStoreModule {
+abstract class LoggerModule {
     @Binds @IntoMap @ClassKey(LoggerStore::class)
-    abstract fun provideLoggerStore(store: LoggerStore): Store<*>
+    abstract fun provideLoggerStoreToMap(store: LoggerStore): Store<*>
 }

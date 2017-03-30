@@ -12,11 +12,14 @@ import kotlin.reflect.KClass
 abstract class Store<S : Any> : AutoCloseable {
 
     open val properties: StoreProperties = StoreProperties()
+
     @Inject protected lateinit var dispatcher: Dispatcher
 
     private val disposables = CompositeDisposable()
     private var _state: S? = null
     private val processor = PublishProcessor.create<S>()
+
+
 
     var state: S
         get() {
