@@ -56,7 +56,8 @@ class SimplePlugin : Plugin {
             WrappedCallback<PluginActivity.RequestPermissionResult, Nothing?>) {
     }
 
-    fun Disposable.track() {
+    fun <T : Disposable> T.track(): T {
         disposables.add(this)
+        return this
     }
 }

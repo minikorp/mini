@@ -13,7 +13,7 @@ class DispatcherTest : Spek({
     it("should add subscriptions") {
         val dispatcher = Dispatcher(verifyThreads = false)
         var called = false
-        dispatcher.subscribe(DummyAction::class) {
+        dispatcher.callback(DummyAction::class) {
             called = true
             assertThat(it.value, equalTo(3))
         }
@@ -23,7 +23,7 @@ class DispatcherTest : Spek({
 
     it("should remove subscriptions") {
         val dispatcher = Dispatcher(verifyThreads = false)
-        val subscription = dispatcher.subscribe(DummyAction::class) {}
+        val subscription = dispatcher.callback(DummyAction::class) {}
         assertThat(dispatcher.subscriptionCount, equalTo(1))
         subscription.dispose()
         assertThat(dispatcher.subscriptionCount, equalTo(0))
@@ -33,9 +33,9 @@ class DispatcherTest : Spek({
         val dispatcher = Dispatcher(verifyThreads = false)
         val callOrder = ArrayList<Int>()
 
-        dispatcher.subscribe(30, DummyAction::class) { callOrder.add(2) }
-        dispatcher.subscribe(30, DummyAction::class) { callOrder.add(3) }
-        dispatcher.subscribe(0, DummyAction::class) { callOrder.add(1) }
+        dispatcher.callback(30, DummyAction::class) { callOrder.add(2) }
+        dispatcher.flowable(30, DummyAction::class) { it.subscribe { callOrder.add(3) } }
+        dispatcher.observable(0, DummyAction::class) { it.subscribe { callOrder.add(1) } }
         dispatcher.dispatch(DummyAction(3))
 
         assertThat(dispatcher.subscriptionCount, equalTo(3))
@@ -54,7 +54,7 @@ class DispatcherTest : Spek({
         }
 
         var called = false
-        dispatcher.subscribe(InterceptedAction::class) {
+        dispatcher.callback(InterceptedAction::class) {
             called = true
             assertThat(it.value, equalTo(3))
         }
@@ -64,5 +64,5 @@ class DispatcherTest : Spek({
     }
 })
 
-data class DummyAction(val value: Int) : Action
-data class InterceptedAction(val value: Int) : Action
+data class DummyAction(val value: Int) : TracedAction()
+data class InterceptedAction(val value: Int) : TracedAction()

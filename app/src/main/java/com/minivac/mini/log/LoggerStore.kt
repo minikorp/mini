@@ -25,7 +25,7 @@ class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: La
             Grove.plant(fileTree)
         }
 
-        dispatcher.subscribe(OnActivityLifeCycleAction::class) {
+        dispatcher.callback(OnActivityLifeCycleAction::class) {
             if (it.stage == OnActivityLifeCycleAction.ActivityStage.PAUSED) {
                 fileTree?.flush()
             }

@@ -14,7 +14,7 @@ private const val TAG = "PluginActivity"
 private const val LC_TAG = "LifeCycle"
 private const val ARG_PLUGIN_SAVED_STATES = "pluginStates"
 
-abstract class PluginActivity<T : Any> : FluxActivity<T>() {
+abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
 
     // Plugins
     private lateinit var pluginMap: Map<Class<*>, Plugin>
@@ -28,8 +28,8 @@ abstract class PluginActivity<T : Any> : FluxActivity<T>() {
     private val sharedKeyUpCallback: WrappedCallback<KeyEvent, Boolean>
     private val sharedBackEvent = WrappedCallback(null, null) { super.onBackPressed() }
     private val onActivityResultCallback = WrappedCallback(ActivityResult(0, 0, null), null)
-    private val onPermissionsResultCallback = WrappedCallback(RequestPermissionResult(0,
-            emptyArray(), intArrayOf()), null)
+    private val onPermissionsResultCallback = WrappedCallback(
+            RequestPermissionResult(0, emptyArray(), intArrayOf()), null)
 
     init {
         val dummyMotionEvent = MotionEvent.obtain(0, 0, 0, 0.0f, 0.0f, 0)
@@ -229,7 +229,7 @@ abstract class PluginActivity<T : Any> : FluxActivity<T>() {
                               val resultCode: Int,
                               val data: Intent?)
 
-    @Suppress("ArrayInDataClass")
+    @Suppress("ArrayInDataClass") //This is safe
     data class RequestPermissionResult(val requestCode: Int,
                                        val permissions: Array<out String>,
                                        val grantResults: IntArray)

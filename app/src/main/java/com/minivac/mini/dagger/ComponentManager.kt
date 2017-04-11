@@ -20,7 +20,7 @@ class RefCountedEntry(val component: Any,
 
 class DefaultComponentManager : ComponentManager {
 
-    val components: MutableMap<String, RefCountedEntry> = HashMap()
+    internal val components: MutableMap<String, RefCountedEntry> = HashMap()
 
     override fun registerComponent(componentFactory: ComponentFactory<*>) {
         val name = componentFactory.componentName
@@ -63,6 +63,7 @@ class DefaultComponentManager : ComponentManager {
                     && it.destroyStrategy.trimMemoryValue == memoryLevel
         }
         toRemove.forEach { key, value ->
+            Grove.d { "Dropping component instance for: $key" }
             if (value.component is DisposableComponent) {
                 value.component.dispose()
             }
