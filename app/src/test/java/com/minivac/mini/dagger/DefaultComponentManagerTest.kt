@@ -13,8 +13,6 @@ import kotlin.test.assertNotNull
 @RunWith(JUnitPlatform::class)
 class DefaultComponentManagerTest : Spek({
 
-    val testComponentName = "testComponent"
-
     abstract class FakeDaggerComponent : DisposableComponent
 
     fun createManager(): DefaultComponentManager {
@@ -37,7 +35,7 @@ class DefaultComponentManagerTest : Spek({
             }
         }
 
-        override val componentName: String = testComponentName
+        override val componentType = FakeDaggerComponent::class
     }
 
     it("adding a component and removing it is disposes it") {
@@ -46,7 +44,7 @@ class DefaultComponentManagerTest : Spek({
 
         manager.registerComponent(componentFactory)
         assertThat(manager.components.size, equalTo(1))
-        assertNotNull(manager.components[testComponentName])
+        assertNotNull(manager.components[FakeDaggerComponent::class])
         assertThat(componentFactory.created, equalTo(true))
 
         manager.unregisterComponent(componentFactory)
@@ -59,7 +57,7 @@ class DefaultComponentManagerTest : Spek({
 
         manager.registerComponent(componentFactory)
         assertThat(manager.components.size, equalTo(1))
-        assertNotNull(manager.components[testComponentName])
+        assertNotNull(manager.components[FakeDaggerComponent::class])
         assertThat(componentFactory.created, equalTo(true))
 
         manager.unregisterComponent(componentFactory)

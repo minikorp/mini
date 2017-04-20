@@ -12,7 +12,7 @@ class SecondActivity : FluxActivity<FakeDaggerComponent>() {
     override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
         override fun createComponent() = FakeDaggerComponent()
         override val destroyStrategy = DestroyStrategy.REF_COUNT
-        override val componentName: String = "dummy"
+        override val componentType = FakeDaggerComponent::class
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

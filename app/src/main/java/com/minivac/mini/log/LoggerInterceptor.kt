@@ -40,8 +40,9 @@ internal class LoggerInterceptor constructor(stores: Collection<Store<*>>) : Int
         stores.forEachIndexed { index, store ->
             val oldState = states[index]
             val newState = store.state
+            val fn = store.properties.logFn ?: { store.state.toString() }
             if (oldState !== newState) {
-                sb.append(String.format("│   %s", store.state.toString())).append("\n")
+                sb.append(String.format("│   %s", fn())).append("\n")
             }
             states[index] = newState
         }

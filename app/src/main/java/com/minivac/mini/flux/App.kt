@@ -28,8 +28,7 @@ class App : Application(), ComponentManager by DefaultComponentManager() {
                         .build()
             }
 
-            override val dependencies: List<String> = emptyList()
-            override val componentName: String = AppComponent.NAME
+            override val componentType = AppComponent::class
         })
         val stores = AppComponent.get().stores()
 

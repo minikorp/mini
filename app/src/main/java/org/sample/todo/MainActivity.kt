@@ -16,7 +16,7 @@ class MainActivity : FluxActivity<FakeDaggerComponent>() {
     override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
         override fun createComponent() = FakeDaggerComponent()
         override val destroyStrategy = DestroyStrategy.REF_COUNT
-        override val componentName: String = "dummy"
+        override val componentType = FakeDaggerComponent::class
     }
 
     val goSecond: View by lazy { findViewById(R.id.goSecondButton) }
@@ -28,7 +28,7 @@ class MainActivity : FluxActivity<FakeDaggerComponent>() {
             startActivity(Intent(this, SecondActivity::class.java))
         }
 
-        val appComponent = app.findComponent<AppComponent>(AppComponent.NAME)
+        val appComponent = app.findComponent(AppComponent::class)
         appComponent.dispatcher().dispatch(DummyAction(3))
     }
 

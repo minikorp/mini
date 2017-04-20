@@ -1,6 +1,7 @@
 package com.minivac.mini.dagger
 
 import android.content.ComponentCallbacks2
+import kotlin.reflect.KClass
 
 typealias ComponentKey = String
 
@@ -15,7 +16,7 @@ interface DisposableComponent {
  * Common interface to allow [com.minivac.mini.flux.App] component tracking,
  * used to share Dagger components between multiple activities.
  */
-interface ComponentFactory<out T : Any> {
+interface ComponentFactory<T : Any> {
 
     /**
      * Factory method to create a component.
@@ -32,14 +33,14 @@ interface ComponentFactory<out T : Any> {
      * Components that should be kept active while this component is active.
      * All dependencies must exist upon registration time.
      */
-    val dependencies: List<String>
+    val dependencies: List<KClass<*>>
         get() = emptyList()
 
     /**
-     * The name of the component to add. If no such component exists with the same
+     * The type of the component to add. If no such component exists with the same
      * name [createComponent] will be called.
      */
-    val componentName: String
+    val componentType: KClass<T>
 }
 
 

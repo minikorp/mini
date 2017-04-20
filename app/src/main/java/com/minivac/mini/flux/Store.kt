@@ -20,7 +20,6 @@ abstract class Store<S : Any> : AutoCloseable {
     private val processor = PublishProcessor.create<S>()
 
 
-
     var state: S
         get() {
             if (_state == null) _state = initialState()
@@ -77,7 +76,16 @@ fun <T : Store<*>> StoreMap.find(clazz: KClass<T>): T {
     return this[java]!! as T
 }
 
-data class StoreProperties(val initOrder: Int = DEFAULT_INIT_PRIORITY) {
+/**
+ * Store meta properties.
+ *
+ * @param initOrder After construction invocation priority. Higher is lower.
+ * @param logFn Optional function used to represent state in a human readable form.
+ *              If null, current state string function will be used.
+ */
+data class StoreProperties(
+        val initOrder: Int = DEFAULT_INIT_PRIORITY,
+        val logFn: (() -> String)? = null) {
     companion object {
         val DEFAULT_INIT_PRIORITY = 100
     }

@@ -20,7 +20,7 @@ import dagger.Provides
 interface AppComponent {
     companion object {
         const val NAME = "AppComponent"
-        fun get(): AppComponent = app.findComponent<AppComponent>(NAME)
+        fun get(): AppComponent = app.findComponent(AppComponent::class)
     }
 
     fun dispatcher(): Dispatcher

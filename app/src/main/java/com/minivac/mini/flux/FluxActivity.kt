@@ -8,7 +8,7 @@ import io.reactivex.disposables.Disposable
 import javax.inject.Inject
 
 
-abstract class FluxActivity<out T : Any> : AppCompatActivity() {
+abstract class FluxActivity<T : Any> : AppCompatActivity() {
 
     private val disposables = CompositeDisposable()
 

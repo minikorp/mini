@@ -14,7 +14,7 @@ private const val TAG = "PluginActivity"
 private const val LC_TAG = "LifeCycle"
 private const val ARG_PLUGIN_SAVED_STATES = "pluginStates"
 
-abstract class PluginActivity<out T : Any> : FluxActivity<T>() {
+abstract class PluginActivity<T : Any> : FluxActivity<T>() {
 
     // Plugins
     private lateinit var pluginMap: Map<Class<*>, Plugin>
