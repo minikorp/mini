@@ -13,7 +13,7 @@ class DispatcherTest : Spek({
     it("should add subscriptions") {
         val dispatcher = Dispatcher(verifyThreads = false)
         var called = false
-        dispatcher.callback(DummyAction::class) {
+        dispatcher.subscribe(DummyAction::class) {
             called = true
             assertThat(it.value, equalTo(3))
         }
@@ -21,25 +21,30 @@ class DispatcherTest : Spek({
         assert(called)
     }
 
-    it("should remove subscriptions") {
-        val dispatcher = Dispatcher(verifyThreads = false)
-        val subscription = dispatcher.callback(DummyAction::class) {}
-        assertThat(dispatcher.subscriptionCount, equalTo(1))
-        subscription.dispose()
-        assertThat(dispatcher.subscriptionCount, equalTo(0))
-    }
-
     it("subscriptions should be ordered") {
         val dispatcher = Dispatcher(verifyThreads = false)
         val callOrder = ArrayList<Int>()
 
-        dispatcher.callback(30, DummyAction::class) { callOrder.add(2) }
-        dispatcher.flowable(30, DummyAction::class) { it.subscribe { callOrder.add(3) } }
-        dispatcher.observable(0, DummyAction::class) { it.subscribe { callOrder.add(1) } }
-        dispatcher.dispatch(DummyAction(3))
+        dispatcher.subscribe(30, DummyAction::class) { callOrder.add(2) }
+        dispatcher.subscribe(30, DummyAction::class).observable().subscribe { callOrder.add(3) }
+        dispatcher.subscribe(0, DummyAction::class).flowable().subscribe { callOrder.add(1) }
 
+        dispatcher.dispatch(DummyAction(3))
         assertThat(dispatcher.subscriptionCount, equalTo(3))
         assertThat(callOrder, equalTo(listOf(1, 2, 3)))
+    }
+
+    it("subscriptions are cancelled") {
+        val dispatcher = Dispatcher(verifyThreads = false)
+        var completeCalled = false
+
+        val dispatcherSubscription = dispatcher.subscribe(DummyAction::class) { error("Disposed!") }
+        dispatcherSubscription.flowable().doOnComplete { completeCalled = true }.subscribe()
+        dispatcherSubscription.dispose()
+
+        dispatcher.dispatch(DummyAction(3))
+        assertThat(dispatcher.subscriptionCount, equalTo(0))
+        assert(completeCalled)
     }
 
     it("interceptors are called") {
@@ -54,7 +59,7 @@ class DispatcherTest : Spek({
         }
 
         var called = false
-        dispatcher.callback(InterceptedAction::class) {
+        dispatcher.subscribe(InterceptedAction::class) {
             called = true
             assertThat(it.value, equalTo(3))
         }

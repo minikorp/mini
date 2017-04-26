@@ -4,6 +4,7 @@ import android.app.Application
 import com.minivac.mini.dagger.AppScope
 import com.minivac.mini.flux.LazyStoreMap
 import com.minivac.mini.flux.OnActivityLifeCycleAction
+import com.minivac.mini.flux.OnActivityLifeCycleAction.ActivityStage.*
 import com.minivac.mini.flux.Store
 import dagger.Binds
 import dagger.Module
@@ -25,9 +26,11 @@ class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: La
             Grove.plant(fileTree)
         }
 
-        dispatcher.callback(OnActivityLifeCycleAction::class) {
-            if (it.stage == OnActivityLifeCycleAction.ActivityStage.PAUSED) {
-                fileTree?.flush()
+        dispatcher.subscribe(OnActivityLifeCycleAction::class) {
+            when (it.stage) {
+                PAUSED, STOPPED, DESTROYED -> fileTree?.flush()
+                else -> { //No-op
+                }
             }
         }
         dispatcher.addInterceptor(LoggerInterceptor(lazyStoreMap.get().values))
@@ -35,7 +38,6 @@ class LoggerStore @Inject constructor(context: Application, val lazyStoreMap: La
 }
 
 class LoggerState
-
 
 @Module
 abstract class LoggerModule {

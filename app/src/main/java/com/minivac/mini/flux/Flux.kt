@@ -67,7 +67,7 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
         override fun proceed(action: Action): Action {
             action.tags.forEach { tag ->
                 subscriptionMap[tag]?.let { set ->
-                    set.forEach { it.cb.invoke(action) }
+                    set.forEach { it.onAction(action) }
                 }
             }
             return action
@@ -112,56 +112,32 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
         }
     }
 
+    /**
+     * Post an event that will dispatch the action on the Ui thread
+     * and return immediately.
+     */
     fun dispatchOnUi(action: Action) {
         onUi { dispatch(action) }
     }
 
+    /**
+     * Post and event that will dispatch the action on the Ui thread
+     * and block until the dispatch is complete.
+     *
+     * Can't be called from the main thread.
+     */
     fun dispatchOnUiSync(action: Action) {
         if (verifyThreads) assertNotOnUiThread()
         onUiSync { dispatch(action) }
     }
 
-    fun <T : Any> observable(tag: KClass<T>, fn: (Observable<T>) -> Unit)
-            = observable(DEFAULT_PRIORITY, tag, fn)
+    fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit = {})
+            = subscribe(DEFAULT_PRIORITY, tag, fn)
 
-    fun <T : Any> observable(priority: Int = DEFAULT_PRIORITY,
-                             tag: KClass<T>,
-                             fn: (Observable<T>) -> Unit): DispatcherSubscription<T> {
-        val subject = PublishSubject.create<T>()
-        val subscription = DispatcherSubscription.ObservableSubscription(
-                this,
-                subscriptionCounter.getAndIncrement(),
-                priority,
-                tag.java,
-                subject)
-        fn.invoke(subject)
-        return registerInternal(subscription)
-    }
-
-    fun <T : Any> flowable(tag: KClass<T>, fn: (Flowable<T>) -> Unit)
-            = flowable(DEFAULT_PRIORITY, tag, fn)
-
-    fun <T : Any> flowable(priority: Int,
-                           tag: KClass<T>,
-                           fn: (Flowable<T>) -> Unit): DispatcherSubscription<T> {
-        val processor = PublishProcessor.create<T>()
-        val subscription = DispatcherSubscription.FlowableSubscription(
-                this,
-                subscriptionCounter.getAndIncrement(),
-                priority,
-                tag.java,
-                processor)
-        fn.invoke(processor)
-        return registerInternal(subscription)
-    }
-
-    fun <T : Any> callback(tag: KClass<T>, fn: (T) -> Unit)
-            = callback(DEFAULT_PRIORITY, tag, fn)
-
-    fun <T : Any> callback(priority: Int,
-                           tag: KClass<T>,
-                           fn: (T) -> Unit): DispatcherSubscription<T> {
-        val subscription = DispatcherSubscription.CallbackSubscription(
+    fun <T : Any> subscribe(priority: Int,
+                            tag: KClass<T>,
+                            fn: (T) -> Unit = {}): DispatcherSubscription<T> {
+        val subscription = DispatcherSubscription(
                 this,
                 subscriptionCounter.getAndIncrement(),
                 priority,
@@ -195,43 +171,52 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
     }
 }
 
-sealed class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
-                                             internal val id: Int,
-                                             internal val priority: Int,
-                                             internal val tag: Class<T>,
-                                             internal val cb: (T) -> Unit) : Disposable {
-
+class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
+                                      internal val id: Int,
+                                      internal val priority: Int,
+                                      internal val tag: Class<T>,
+                                      internal val cb: (T) -> Unit) : Disposable {
+    private var processor: PublishProcessor<T>? = null
+    private var subject: PublishSubject<T>? = null
     private var disposed = false
+
     override fun isDisposed(): Boolean = disposed
 
-    protected fun disposeInternal() {
-        dispatcher.unregisterInternal(this)
-        disposed = true
-    }
-
-    class CallbackSubscription<T : Any>
-    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, cb: (T) -> Unit)
-        : DispatcherSubscription<T>(dispatcher, id, priority, tag, cb) {
-        override fun dispose() {
-            disposeInternal()
+    internal fun onAction(action: T) {
+        if (disposed) {
+            Grove.e { "Subscription is disposed but got an action: $action" }
+            return
         }
+        cb.invoke(action)
+        processor?.onNext(action)
+        subject?.onNext(action)
     }
 
-    class FlowableSubscription<T : Any>
-    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, val flowable: PublishProcessor<T>)
-        : DispatcherSubscription<T>(dispatcher, id, priority, tag, { a -> flowable.onNext(a) }) {
-        override fun dispose() {
-            flowable.onComplete()
-            disposeInternal()
+    fun flowable(): Flowable<T> {
+        if (processor == null) {
+            synchronized(this) {
+                if (processor == null) processor = PublishProcessor.create()
+            }
         }
+        return processor!!
     }
 
-    class ObservableSubscription<T : Any>
-    (dispatcher: Dispatcher, id: Int, priority: Int, tag: Class<T>, val subject: PublishSubject<T>)
-        : DispatcherSubscription<T>(dispatcher, id, priority, tag, { a -> subject.onNext(a) }) {
-        override fun dispose() {
-            subject.onComplete()
-            disposeInternal()
+    fun observable(): Observable<T> {
+        if (subject == null) {
+            synchronized(this) {
+                if (subject == null) subject = PublishSubject.create()
+            }
+        }
+        return subject!!
+    }
+
+    override fun dispose() {
+        if (disposed) return
+        synchronized(this) {
+            dispatcher.unregisterInternal(this)
+            disposed = true
+            processor?.onComplete()
+            subject?.onComplete()
         }
     }
 }
