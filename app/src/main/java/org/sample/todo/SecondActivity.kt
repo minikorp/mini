@@ -2,22 +2,18 @@ package org.sample.todo
 
 import android.os.Bundle
 import android.widget.Toast
-import com.minivac.mini.dagger.ComponentFactory
-import com.minivac.mini.dagger.DestroyStrategy
 import com.minivac.mini.flux.FluxActivity
 import com.minivac.mini.log.Grove
+import javax.inject.Inject
 
-class SecondActivity : FluxActivity<FakeDaggerComponent>() {
+class SecondActivity : FluxActivity<UserComponent>() {
 
-    override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
-        override fun createComponent() = FakeDaggerComponent()
-        override val destroyStrategy = DestroyStrategy.REF_COUNT
-        override val componentType = FakeDaggerComponent::class
-    }
+    override val componentFactory = UserComponentFactory
+    @Inject lateinit var userStore: UserStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Toast.makeText(this, "hey", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "hey: ${userStore.state.name}", Toast.LENGTH_SHORT).show()
         Grove.d { "Created" }
     }
 }

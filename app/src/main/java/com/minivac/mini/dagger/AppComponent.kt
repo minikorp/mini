@@ -4,12 +4,12 @@ import android.app.Application
 import android.content.Context
 import com.minivac.mini.flux.App
 import com.minivac.mini.flux.Dispatcher
-import com.minivac.mini.flux.StoreMap
-import com.minivac.mini.flux.app
+import com.minivac.mini.flux.StoreHolderComponent
 import com.minivac.mini.log.LoggerModule
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import org.sample.todo.UserComponent
 
 
 @Component(modules = arrayOf(
@@ -17,15 +17,10 @@ import dagger.Provides
         LoggerModule::class
 ))
 @AppScope
-interface AppComponent {
-    companion object {
-        const val NAME = "AppComponent"
-        fun get(): AppComponent = app.findComponent(AppComponent::class)
-    }
-
+interface AppComponent : StoreHolderComponent {
     fun dispatcher(): Dispatcher
 
-    fun stores(): StoreMap
+    fun mainActivityComponent(): UserComponent
 }
 
 @Module

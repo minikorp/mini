@@ -5,14 +5,15 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 interface ComponentManager {
-    fun registerComponent(componentFactory: ComponentFactory<*>)
-    fun unregisterComponent(componentFactory: ComponentFactory<*>)
-    fun trimComponents(memoryLevel: Int)
+    fun <T : Any> registerComponent(componentFactory: ComponentFactory<T>)
+    fun <T : Any> unregisterComponent(componentFactory: ComponentFactory<T>)
     fun <T : Any> findComponent(type: KClass<T>): T
     fun <T : Any> findComponentOrNull(type: KClass<T>): T?
+    fun trimComponents(memoryLevel: Int)
 }
 
-class RefCountedEntry(val component: Any,
+class RefCountedEntry(val factory: ComponentFactory<Any>,
+                      val component: Any,
                       val type: KClass<*>,
                       val destroyStrategy: DestroyStrategy) {
     val references: AtomicInteger = AtomicInteger(0)
@@ -23,11 +24,13 @@ class DefaultComponentManager : ComponentManager {
 
     internal val components: MutableMap<KClass<*>, RefCountedEntry> = HashMap()
 
-    override fun registerComponent(componentFactory: ComponentFactory<*>) {
+    override fun <T : Any> registerComponent(componentFactory: ComponentFactory<T>) {
         val type = componentFactory.componentType
         components.getOrPut(type, {
             Grove.d { "Creating new component instance for: $type" }
+            @Suppress("UNCHECKED_CAST")
             RefCountedEntry(
+                    componentFactory as ComponentFactory<Any>,
                     componentFactory.createComponent(),
                     type,
                     componentFactory.destroyStrategy)
@@ -40,7 +43,7 @@ class DefaultComponentManager : ComponentManager {
                 .forEach { it.references.incrementAndGet() }
     }
 
-    override fun unregisterComponent(componentFactory: ComponentFactory<*>) {
+    override fun <T : Any> unregisterComponent(componentFactory: ComponentFactory<T>) {
         componentFactory.dependencies
                 .plus(componentFactory.componentType)
                 .map { components[it]!! }
@@ -50,9 +53,8 @@ class DefaultComponentManager : ComponentManager {
                     if (references == 0 && it.destroyStrategy == DestroyStrategy.REF_COUNT) {
                         Grove.d { "Dropping component instance for: ${it.type}" }
                         val component = it.component
-                        if (component is DisposableComponent) {
-                            component.dispose()
-                        }
+                        @Suppress("UNCHECKED_CAST")
+                        componentFactory.destroyComponent(component as T)
                         components.remove(it.type)
                     }
                 }
@@ -65,9 +67,7 @@ class DefaultComponentManager : ComponentManager {
         }
         toRemove.forEach { key, value ->
             Grove.d { "Dropping component instance for: $key" }
-            if (value.component is DisposableComponent) {
-                value.component.dispose()
-            }
+            value.factory.destroyComponent(value.component)
             components -= key
         }
         Grove.d { "Trimmed ${toRemove.size} components" }

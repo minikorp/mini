@@ -1,6 +1,5 @@
 package com.minivac.mini.misc
 
-import android.annotation.SuppressLint
 
 /**
  * Transform bytes into a human readable string without localization.
@@ -9,7 +8,6 @@ import android.annotation.SuppressLint
  * *
  * @param shorter Include decimal values (1.3MB or 1.34MB)
  */
-@SuppressLint("DefaultLocale")
 fun humanFileSize(bytes: Long, shorter: Boolean = false): String {
     if (bytes < 0) return "??B"
 

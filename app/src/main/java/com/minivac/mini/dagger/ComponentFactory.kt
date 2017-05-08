@@ -6,14 +6,7 @@ import kotlin.reflect.KClass
 typealias ComponentKey = String
 
 /**
- * Generic interface for components that require custom dispose logic.
- */
-interface DisposableComponent {
-    fun dispose(): Unit
-}
-
-/**
- * Common interface to allow [com.minivac.mini.flux.App] component tracking,
+ * Common interface to allow component tracking,
  * used to share Dagger components between multiple activities.
  */
 interface ComponentFactory<T : Any> {
@@ -22,6 +15,10 @@ interface ComponentFactory<T : Any> {
      * Factory method to create a component.
      */
     fun createComponent(): T
+
+    fun destroyComponent(component: T) {
+
+    }
 
     /**
      * When this component should be destroyed, see [DestroyStrategy].

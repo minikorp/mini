@@ -43,3 +43,4 @@ private fun scanStaticFields(clazz: Class<*>): String {
     return sb.toString()
 }
 
+

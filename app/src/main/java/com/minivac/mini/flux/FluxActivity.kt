@@ -3,21 +3,32 @@ package com.minivac.mini.flux
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.minivac.mini.dagger.ComponentFactory
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
+import com.minivac.mini.dagger.ComponentManager
+import com.minivac.mini.dagger.inject
+import com.minivac.mini.rx.DefaultSubscriptionTracker
+import com.minivac.mini.rx.SubscriptionTracker
 import javax.inject.Inject
 
 
-abstract class FluxActivity<T : Any> : AppCompatActivity() {
+abstract class FluxActivity<T : Any> :
+        AppCompatActivity(),
+        SubscriptionTracker by DefaultSubscriptionTracker(),
+        ComponentManager by app {
 
-    private val disposables = CompositeDisposable()
-
+    @Inject lateinit var dispatcher: Dispatcher
     abstract val componentFactory: ComponentFactory<T>
-    @Inject lateinit protected var dispatcher: Dispatcher
+
+    val component: T by lazy {
+        findComponent(componentFactory.componentType)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) app.registerComponent(componentFactory)
+        if (savedInstanceState == null) {
+            app.registerComponent(componentFactory)
+        }
+        inject(component, this)
     }
 
     override fun onDestroy() {
@@ -26,10 +37,6 @@ abstract class FluxActivity<T : Any> : AppCompatActivity() {
             //This won't be called if app is killed!
             app.unregisterComponent(componentFactory)
         }
-    }
-
-    fun <T : Disposable> T.track(): T {
-        disposables.add(this)
-        return this
+        cancelSubscriptions()
     }
 }

@@ -2,35 +2,34 @@ package org.sample.todo
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.widget.TextView
 import com.minivac.mini.R
-import com.minivac.mini.dagger.AppComponent
-import com.minivac.mini.dagger.ComponentFactory
-import com.minivac.mini.dagger.DestroyStrategy
-import com.minivac.mini.flux.Action
 import com.minivac.mini.flux.FluxActivity
-import com.minivac.mini.flux.app
+import javax.inject.Inject
 
-class MainActivity : FluxActivity<FakeDaggerComponent>() {
+class MainActivity : FluxActivity<UserComponent>() {
 
-    override val componentFactory = object : ComponentFactory<FakeDaggerComponent> {
-        override fun createComponent() = FakeDaggerComponent()
-        override val destroyStrategy = DestroyStrategy.REF_COUNT
-        override val componentType = FakeDaggerComponent::class
-    }
+    @Inject lateinit var userStore: UserStore
 
-    val goSecond: View by lazy { findViewById(R.id.goSecondButton) }
+    override val componentFactory = UserComponentFactory
+
+    val goSecond: TextView by lazy { findViewById(R.id.goSecondButton) as TextView }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
+
         goSecond.setOnClickListener {
             startActivity(Intent(this, SecondActivity::class.java))
         }
 
-        val appComponent = app.findComponent(AppComponent::class)
-        appComponent.dispatcher().dispatch(DummyAction(3))
-    }
+        userStore.flowable()
+                .subscribe { goSecond.text = it.name }
+                .track()
 
-    data class DummyAction(val x: Int = 3) : Action
+        if (savedInstanceState == null) {
+            dispatcher.dispatch(LoginUserAction("${userStore.state.name} Hello", "Reactive"))
+        }
+    }
 }

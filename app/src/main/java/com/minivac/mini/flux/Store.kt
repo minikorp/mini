@@ -1,31 +1,30 @@
 package com.minivac.mini.flux
 
-import android.support.annotation.CallSuper
+import com.minivac.mini.rx.DefaultSubscriptionTracker
+import com.minivac.mini.rx.SubscriptionTracker
 import io.reactivex.Flowable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import java.lang.reflect.ParameterizedType
-import javax.inject.Inject
 import kotlin.reflect.KClass
 
-abstract class Store<S : Any> : AutoCloseable {
+abstract class Store<S : Any> : SubscriptionTracker by DefaultSubscriptionTracker() {
 
     open val properties: StoreProperties = StoreProperties()
 
-    @Inject protected lateinit var dispatcher: Dispatcher
-
-    private val disposables = CompositeDisposable()
+    private var initialized = false
     private var _state: S? = null
     private val processor = PublishProcessor.create<S>()
 
-
     var state: S
         get() {
-            if (_state == null) _state = initialState()
+            if (_state == null) {
+                synchronized(this) {
+                    if (_state == null) _state = initialState()
+                }
+            }
             return _state!!
         }
-        protected set(value) {
+        set(value) {
             if (value != _state) {
                 _state = value
                 processor.onNext(value)
@@ -52,19 +51,29 @@ abstract class Store<S : Any> : AutoCloseable {
         }
     }
 
-    fun Disposable.track() {
-        disposables.add(this)
-    }
-
-    @CallSuper
-    override fun close() {
-        disposables.dispose()
+    /**
+     * Perform initialization, will have effect exactly once.
+     */
+    fun initOnce() {
+        if (initialized) return
+        synchronized(this) {
+            if (initialized) return
+            initialized = true
+            init()
+        }
     }
 
     /**
-     * Initialize the store. Called after all stores constructors ar
+     * Initialize the store. Called after all stores instances are ready.
      */
-    abstract fun init()
+    protected abstract fun init()
+
+    /**
+     * Release resources.
+     */
+    fun dispose() {
+        //No-op
+    }
 }
 
 /**

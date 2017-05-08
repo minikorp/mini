@@ -27,9 +27,9 @@ abstract class ReduxStore<S : Any> : Store<S>() {
 
         synchronized(this) {
             reducers.getOrPut(tag.java, {
-                TreeSet({ a, b ->
-                    val p = a.priority.compareTo(b.priority)
-                    if (p == 0) a.id.compareTo(b.id)
+                TreeSet({ (id1, priority1), (id2, priority2) ->
+                    val p = priority1.compareTo(priority2)
+                    if (p == 0) id1.compareTo(id2)
                     else p
                 })
             })!!.add(reducer)
