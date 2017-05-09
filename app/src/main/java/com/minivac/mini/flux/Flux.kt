@@ -22,6 +22,10 @@ import kotlin.reflect.KClass
  * Defaults to Any and the runtime type.
  */
 interface Action {
+
+    /**
+     * List of types this action may be observed by.
+     */
     val tags: Array<Class<*>>
         get() = arrayOf(Any::class.java, this.javaClass)
 }
@@ -51,8 +55,10 @@ interface Chain {
     fun proceed(action: Action): Action
 }
 
-
-class Dispatcher(private val verifyThreads: Boolean = true) {
+/**
+ * Dispatch actions and subscribe to them in order to produce changes.
+ */
+class Dispatcher(var verifyThreads: Boolean = true) {
     val DEFAULT_PRIORITY: Int = 100
 
     val subscriptionCount: Int get() = subscriptionMap.values.map { it?.size ?: 0 }.sum()

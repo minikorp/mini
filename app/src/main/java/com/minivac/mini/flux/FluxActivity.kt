@@ -16,12 +16,15 @@ abstract class FluxActivity<T : Any> :
         ComponentManager by app {
 
     @Inject lateinit var dispatcher: Dispatcher
-    abstract val componentFactory: ComponentFactory<T>
+    private val componentFactory: ComponentFactory<T> by lazy {
+        onCreateComponentFactory()
+    }
+
+    abstract fun onCreateComponentFactory(): ComponentFactory<T>
 
     val component: T by lazy {
         findComponent(componentFactory.componentType)
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -11,7 +11,7 @@ class MainActivity : FluxActivity<UserComponent>() {
 
     @Inject lateinit var userStore: UserStore
 
-    override val componentFactory = UserComponentFactory
+    override fun onCreateComponentFactory() = UserComponentFactory
 
     val goSecond: TextView by lazy { findViewById(R.id.goSecondButton) as TextView }
 

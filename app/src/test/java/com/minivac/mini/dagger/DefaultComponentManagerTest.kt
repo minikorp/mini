@@ -13,7 +13,7 @@ import kotlin.test.assertNotNull
 @RunWith(JUnitPlatform::class)
 class DefaultComponentManagerTest : Spek({
 
-    abstract class FakeDaggerComponent : DisposableComponent
+    class FakeDaggerComponent
 
     fun createManager(): DefaultComponentManager {
         return DefaultComponentManager()
@@ -28,11 +28,11 @@ class DefaultComponentManagerTest : Spek({
 
         override fun createComponent(): FakeDaggerComponent {
             created = true
-            return object : FakeDaggerComponent() {
-                override fun dispose() {
-                    disposed = true
-                }
-            }
+            return FakeDaggerComponent()
+        }
+
+        override fun destroyComponent(component: FakeDaggerComponent) {
+            disposed = true
         }
 
         override val componentType = FakeDaggerComponent::class
@@ -51,7 +51,7 @@ class DefaultComponentManagerTest : Spek({
         assertThat(componentFactory.disposed, equalTo(true))
     }
 
-    it("adding a component and trimming memory disposes it"){
+    it("adding a component and trimming memory disposes it") {
         val manager = createManager()
         val componentFactory = TestComponentFactory(DestroyStrategy.TRIM_MEMORY_BACKGROUND)
 

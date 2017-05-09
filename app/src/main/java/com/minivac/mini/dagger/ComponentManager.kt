@@ -83,4 +83,9 @@ class DefaultComponentManager : ComponentManager {
     override fun <T : Any> findComponentOrNull(type: KClass<T>): T? {
         return components[type]?.component as? T
     }
+
+    override fun toString(): String {
+        return "DefaultComponentManager(components=$components)"
+    }
+
 }

@@ -8,7 +8,8 @@ import javax.inject.Inject
 
 class SecondActivity : FluxActivity<UserComponent>() {
 
-    override val componentFactory = UserComponentFactory
+    override fun onCreateComponentFactory() = UserComponentFactory
+
     @Inject lateinit var userStore: UserStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
