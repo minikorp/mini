@@ -65,7 +65,7 @@ class DefaultComponentManager : ComponentManager {
             it.references.get() == 0
                     && it.destroyStrategy.trimMemoryValue == memoryLevel
         }
-        toRemove.forEach { key, value ->
+        toRemove.forEach { (key, value) ->
             Grove.d { "Dropping component instance for: $key" }
             value.factory.destroyComponent(value.component)
             components -= key
