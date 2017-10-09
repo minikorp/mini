@@ -45,7 +45,9 @@ abstract class TracedAction : Action {
 }
 
 
-typealias Interceptor = (Action, Chain) -> Action
+typealias Interceptor = (action: Action, chain: Chain) -> Action
+
+val actionCounter = AtomicInteger()
 
 /**
  * A chain of interceptors. Call [.proceed] with
@@ -84,9 +86,8 @@ class Dispatcher(var verifyThreads: Boolean = true) {
         return interceptors.fold(rootChain)
         { chain, interceptor ->
             object : Chain {
-                override fun proceed(action: Action): Action {
-                    return interceptor(action, chain)
-                }
+                override fun proceed(action: Action): Action
+                        = interceptor(action, chain)
             }
         }
     }
@@ -110,6 +111,7 @@ class Dispatcher(var verifyThreads: Boolean = true) {
         synchronized(this) {
             try {
                 if (dispatching) error("Can't dispatch actions while reducing state!")
+                actionCounter.incrementAndGet()
                 dispatching = true
                 chain.proceed(action)
             } finally {
@@ -181,7 +183,7 @@ class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
                                       internal val id: Int,
                                       internal val priority: Int,
                                       internal val tag: Class<T>,
-                                      internal val cb: (T) -> Unit) : Disposable {
+                                      private val cb: (T) -> Unit) : Disposable {
     private var processor: PublishProcessor<T>? = null
     private var subject: PublishSubject<T>? = null
     private var disposed = false
@@ -226,3 +228,4 @@ class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
         }
     }
 }
+

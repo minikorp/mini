@@ -4,6 +4,7 @@ import com.minivac.mini.rx.DefaultSubscriptionTracker
 import com.minivac.mini.rx.SubscriptionTracker
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
+import org.jetbrains.annotations.TestOnly
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KClass
 
@@ -32,7 +33,7 @@ abstract class Store<S : Any> : SubscriptionTracker by DefaultSubscriptionTracke
         }
 
     @Suppress("UNCHECKED_CAST")
-    protected open fun initialState(): S {
+    open fun initialState(): S {
         try {
             val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
                     as Class<S>
@@ -44,6 +45,15 @@ abstract class Store<S : Any> : SubscriptionTracker by DefaultSubscriptionTracke
         }
     }
 
+    @TestOnly
+    fun setTestState(state: S) = { this.state = state }
+
+    @TestOnly
+    fun resetState() = setTestState(initialState())
+
+    /**
+     * Observable state.
+     */
     fun flowable(): Flowable<S> {
         return processor.startWith { s ->
             s.onNext(state)
