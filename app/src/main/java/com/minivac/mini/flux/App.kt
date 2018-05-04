@@ -5,7 +5,6 @@ import com.minivac.mini.BuildConfig
 import com.minivac.mini.dagger.*
 import com.minivac.mini.log.DebugTree
 import com.minivac.mini.log.Grove
-import com.minivac.mini.misc.collectDeviceBuildInformation
 import com.squareup.leakcanary.LeakCanary
 import kotlin.properties.Delegates
 
@@ -23,7 +22,6 @@ class App :
         _app = this
         if (BuildConfig.DEBUG) {
             Grove.plant(DebugTree(true))
-            Grove.d { collectDeviceBuildInformation(this) }
         }
 
         registerComponent(object : ComponentFactory<AppComponent> {
@@ -40,8 +38,6 @@ class App :
         val stores = appComponent.stores()
         initStores(stores.values.toList())
 
-        registerSystemCallbacks(appComponent.dispatcher(), this)
-
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
         exceptionHandlers.add(exceptionHandler)
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
@@ -50,12 +46,6 @@ class App :
 
         configureLeakCanary()
     }
-
-    override fun onTrimMemory(level: Int) {
-        super.onTrimMemory(level)
-        trimComponents(level)
-    }
-
 
     private fun configureLeakCanary() {
         if (LeakCanary.isInAnalyzerProcess(this)) return

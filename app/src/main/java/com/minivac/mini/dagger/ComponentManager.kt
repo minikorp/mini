@@ -9,7 +9,6 @@ interface ComponentManager {
     fun <T : Any> unregisterComponent(componentFactory: ComponentFactory<T>)
     fun <T : Any> findComponent(type: KClass<T>): T
     fun <T : Any> findComponentOrNull(type: KClass<T>): T?
-    fun trimComponents(memoryLevel: Int)
 }
 
 class RefCountedEntry(val factory: ComponentFactory<Any>,
@@ -59,20 +58,6 @@ class DefaultComponentManager : ComponentManager {
                     }
                 }
     }
-
-    override fun trimComponents(memoryLevel: Int) {
-        val toRemove = components.filterValues {
-            it.references.get() == 0
-                    && it.destroyStrategy.trimMemoryValue == memoryLevel
-        }
-        toRemove.forEach { (key, value) ->
-            Grove.d { "Dropping component instance for: $key" }
-            value.factory.destroyComponent(value.component)
-            components -= key
-        }
-        Grove.d { "Trimmed ${toRemove.size} components" }
-    }
-
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Any> findComponent(type: KClass<T>): T {

@@ -1,18 +1,14 @@
 package com.minivac.mini.flux
 
-import android.app.Activity
-import android.app.Application
-import android.content.ComponentCallbacks2
-import android.content.Context
-import android.content.res.Configuration
-import android.os.Bundle
 import com.minivac.mini.log.Grove
 
-/**
- * Handy alias to use with dagger
- */
+        /**
+         * Handy alias to use with dagger
+         */
 typealias StoreMap = Map<Class<*>, Store<*>>
+
 typealias LazyStoreMap = dagger.Lazy<Map<Class<*>, Store<*>>>
+
 interface StoreHolderComponent {
     fun stores(): StoreMap
 }
@@ -50,43 +46,4 @@ fun initStores(uninitializedStores: Iterable<Store<*>>) {
 
 fun disposeStores(stores: Iterable<Store<*>>) {
     stores.forEach { it.dispose() }
-}
-
-/**
- * Register callbacks to send [OnTrimMemoryAction] and [OnActivityLifeCycleAction].
- */
-fun registerSystemCallbacks(dispatcher: Dispatcher, context: Context) {
-    val app = context.applicationContext as? Application
-
-    app?.registerComponentCallbacks(object : ComponentCallbacks2 {
-        override fun onLowMemory() {}
-
-        override fun onConfigurationChanged(newConfig: Configuration?) {}
-
-        override fun onTrimMemory(level: Int) {
-            dispatcher.dispatch(OnTrimMemoryAction(level))
-        }
-    })
-
-    app?.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.CREATED))
-
-        override fun onActivityStarted(activity: Activity)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.STARTED))
-
-        override fun onActivityResumed(activity: Activity)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.RESUMED))
-
-        override fun onActivityPaused(activity: Activity)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.PAUSED))
-
-        override fun onActivityStopped(activity: Activity)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.STOPPED))
-
-        override fun onActivityDestroyed(activity: Activity)
-                = dispatcher.dispatch(OnActivityLifeCycleAction(activity, OnActivityLifeCycleAction.ActivityStage.DESTROYED))
-
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {}
-    })
 }

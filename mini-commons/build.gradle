@@ -1,0 +1,70 @@
+buildscript {
+    ext {
+        rx_version = "2.0.3"
+        rx_android_version = "2.0.1"
+        target_sdk_version = 26
+    }
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android'
+
+//Android
+android {
+    compileSdkVersion target_sdk_version
+    buildToolsVersion '26.0.2'
+
+    defaultConfig {
+        applicationId "com.minivac.mini"
+        minSdkVersion 21
+        targetSdkVersion target_sdk_version
+        versionCode 1
+        multiDexEnabled true
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility "1.7"
+        targetCompatibility "1.7"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    configurations.all {
+        //This is library is included with two different versions
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.1'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testCompile 'junit:junit:4.12'
+
+    //Rx
+    compile "io.reactivex.rxjava2:rxjava:$rx_version"
+    compile "io.reactivex.rxjava2:rxandroid:$rx_android_version"
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+        sourceDirs += files('build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main')
+        generatedSourceDirs += files('build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main')
+    }
+}
