@@ -1,6 +1,7 @@
 package com.minivac.mini.flux
 
 import android.app.Activity
+import com.example.mini_commons.Action
 
 
 data class OnTrimMemoryAction(val level: Int) : Action

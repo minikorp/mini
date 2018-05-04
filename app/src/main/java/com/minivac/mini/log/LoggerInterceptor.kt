@@ -1,6 +1,6 @@
 package com.minivac.mini.log
 
-import com.minivac.mini.flux.Action
+import com.example.mini_commons.Action
 import com.minivac.mini.flux.Chain
 import com.minivac.mini.flux.Interceptor
 import com.minivac.mini.flux.Store

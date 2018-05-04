@@ -61,28 +61,6 @@ fun Fragment.toast(@StringRes message: Int, duration: Int = Toast.LENGTH_SHORT)
 
 //Bundle
 
-fun <V> Map<String, V>.toBundle(bundle: Bundle = Bundle()): Bundle = bundle.apply {
-    forEach {
-        val k = it.key
-        val v = it.value
-        when (v) {
-            is IBinder -> putBinder(k, v)
-            is Bundle -> putBundle(k, v)
-            is Byte -> putByte(k, v)
-            is ByteArray -> putByteArray(k, v)
-            is Char -> putChar(k, v)
-            is CharArray -> putCharArray(k, v)
-            is CharSequence -> putCharSequence(k, v)
-            is Float -> putFloat(k, v)
-            is FloatArray -> putFloatArray(k, v)
-            is Parcelable -> putParcelable(k, v)
-            is Short -> putShort(k, v)
-            is ShortArray -> putShortArray(k, v)
-            else -> throw IllegalArgumentException("$v is of a type that is not currently supported")
-        }
-    }
-}
-
 fun newBundle(fn: BundleBuilder.() -> Unit): Bundle {
     val builder = BundleBuilder()
     fn(builder)
@@ -111,15 +89,6 @@ fun randomColor(alpha: Int = 255): Int =
         Color.argb(alpha, random.nextInt(256), random.nextInt(256), random.nextInt(256))
 
 private val point = Point()
-fun Context.calculateScreenSize(): Pair<Int, Int> {
-    val display = (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
-    display.getSize(point)
-    val width = point.x
-    val height = point.y
-    return width to height
-}
-
-fun Pair<Int, Int>.toSize(): Size = Size(this.first, this.second)
 
 //Database
 

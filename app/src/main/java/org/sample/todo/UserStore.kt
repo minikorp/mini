@@ -1,5 +1,7 @@
 package org.sample.todo
 
+import com.example.mini_commons.Action
+import com.example.mini_commons.Reducer
 import com.minivac.mini.dagger.ActivityScope
 import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.dagger.ComponentFactory
@@ -47,11 +49,11 @@ data class UserState(val name: String = "Anonymous")
 @ActivityScope
 class UserStore @Inject constructor(val dispatcher: Dispatcher) : Store<UserState>() {
     override fun init() {
-        dispatcher.subscribe(LoginUserAction::class)
-                .track()
-                .flowable()
-                .subscribe {
-                    state = state.copy(name = "${it.username} & ${it.password}")
-                }
+
+    }
+
+    @Reducer
+    public fun loginUser(loginUserAction: LoginUserAction){
+
     }
 }

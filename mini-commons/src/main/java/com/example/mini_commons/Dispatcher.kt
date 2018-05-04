@@ -1,48 +1,12 @@
-package com.minivac.mini.flux
+package com.example.mini_commons
 
-import com.example.mini_commons.Action
-import com.minivac.mini.BuildConfig
-import com.minivac.mini.log.Grove
-import com.minivac.mini.misc.assertNotOnUiThread
-import com.minivac.mini.misc.assertOnUiThread
-import com.minivac.mini.misc.onUi
-import com.minivac.mini.misc.onUiSync
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.disposables.Disposable
-import io.reactivex.processors.PublishProcessor
-import io.reactivex.subjects.PublishSubject
-import java.util.*
+import java.util.HashMap
+import java.util.TreeSet
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 
-/**
- * Debug Action that captures trace information when its created.
- * It has no effect on release builds.
- */
-abstract class TracedAction : Action {
-    val trace: Array<StackTraceElement>? = let {
-        if (BuildConfig.DEBUG) {
-            Throwable().stackTrace
-        } else {
-            null
-        }
-    }
-}
-
-
-typealias Interceptor = (action: Action, chain: Chain) -> Action
 
 val actionCounter = AtomicInteger()
-
-/**
- * A chain of interceptors. Call [.proceed] with
- * the intercepted action or directly handle it.
- */
-interface Chain {
-    fun proceed(action: Action): Action
-}
 
 /**
  * Dispatch actions and subscribe to them in order to produce changes.
@@ -160,59 +124,8 @@ class Dispatcher(var verifyThreads: Boolean = true) {
             val set = subscriptionMap[dispatcherSubscription.tag] as? TreeSet<*>
             val removed = set?.remove(dispatcherSubscription) ?: false
             if (!removed) {
-                Grove.w { "Failed to remove dispatcherSubscription, multiple dispose calls?" }
+                //Grove.w { "Failed to remove dispatcherSubscription, multiple dispose calls?" }
             }
         }
     }
 }
-
-class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
-                                      internal val id: Int,
-                                      internal val priority: Int,
-                                      internal val tag: Class<T>,
-                                      private val cb: (T) -> Unit) : Disposable {
-    private var processor: PublishProcessor<T>? = null
-    private var subject: PublishSubject<T>? = null
-    private var disposed = false
-
-    override fun isDisposed(): Boolean = disposed
-
-    internal fun onAction(action: T) {
-        if (disposed) {
-            Grove.e { "Subscription is disposed but got an action: $action" }
-            return
-        }
-        cb.invoke(action)
-        processor?.onNext(action)
-        subject?.onNext(action)
-    }
-
-    fun flowable(): Flowable<T> {
-        if (processor == null) {
-            synchronized(this) {
-                if (processor == null) processor = PublishProcessor.create()
-            }
-        }
-        return processor!!
-    }
-
-    fun observable(): Observable<T> {
-        if (subject == null) {
-            synchronized(this) {
-                if (subject == null) subject = PublishSubject.create()
-            }
-        }
-        return subject!!
-    }
-
-    override fun dispose() {
-        if (disposed) return
-        synchronized(this) {
-            dispatcher.unregisterInternal(this)
-            disposed = true
-            processor?.onComplete()
-            subject?.onComplete()
-        }
-    }
-}
-
