@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import javax.annotation.processing.ProcessingEnvironment
 
-class Dispatcher(actionElements: List<ReducerFunc>, val processingEnv: ProcessingEnvironment) {
+class DispatchInterceptor(actionElements: List<ReducerFunc>, val processingEnv: ProcessingEnvironment) {
     val storeMap = mutableMapOf<String, Store>()
 
     init {
@@ -21,11 +21,9 @@ class Dispatcher(actionElements: List<ReducerFunc>, val processingEnv: Processin
                 }
     }
 
-    fun generateDispatcherFile() {
-        val dispatcherClass = ClassName("", "Dispatcher")
-        val file = FileSpec.builder("", "Dispatcher")
-                .addType(
-                        TypeSpec.classBuilder("Greeter").add
+    fun generateInterceptorFile() {
+        val dispatcherClass = ClassName("", "DispatchInterceptor")
+        val file = FileSpec.builder("", "DispatchInterceptor")
     }
 
 }
