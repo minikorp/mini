@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class MainActivity : FluxActivity<UserComponent>() {
 
-    @Inject lateinit var userStore: UserStore
+    @Inject lateinit var userStore: WarcraftStore
 
     override fun onCreateComponentFactory() = UserComponentFactory
 
@@ -29,7 +29,7 @@ class MainActivity : FluxActivity<UserComponent>() {
                 .track()
 
         if (savedInstanceState == null) {
-            dispatcher.dispatch(LoginUserAction("${userStore.state.name} Hello", "Reactive"))
+            dispatcher.dispatch(PlusUltraAction("${userStore.state.name} Hello", "Reactive"))
         }
     }
 }

@@ -1,6 +1,5 @@
 package mini.processor
 
-
 import mini.Reducer
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
@@ -21,20 +20,20 @@ class MiniProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Reducer::class.java)
-                .map { it.canonicalName }
-                .toMutableSet()
+            .map { it.canonicalName }
+            .toMutableSet()
     }
 
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
         val annotatedElements = roundEnv.getElementsAnnotatedWith(Reducer::class.java)
         if (annotatedElements.isEmpty()) return false
 
-        val actionMethods =  annotatedElements
-                .filter { it.isMethod }
-                .map { ReducerFunc(it as ExecutableElement) }
+        val actionMethods = annotatedElements
+            .filterNotNull()
+            .filter { it.isMethod }
+            .map { ReducerFunc(it as ExecutableElement) }
 
-        val dispatcherFile = DispatchInterceptor(actionMethods, processingEnv)
-
+         val dispatcherFile = InterceptorModule(actionMethods)
         return true
     }
 }

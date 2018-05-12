@@ -17,6 +17,10 @@ val Element.isInterface: Boolean get() = this.kind == ElementKind.INTERFACE
 val Element.isAbstract: Boolean get() = this.modifiers.contains(Modifier.ABSTRACT)
 val ExecutableElement.isVoid: Boolean get() = this.returnType.kind == TypeKind.VOID
 
+fun TypeMirror.asElement(): Element = asElementOrNull()!!
+
+fun TypeMirror.asElementOrNull(): Element? = env.typeUtils.asElement(this)
+
 infix fun TypeMirror.assignableTo(base: TypeMirror): Boolean {
     return env.typeUtils.isAssignable(base, this)
 }
@@ -28,4 +32,13 @@ infix fun TypeMirror.isSubtypeOf(base: TypeMirror): Boolean {
 fun <T : Annotation> Element.hasAnnotation(type: Class<T>): Boolean {
     return this.annotationMirrors
             .firstOrNull { it.annotationType == type } != null
+}
+
+fun Element.getPackageName(): String {
+    //xxx.xxx.simpleName
+    //xxx.xxx
+    val startIndex = toString().count().minus(simpleName.toString().count().plus(1))
+    val endIndex = toString().count()
+    //simpleName
+    return toString().removeRange(startIndex, endIndex)
 }

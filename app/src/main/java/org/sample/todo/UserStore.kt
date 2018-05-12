@@ -1,7 +1,5 @@
 package org.sample.todo
 
-import mini.Action
-import mini.Reducer
 import com.minivac.mini.dagger.ActivityScope
 import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.dagger.ComponentFactory
@@ -11,12 +9,14 @@ import dagger.Module
 import dagger.Subcomponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import mini.Action
+import mini.Reducer
 import javax.inject.Inject
-
 
 @ActivityScope
 @Subcomponent(modules = arrayOf(
-        UserModule::class
+    WarcraftModule::class,
+    MightModule::class
 ))
 interface UserComponent : StoreHolderComponent {
     fun inject(target: MainActivity)
@@ -25,9 +25,9 @@ interface UserComponent : StoreHolderComponent {
 
 object UserComponentFactory : ComponentFactory<UserComponent> {
     override fun createComponent() =
-            app.findComponent(AppComponent::class)
-                    .mainActivityComponent()
-                    .also { initStores(it.stores().values) }
+        app.findComponent(AppComponent::class)
+            .mainActivityComponent()
+            .also { initStores(it.stores().values) }
 
     override fun destroyComponent(component: UserComponent) {
         disposeStores(component.stores().values)
@@ -36,24 +36,77 @@ object UserComponentFactory : ComponentFactory<UserComponent> {
     override val componentType = UserComponent::class
 }
 
-
 @Module
-abstract class UserModule {
-    @Binds @ActivityScope @IntoMap @ClassKey(UserStore::class)
-    abstract fun storeToMap(store: UserStore): Store<*>
+abstract class WarcraftModule {
+    @Binds
+    @ActivityScope
+    @IntoMap
+    @ClassKey(WarcraftStore::class)
+    abstract fun storeToMap(store: WarcraftStore): Store<*>
 }
 
-data class LoginUserAction(val username: String, val password: String) : Action
+@Module
+abstract class MightModule {
+    @Binds
+    @ActivityScope
+    @IntoMap
+    @ClassKey(MightStore::class)
+    abstract fun storeToMap(store: MightStore): Store<*>
+}
 
-data class UserState(val name: String = "Anonymous")
+data class GarroshAction(val username: String, val password: String) : Action
+data class IllidanAction(val username: String, val password: String) : Action
+data class DurdinAction(val username: String, val password: String) : Action
+
+data class PlusUltraAction(val username: String, val password: String) : Action
+data class CarolinaSmashAction(val username: String, val password: String) : Action
+data class BecauseImHereAction(val username: String, val password: String) : Action
+
+data class WarcraftState(val name: String = "Anonymous")
+data class StarcraftState(val name: String = "Anonymous")
 @ActivityScope
-class UserStore @Inject constructor(val dispatcher: Dispatcher) : Store<UserState>() {
+class WarcraftStore @Inject constructor(val dispatcher: Dispatcher) : Store<WarcraftState>() {
     override fun init() {
 
     }
 
     @Reducer
-    public fun loginUser(loginUserAction: LoginUserAction){
+    public fun garroshIsOp(action: GarroshAction) {
+    }
 
+    @Reducer
+    public fun illidanIsOp(action: IllidanAction) {
+    }
+
+    @Reducer
+    public fun durdinIsMoreOp(action: DurdinAction) {
+    }
+
+    @Reducer
+    public fun damnAllMight(action: BecauseImHereAction) {
+    }
+
+    @Reducer
+    public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 }
+
+@ActivityScope
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
+    override fun init() {
+
+    }
+
+    @Reducer
+    public fun damnAllMight(action: BecauseImHereAction) {
+    }
+
+    @Reducer
+    public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
+    }
+
+    @Reducer
+    public fun kawaiNoDesuNeAllMight(action: PlusUltraAction) {
+    }
+}
+

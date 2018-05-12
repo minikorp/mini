@@ -10,7 +10,7 @@ class SecondActivity : FluxActivity<UserComponent>() {
 
     override fun onCreateComponentFactory() = UserComponentFactory
 
-    @Inject lateinit var userStore: UserStore
+    @Inject lateinit var userStore: WarcraftStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
