@@ -1,6 +1,6 @@
 package com.minivac.mini.dagger
 
-import com.minivac.mini.log.Grove
+import mini.Grove
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 

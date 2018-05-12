@@ -1,1 +1,1 @@
-include ':app', ':mini-processor', ':mini-common', ':mini-commons'
+include ':app', ':mini-processor', ':mini-common'

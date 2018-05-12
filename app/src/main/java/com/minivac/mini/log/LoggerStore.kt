@@ -1,6 +1,7 @@
 package com.minivac.mini.log
 
 import android.app.Application
+import mini.Grove
 import com.minivac.mini.dagger.AppScope
 import com.minivac.mini.flux.*
 import com.minivac.mini.flux.OnActivityLifeCycleAction.ActivityStage.DESTROYED

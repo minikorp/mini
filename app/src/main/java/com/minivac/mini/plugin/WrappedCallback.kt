@@ -1,7 +1,7 @@
 package com.minivac.mini.plugin
 
 
-import com.minivac.mini.log.Grove
+import mini.Grove
 
 /**
  * Function wrapper with parameter P and return type R.

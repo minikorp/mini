@@ -1,8 +1,7 @@
-package com.example.mini_processor
+package mini.processor
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.TypeSpec
 import javax.annotation.processing.ProcessingEnvironment
 
 class DispatchInterceptor(actionElements: List<ReducerFunc>, val processingEnv: ProcessingEnvironment) {

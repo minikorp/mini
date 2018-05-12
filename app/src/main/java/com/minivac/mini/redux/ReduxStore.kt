@@ -1,6 +1,6 @@
 package com.minivac.mini.redux
 
-import com.example.mini_commons.Action
+import mini.Action
 import com.minivac.mini.flux.Store
 import com.minivac.mini.misc.assertOnUiThread
 import java.util.TreeSet

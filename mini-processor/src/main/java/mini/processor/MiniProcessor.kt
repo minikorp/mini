@@ -1,7 +1,7 @@
-package com.example.mini_processor
+package mini.processor
 
 
-import com.example.mini_commons.Reducer
+import mini.Reducer
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ExecutableElement
@@ -9,8 +9,8 @@ import javax.lang.model.element.TypeElement
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("org.kotlin.annotationProcessor.reducer")
-@SupportedOptions(DispatcherProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
-class DispatcherProcessor : AbstractProcessor() {
+@SupportedOptions(MiniProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
+class MiniProcessor : AbstractProcessor() {
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
@@ -33,7 +33,7 @@ class DispatcherProcessor : AbstractProcessor() {
                 .filter { it.isMethod }
                 .map { ReducerFunc(it as ExecutableElement) }
 
-        val dispatcherFile = Dispatcher(actionMethods, processingEnv)
+        val dispatcherFile = DispatchInterceptor(actionMethods, processingEnv)
 
         return true
     }

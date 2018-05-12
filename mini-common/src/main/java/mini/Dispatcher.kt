@@ -1,4 +1,4 @@
-package com.example.mini_commons
+package mini
 
 import java.util.HashMap
 import java.util.TreeSet
@@ -97,11 +97,11 @@ class Dispatcher(var verifyThreads: Boolean = true) {
                             tag: KClass<T>,
                             fn: (T) -> Unit = {}): DispatcherSubscription<T> {
         val subscription = DispatcherSubscription(
-                this,
-                subscriptionCounter.getAndIncrement(),
-                priority,
-                tag.java,
-                fn)
+            this,
+            subscriptionCounter.getAndIncrement(),
+            priority,
+            tag.java,
+            fn)
         return registerInternal(subscription)
     }
 
