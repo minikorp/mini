@@ -1,11 +1,10 @@
-package com.example.mini_processor
+package mini.processor
 
-import com.example.mini_processor.ProcessorUtils.env
+import mini.processor.ProcessorUtils.env
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.*
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
-import javax.tools.Diagnostic.Kind.*
 
 object ProcessorUtils {
     lateinit var env: ProcessingEnvironment

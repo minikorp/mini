@@ -1,4 +1,4 @@
-package com.example.mini_commons
+package mini
 
 /**
  * Common interface for all actions.

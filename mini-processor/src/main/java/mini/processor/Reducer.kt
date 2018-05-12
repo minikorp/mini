@@ -1,6 +1,6 @@
-package com.example.mini_processor
+package mini.processor
 
-import com.example.mini_commons.Action
+import mini.Action
 import javax.lang.model.element.ExecutableElement
 
 class ReducerFunc(executableElement: ExecutableElement) {

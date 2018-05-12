@@ -1,6 +1,6 @@
 package com.minivac.mini.flux
 
-import com.minivac.mini.log.Grove
+import mini.Grove
 
         /**
          * Handy alias to use with dagger

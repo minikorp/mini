@@ -1,4 +1,4 @@
-package com.example.mini_commons
+package mini
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

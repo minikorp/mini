@@ -1,4 +1,4 @@
-package com.example.mini_commons
+package mini
 
 import android.os.Handler
 import android.os.Looper

@@ -1,4 +1,4 @@
-package com.example.mini_commons
+package mini
 
 typealias Interceptor = (action: Action, chain: Chain) -> Action
 

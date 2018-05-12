@@ -1,8 +1,8 @@
 package com.minivac.mini.flux
 
-import com.example.mini_commons.Action
+import mini.Action
 import com.minivac.mini.BuildConfig
-import com.minivac.mini.log.Grove
+import mini.Grove
 import com.minivac.mini.misc.assertNotOnUiThread
 import com.minivac.mini.misc.assertOnUiThread
 import com.minivac.mini.misc.onUi

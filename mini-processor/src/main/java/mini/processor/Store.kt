@@ -1,10 +1,8 @@
-package com.example.mini_processor
+package mini.processor
 
-import com.example.mini_commons.Reducer
+import mini.Reducer
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.TypeElement
-
 
 class Store(annotatedClass: Element) {
     val className: String = annotatedClass.simpleName.toString()

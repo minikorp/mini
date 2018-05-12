@@ -1,4 +1,4 @@
-package com.minivac.mini.log
+package mini
 
 import android.util.Log
 import android.util.Log.*

@@ -3,8 +3,8 @@ package com.minivac.mini.flux
 import android.app.Application
 import com.minivac.mini.BuildConfig
 import com.minivac.mini.dagger.*
-import com.minivac.mini.log.DebugTree
-import com.minivac.mini.log.Grove
+import mini.DebugTree
+import mini.Grove
 import com.squareup.leakcanary.LeakCanary
 import kotlin.properties.Delegates
 

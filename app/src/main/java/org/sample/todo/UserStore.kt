@@ -1,7 +1,7 @@
 package org.sample.todo
 
-import com.example.mini_commons.Action
-import com.example.mini_commons.Reducer
+import mini.Action
+import mini.Reducer
 import com.minivac.mini.dagger.ActivityScope
 import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.dagger.ComponentFactory
