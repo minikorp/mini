@@ -6,9 +6,7 @@ import com.minivac.mini.flux.FluxActivity
 import mini.Grove
 import javax.inject.Inject
 
-class SecondActivity : FluxActivity<UserComponent>() {
-
-    override fun onCreateComponentFactory() = UserComponentFactory
+class SecondActivity : FluxActivity() {
 
     @Inject lateinit var userStore: WarcraftStore
 

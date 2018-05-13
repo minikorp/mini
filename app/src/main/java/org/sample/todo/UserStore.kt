@@ -1,45 +1,19 @@
 package org.sample.todo
 
-import com.minivac.mini.dagger.ActivityScope
-import com.minivac.mini.dagger.AppComponent
-import com.minivac.mini.dagger.ComponentFactory
-import com.minivac.mini.flux.*
+import com.minivac.mini.dagger.AppScope
 import dagger.Binds
 import dagger.Module
-import dagger.Subcomponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 import mini.Action
 import mini.Reducer
+import mini.Store
 import javax.inject.Inject
-
-@ActivityScope
-@Subcomponent(modules = arrayOf(
-    WarcraftModule::class,
-    MightModule::class
-))
-interface UserComponent : StoreHolderComponent {
-    fun inject(target: MainActivity)
-    fun inject(target: SecondActivity)
-}
-
-object UserComponentFactory : ComponentFactory<UserComponent> {
-    override fun createComponent() =
-        app.findComponent(AppComponent::class)
-            .mainActivityComponent()
-            .also { initStores(it.stores().values) }
-
-    override fun destroyComponent(component: UserComponent) {
-        disposeStores(component.stores().values)
-    }
-
-    override val componentType = UserComponent::class
-}
 
 @Module
 abstract class WarcraftModule {
     @Binds
-    @ActivityScope
+    @AppScope
     @IntoMap
     @ClassKey(WarcraftStore::class)
     abstract fun storeToMap(store: WarcraftStore): Store<*>
@@ -48,7 +22,7 @@ abstract class WarcraftModule {
 @Module
 abstract class MightModule {
     @Binds
-    @ActivityScope
+    @AppScope
     @IntoMap
     @ClassKey(MightStore::class)
     abstract fun storeToMap(store: MightStore): Store<*>
@@ -64,8 +38,9 @@ data class BecauseImHereAction(val username: String, val password: String) : Act
 
 data class WarcraftState(val name: String = "Anonymous")
 data class StarcraftState(val name: String = "Anonymous")
-@ActivityScope
-class WarcraftStore @Inject constructor(val dispatcher: Dispatcher) : Store<WarcraftState>() {
+
+@AppScope
+class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
     override fun init() {
 
     }
@@ -91,8 +66,8 @@ class WarcraftStore @Inject constructor(val dispatcher: Dispatcher) : Store<Warc
     }
 }
 
-@ActivityScope
-class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
+@AppScope
+class MightStore @Inject constructor() : Store<StarcraftState>() {
     override fun init() {
 
     }

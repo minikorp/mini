@@ -38,7 +38,7 @@ class Dispatcher(var verifyThreads: Boolean = true) {
         { chain, interceptor ->
             object : Chain {
                 override fun proceed(action: Action): Action
-                        = interceptor(action, chain)
+                    = interceptor(action, chain)
             }
         }
     }
@@ -91,7 +91,7 @@ class Dispatcher(var verifyThreads: Boolean = true) {
     }
 
     fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit = {})
-            = subscribe(DEFAULT_PRIORITY, tag, fn)
+        = subscribe(DEFAULT_PRIORITY, tag, fn)
 
     fun <T : Any> subscribe(priority: Int,
                             tag: KClass<T>,
@@ -122,9 +122,9 @@ class Dispatcher(var verifyThreads: Boolean = true) {
     internal fun <T : Any> unregisterInternal(dispatcherSubscription: DispatcherSubscription<T>) {
         synchronized(this) {
             val set = subscriptionMap[dispatcherSubscription.tag] as? TreeSet<*>
-            val removed = set?.remove(dispatcherSubscription) ?: false
+            val removed = set?.remove(dispatcherSubscription) == true
             if (!removed) {
-                //Grove.w { "Failed to remove dispatcherSubscription, multiple dispose calls?" }
+                Grove.w { "Failed to remove dispatcherSubscription, multiple dispose calls?" }
             }
         }
     }

@@ -1,23 +1,19 @@
 package com.minivac.mini.flux
 
 import mini.Grove
+import mini.Store
 
-        /**
+/**
          * Handy alias to use with dagger
          */
 typealias StoreMap = Map<Class<*>, Store<*>>
 
 typealias LazyStoreMap = dagger.Lazy<Map<Class<*>, Store<*>>>
 
-interface StoreHolderComponent {
-    fun stores(): StoreMap
-}
-
-
 /**
  * Sort and create Stores initial state.
  */
-fun initStores(uninitializedStores: Iterable<Store<*>>) {
+fun initStores(uninitializedStores: Collection<Store<*>>) {
     val now = System.currentTimeMillis()
 
     val stores = uninitializedStores.sortedBy { it.properties.initOrder }
@@ -25,7 +21,7 @@ fun initStores(uninitializedStores: Iterable<Store<*>>) {
     val initTimes = LongArray(stores.size)
     for (i in 0..stores.size - 1) {
         val start = System.currentTimeMillis()
-        stores[i].initOnce()
+        stores[i].init()
         stores[i].state //Create initial state
         initTimes[i] += System.currentTimeMillis() - start
     }
@@ -44,6 +40,7 @@ fun initStores(uninitializedStores: Iterable<Store<*>>) {
     }
 }
 
+
 fun disposeStores(stores: Iterable<Store<*>>) {
-    stores.forEach { it.dispose() }
+   // stores.forEach { it.dispose() }
 }

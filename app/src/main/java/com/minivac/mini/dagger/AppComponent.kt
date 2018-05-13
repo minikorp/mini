@@ -3,34 +3,35 @@ package com.minivac.mini.dagger
 import android.app.Application
 import android.content.Context
 import com.minivac.mini.flux.App
-import com.minivac.mini.flux.Dispatcher
-import com.minivac.mini.flux.StoreHolderComponent
+import com.minivac.mini.flux.StoreMap
 import com.minivac.mini.log.LoggerModule
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import org.sample.todo.UserComponent
+import mini.Dispatcher
+import org.sample.todo.MainActivity
+import org.sample.todo.MightModule
+import org.sample.todo.WarcraftModule
 
-
-@Component(modules = arrayOf(
-        AppModule::class,
-        LoggerModule::class
-))
-@AppScope
-interface AppComponent : StoreHolderComponent {
+interface AppComponent {
     fun dispatcher(): Dispatcher
-
-    fun mainActivityComponent(): UserComponent
+    fun stores(): StoreMap
 }
 
+@AppScope
+@Component(modules = arrayOf(
+    AppModule::class,
+    WarcraftModule::class,
+    MightModule::class,
+    LoggerModule::class
+))
+
+interface DefaultAppComponent : AppComponent {
+    fun inject(target: MainActivity)
+}
 @Module
 class AppModule(val app: App) {
-    @Provides @AppScope
-    fun provideDispatcher() = Dispatcher()
-
-    @Provides
-    fun provideApplication(): Application = app
-
-    @Provides
-    fun provideAppContext(): Context = app
+    @Provides @AppScope fun provideDispatcher() = Dispatcher()
+    @Provides fun provideApplication(): Application = app
+    @Provides fun provideAppContext(): Context = app
 }

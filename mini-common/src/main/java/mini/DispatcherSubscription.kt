@@ -5,7 +5,6 @@ import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import io.reactivex.subjects.PublishSubject
-
 class DispatcherSubscription<T : Any>(internal val dispatcher: Dispatcher,
                                       internal val id: Int,
                                       internal val priority: Int,
