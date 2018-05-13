@@ -1,10 +1,15 @@
 package mini.processor
 
 import com.squareup.kotlinpoet.*
+import com.sun.xml.internal.ws.policy.sourcemodel.ModelNode
 import mini.Action
 import mini.Chain
+import mini.Store
+import sun.reflect.generics.tree.TypeArgument
+import java.lang.reflect.Type
 import javax.tools.StandardLocation
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.internal.impl.types.TypeHolderArgument
 
 class InterceptorModule(val actionElements: List<ReducerFunc>) {
     val storeMap = mutableMapOf<String, StoreModel>()
@@ -27,7 +32,7 @@ class InterceptorModule(val actionElements: List<ReducerFunc>) {
     fun generateInterceptorFile() {
 
         //Generate FileSpec
-        val builder = FileSpec.builder("", "DispatcherInterceptor")
+        val builder = FileSpec.builder("mini", "DispatcherInterceptor")
         //Add Store imports
         storeMap.forEach { builder.addStaticImport(it.value.packageName, it.value.className) }
         //Add Action imports
@@ -51,14 +56,8 @@ class InterceptorModule(val actionElements: List<ReducerFunc>) {
     }
 
     private fun TypeSpec.Builder.mainConstructor(): TypeSpec.Builder {
-        //Get types
-        val storeClass = ParameterizedTypeName.get(KClass::class, Action::class)
-        val kotlinMapType = ClassName("kotlin.collections", "Map")
-        val storeType = ClassName("mini", "Action")
-        //Generated the parameterized constructor
-        val storeMapType = ParameterizedTypeName.get(kotlinMapType, storeClass, storeType)
         return primaryConstructor(FunSpec.constructorBuilder()
-            .addParameter("stores", storeMapType)
+            .addParameter("stores", getStoreMapType())
             .build())
     }
 
@@ -67,7 +66,7 @@ class InterceptorModule(val actionElements: List<ReducerFunc>) {
             val storeClass = ClassName("", storeModel.className)
             addProperty(
                 PropertySpec.builder(s.toLowerCase(), storeClass)
-                    .initializer("stores.get(${storeClass.canonicalName}::class)")
+                    .initializer("stores.get(${storeClass.canonicalName}::class.java) as ${storeClass.canonicalName}")
                     .build()
             )
         }
@@ -102,7 +101,16 @@ class InterceptorModule(val actionElements: List<ReducerFunc>) {
     }
 }
 
+fun getStoreMapType(): ParameterizedTypeName {
+    val anyType = WildcardTypeName.subtypeOf(ANY) // <*>
+    val storeType = ClassName("mini", "Store") //Store
+    val anyStoreType = ParameterizedTypeName.get(storeType, anyType) //Store<*>
+    val kClassType = ClassName("java.lang", "Class") //Class //TODO change to KClass?
+    val storeClass = ParameterizedTypeName.get(kClassType, anyType) //Class<*>
+    val kotlinMapType = ClassName("kotlin.collections", "Map") //Map
+    //Generated the parameterized constructor
+    return ParameterizedTypeName.get(kotlinMapType, storeClass, anyStoreType) //Map<Class<*>, Store<*>>
+}
 
 typealias PoetFunc = Pair<String, KClass<*>>
-
 fun PoetFunc.toSpec() = ParameterSpec.builder(first, second)

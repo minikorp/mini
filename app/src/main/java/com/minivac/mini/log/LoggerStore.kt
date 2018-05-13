@@ -10,14 +10,15 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import mini.Dispatcher
+import mini.Store
 import javax.inject.Inject
 
 
 @AppScope
 class LoggerStore @Inject constructor(
-        val dispatcher: Dispatcher,
-        context: Application,
-        val lazyStoreMap: LazyStoreMap) : Store<LoggerState>() {
+    context: Application,
+    val lazyStoreMap: LazyStoreMap) : Store<LoggerState>() {
 
     private val fileLogController = FileLogController(context)
 

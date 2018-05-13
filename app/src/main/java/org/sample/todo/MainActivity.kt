@@ -7,11 +7,10 @@ import com.minivac.mini.R
 import com.minivac.mini.flux.FluxActivity
 import javax.inject.Inject
 
-class MainActivity : FluxActivity<UserComponent>() {
+class MainActivity : FluxActivity() {
 
-    @Inject lateinit var userStore: WarcraftStore
-
-    override fun onCreateComponentFactory() = UserComponentFactory
+    @Inject
+    lateinit var userStore: WarcraftStore
 
     val goSecond: TextView by lazy { findViewById(R.id.goSecondButton) as TextView }
 
@@ -25,8 +24,8 @@ class MainActivity : FluxActivity<UserComponent>() {
         }
 
         userStore.flowable()
-                .subscribe { goSecond.text = it.name }
-                .track()
+            .subscribe { goSecond.text = it.name }
+            .track()
 
         if (savedInstanceState == null) {
             dispatcher.dispatch(PlusUltraAction("${userStore.state.name} Hello", "Reactive"))

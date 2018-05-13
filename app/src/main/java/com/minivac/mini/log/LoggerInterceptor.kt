@@ -1,10 +1,6 @@
 package com.minivac.mini.log
 
-import mini.Action
-import mini.Grove
-import com.minivac.mini.flux.Chain
-import com.minivac.mini.flux.Interceptor
-import com.minivac.mini.flux.Store
+import mini.*
 
 internal class LoggerInterceptor constructor(stores: Collection<Store<*>>) : Interceptor {
     private var firstPass = true

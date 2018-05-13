@@ -2,39 +2,39 @@ package com.minivac.mini.flux
 
 import android.app.Application
 import com.minivac.mini.BuildConfig
-import com.minivac.mini.dagger.*
-import mini.DebugTree
-import mini.Grove
+import com.minivac.mini.dagger.AppComponent
+import com.minivac.mini.dagger.AppModule
+import com.minivac.mini.dagger.DaggerDefaultAppComponent
 import com.squareup.leakcanary.LeakCanary
+import mini.ActionDispatcher
+import mini.DebugTree
+import mini.Dispatcher
+import mini.Grove
 import kotlin.properties.Delegates
 
 private var _app: App by Delegates.notNull<App>()
+private var _dispatcher: Dispatcher by Delegates.notNull<Dispatcher>()
+private var _appComponent: AppComponent? = null
 val app: App get() = _app
+val dispatcher: Dispatcher get() = _dispatcher
+val appComponent: AppComponent get() = _appComponent!!
 
-class App :
-        Application(),
-        ComponentManager by DefaultComponentManager() {
+class App : Application() {
 
     val exceptionHandlers: MutableList<Thread.UncaughtExceptionHandler> = ArrayList()
 
     override fun onCreate() {
         super.onCreate()
         _app = this
+        _dispatcher = Dispatcher()
         if (BuildConfig.DEBUG) {
             Grove.plant(DebugTree(true))
         }
 
-        registerComponent(object : ComponentFactory<AppComponent> {
-            override fun createComponent(): AppComponent {
-                return DaggerAppComponent.builder()
-                        .appModule(AppModule(app))
-                        .build()
-            }
-
-            override val componentType = AppComponent::class
-        })
-
-        val appComponent = findComponent(AppComponent::class)
+        _appComponent = DaggerDefaultAppComponent
+            .builder()
+            .appModule(AppModule(this))
+            .build()
         val stores = appComponent.stores()
         initStores(stores.values.toList())
 
@@ -43,7 +43,7 @@ class App :
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             exceptionHandlers.forEach { it.uncaughtException(thread, error) }
         }
-
+        dispatcher.addInterceptor(ActionDispatcher(stores))
         configureLeakCanary()
     }
 
