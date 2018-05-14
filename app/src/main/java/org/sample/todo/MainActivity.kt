@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.TextView
 import com.minivac.mini.R
 import com.minivac.mini.flux.FluxActivity
+import com.minivac.mini.flux.dispatcher
 import javax.inject.Inject
 
 class MainActivity : FluxActivity() {

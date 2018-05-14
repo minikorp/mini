@@ -11,9 +11,6 @@ import javax.inject.Inject
 abstract class FluxActivity : AppCompatActivity(),
     SubscriptionTracker by DefaultSubscriptionTracker() {
 
-    @Inject
-    lateinit protected var dispatcher: Dispatcher
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         inject(appComponent, this)

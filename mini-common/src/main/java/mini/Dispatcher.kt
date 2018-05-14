@@ -3,6 +3,15 @@ package mini
 import java.util.HashMap
 import java.util.TreeSet
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.ArrayList
+import kotlin.collections.fold
+import kotlin.collections.forEach
+import kotlin.collections.getOrPut
+import kotlin.collections.map
+import kotlin.collections.minusAssign
+import kotlin.collections.plusAssign
+import kotlin.collections.remove
+import kotlin.collections.sum
 import kotlin.reflect.KClass
 
 
@@ -18,17 +27,14 @@ class Dispatcher(var verifyThreads: Boolean = true) {
     var dispatching: Boolean = false
         private set
 
+    lateinit var actionReducer: ActionReducer
     private val subscriptionMap = HashMap<Class<*>, TreeSet<DispatcherSubscription<Any>>?>()
     private var subscriptionCounter = AtomicInteger()
 
     private val interceptors = ArrayList<Interceptor>()
     private val rootChain: Chain = object : Chain {
         override fun proceed(action: Action): Action {
-            action.tags.forEach { tag ->
-                subscriptionMap[tag]?.let { set ->
-                    set.forEach { it.onAction(action) }
-                }
-            }
+            actionReducer.reduce(action)
             return action
         }
     }
@@ -37,8 +43,7 @@ class Dispatcher(var verifyThreads: Boolean = true) {
         return interceptors.fold(rootChain)
         { chain, interceptor ->
             object : Chain {
-                override fun proceed(action: Action): Action
-                    = interceptor(action, chain)
+                override fun proceed(action: Action): Action = interceptor(action, chain)
             }
         }
     }
@@ -90,18 +95,17 @@ class Dispatcher(var verifyThreads: Boolean = true) {
         onUiSync { dispatch(action) }
     }
 
-    fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit = {})
-        = subscribe(DEFAULT_PRIORITY, tag, fn)
+    fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit = {}) = subscribe(DEFAULT_PRIORITY, tag, fn)
 
     fun <T : Any> subscribe(priority: Int,
                             tag: KClass<T>,
                             fn: (T) -> Unit = {}): DispatcherSubscription<T> {
         val subscription = DispatcherSubscription(
-            this,
-            subscriptionCounter.getAndIncrement(),
-            priority,
-            tag.java,
-            fn)
+                this,
+                subscriptionCounter.getAndIncrement(),
+                priority,
+                tag.java,
+                fn)
         return registerInternal(subscription)
     }
 

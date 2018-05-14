@@ -6,7 +6,6 @@ import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.dagger.AppModule
 import com.minivac.mini.dagger.DaggerDefaultAppComponent
 import com.squareup.leakcanary.LeakCanary
-import mini.ActionDispatcher
 import mini.DebugTree
 import mini.Dispatcher
 import mini.Grove
@@ -43,7 +42,6 @@ class App : Application() {
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             exceptionHandlers.forEach { it.uncaughtException(thread, error) }
         }
-        dispatcher.addInterceptor(ActionDispatcher(stores))
         configureLeakCanary()
     }
 
