@@ -61,7 +61,7 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
     public fun damnAllMight(action: BecauseImHereAction) {
     }
 
-    @Reducer
+    @Reducer(priority = 150)
     public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 }
@@ -76,12 +76,13 @@ class MightStore @Inject constructor() : Store<StarcraftState>() {
     public fun damnAllMight(action: BecauseImHereAction) {
     }
 
-    @Reducer
+    @Reducer(priority = 150)
     public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 
     @Reducer
     public fun kawaiNoDesuNeAllMight(action: PlusUltraAction) {
+        state = state.copy(name = action.username)
     }
 }
 
