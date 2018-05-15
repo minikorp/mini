@@ -9,7 +9,6 @@ class InterceptorModule(actionElements: List<ReducerModelFunc>) {
     private val reducersMaps = mutableMapOf<String, MutableList<ReducerModelFunc>>()
     private val actions = actionElements.map { it.action }
     private val stores = mutableListOf<StoreModel>()
-    var depth = 0
 
     init {
         actionElements
@@ -92,31 +91,9 @@ class InterceptorModule(actionElements: List<ReducerModelFunc>) {
                 .build())
     }
 
-    private fun indent(): String {
-        if (depth == 0) return ""
-        return "    ".repeat(depth)
-    }
-
-    private inline fun <T> T.nest(func: T.() -> Unit): T {
-        depth++
-        func()
-        depth--
-        return this
-    }
-
-    private fun FunSpec.Builder.addIndentedStatement(statement: String, vararg args: Any): FunSpec.Builder {
-        addStatement(indent() + statement, args)
-        return this
-    }
-
     private fun getStoreMapType(): ParameterizedTypeName {
-        val anyType = WildcardTypeName.subtypeOf(ANY) // <*>
-        val storeType = ClassName("mini", "Store") //Store
-        val anyStoreType = ParameterizedTypeName.get(storeType, anyType) //Store<*>
-        val kClassType = ClassName("java.lang", "Class") //Class
-        val storeClass = ParameterizedTypeName.get(kClassType, anyType) //Class<*>
-        val kotlinMapType = ClassName("kotlin.collections", "Map") //Map
-        //Generated the parameterized constructor
-        return ParameterizedTypeName.get(kotlinMapType, storeClass, anyStoreType) //Map<Class<*>, Store<*>>
+        val anyStoreType = ClassName("mini", "Store").wildcardType() //Store<*>
+        val anyClassType = ClassName("java.lang", "Class").wildcardType() //Class<*>
+        return mapTypeOf(anyClassType, anyStoreType)
     }
 }

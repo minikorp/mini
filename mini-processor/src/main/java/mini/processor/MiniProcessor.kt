@@ -33,8 +33,11 @@ class MiniProcessor : AbstractProcessor() {
             .filter { it.isMethod }
             .map { ReducerModelFunc(it as ExecutableElement) }
 
-        InterceptorModule(actionMethods)
-        
+        if (true) {
+            DispatcherModule(actionMethods)
+        } else {
+            InterceptorModule(actionMethods)
+        }
         return true
     }
 }
