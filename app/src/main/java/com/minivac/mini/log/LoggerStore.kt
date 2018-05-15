@@ -30,14 +30,6 @@ class LoggerStore @Inject constructor(
             Grove.plant(fileTree)
         }
 
-        dispatcher.subscribe(OnActivityLifeCycleAction::class) {
-            when (it.stage) {
-                STOPPED, DESTROYED -> fileTree?.flush()
-                else -> { //No-op
-                }
-            }
-        }
-
         dispatcher.addInterceptor(LoggerInterceptor(lazyStoreMap.get().values))
         app.exceptionHandlers.add(Thread.UncaughtExceptionHandler { t, e ->
             fileTree?.flush()
