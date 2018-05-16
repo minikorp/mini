@@ -31,13 +31,11 @@ class MiniProcessor : AbstractProcessor() {
         val actionMethods = annotatedElements
             .filterNotNull()
             .filter { it.isMethod }
-            .map { ReducerModelFunc(it as ExecutableElement) }
+            .map { ReducerFuncModel(it as ExecutableElement) }
 
-        if (true) {
-            DispatcherModule(actionMethods)
-        } else {
-            InterceptorModule(actionMethods)
-        }
+        val reducerModel = ActionReducerModel(actionMethods)
+        reducerModel.generateDispatcherFile()
+
         return true
     }
 }

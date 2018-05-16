@@ -7,7 +7,7 @@ class StoreModel(annotatedClass: Element) {
     val className: String = annotatedClass.simpleName.toString()
 }
 
-class StoreMethod(reducerFunc: ReducerModelFunc) {
+class StoreMethod(reducerFunc: ReducerFuncModel) {
     val storeName = reducerFunc.parentClass.simpleName.toString()
     val methodCall: String = "${storeName.toLowerCase()}.${reducerFunc.funcName}"
     val priority: Int = reducerFunc.priority

@@ -4,8 +4,8 @@ import mini.Grove
 import mini.Store
 
 /**
-         * Handy alias to use with dagger
-         */
+ * Handy alias to use with dagger
+ */
 typealias StoreMap = Map<Class<*>, Store<*>>
 
 typealias LazyStoreMap = dagger.Lazy<Map<Class<*>, Store<*>>>
@@ -40,7 +40,6 @@ fun initStores(uninitializedStores: Collection<Store<*>>) {
     }
 }
 
-
 fun disposeStores(stores: Iterable<Store<*>>) {
-   // stores.forEach { it.dispose() }
+    // stores.forEach { it.dispose() }
 }

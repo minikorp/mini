@@ -1,36 +1,19 @@
 package mini
 
-import java.util.HashMap
-import java.util.TreeSet
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.ArrayList
-import kotlin.reflect.KClass
-
-val actionCounter = AtomicInteger()
-
-/**
- * Dispatch actions and subscribe to them in order to produce changes.
- */
-class Dispatcher(var verifyThreads: Boolean = true) {
-    val DEFAULT_PRIORITY: Int = 100
-
-    val subscriptionCount: Int get() = subscriptionMap.values.map { it?.size ?: 0 }.sum()
-    var dispatching: Boolean = false
-        private set
-
+class Dispatcher {
     lateinit var actionReducer: ActionReducer
-    private val subscriptionMap = HashMap<Class<*>, TreeSet<DispatcherSubscription<Any>>?>()
-    private var subscriptionCounter = AtomicInteger()
-
-    private val interceptors = ArrayList<Interceptor>()
-    private val rootChain: Chain = object : Chain {
+    private val interceptors: MutableList<Interceptor> = ArrayList()
+    private var interceptorChain: Chain = buildChain()
+    private val actionReducerLink: Chain = object : Chain {
         override fun proceed(action: Action): Action {
-            actionReducer.reduce(action); return action
+            actionReducer.reduce(action)
+            return action
         }
     }
-    private var chain = rootChain
+    private var dispatching: Boolean = false
+
     private fun buildChain(): Chain {
-        return interceptors.fold(rootChain)
+        return interceptors.fold(actionReducerLink)
         { chain, interceptor ->
             object : Chain {
                 override fun proceed(action: Action): Action = interceptor(action, chain)
@@ -41,28 +24,14 @@ class Dispatcher(var verifyThreads: Boolean = true) {
     fun addInterceptor(interceptor: Interceptor) {
         synchronized(this) {
             interceptors += interceptor
-            chain = buildChain()
+            interceptorChain = buildChain()
         }
     }
 
     fun removeInterceptor(interceptor: Interceptor) {
         synchronized(this) {
             interceptors -= interceptor
-            chain = buildChain()
-        }
-    }
-
-    fun dispatch(action: Action) {
-        if (verifyThreads) assertOnUiThread()
-        synchronized(this) {
-            try {
-                if (dispatching) error("Can't dispatch actions while reducing state!")
-                actionCounter.incrementAndGet()
-                dispatching = true
-                chain.proceed(action)
-            } finally {
-                dispatching = false
-            }
+            interceptorChain = buildChain()
         }
     }
 
@@ -81,45 +50,15 @@ class Dispatcher(var verifyThreads: Boolean = true) {
      * Can't be called from the main thread.
      */
     fun dispatchOnUiSync(action: Action) {
-        if (verifyThreads) assertNotOnUiThread()
+        assertNotOnUiThread()
         onUiSync { dispatch(action) }
     }
 
-    fun <T : Any> subscribe(tag: KClass<T>, fn: (T) -> Unit = {}) = subscribe(DEFAULT_PRIORITY, tag, fn)
-
-    fun <T : Any> subscribe(priority: Int,
-                            tag: KClass<T>,
-                            fn: (T) -> Unit = {}): DispatcherSubscription<T> {
-        val subscription = DispatcherSubscription(
-            this,
-            subscriptionCounter.getAndIncrement(),
-            priority,
-            tag.java,
-            fn)
-        return registerInternal(subscription)
-    }
-
-    internal fun <T : Any> registerInternal(dispatcherSubscription: DispatcherSubscription<T>): DispatcherSubscription<T> {
-        @Suppress("UNCHECKED_CAST")
-        synchronized(this) {
-            subscriptionMap.getOrPut(dispatcherSubscription.tag, {
-                TreeSet({ a, b ->
-                    val p = a.priority.compareTo(b.priority)
-                    if (p == 0) a.id.compareTo(b.id)
-                    else p
-                })
-            })!!.add(dispatcherSubscription as DispatcherSubscription<Any>)
-        }
-        return dispatcherSubscription
-    }
-
-    internal fun <T : Any> unregisterInternal(dispatcherSubscription: DispatcherSubscription<T>) {
-        synchronized(this) {
-            val set = subscriptionMap[dispatcherSubscription.tag] as? TreeSet<*>
-            val removed = set?.remove(dispatcherSubscription) == true
-            if (!removed) {
-                Grove.w { "Failed to remove dispatcherSubscription, multiple dispose calls?" }
-            }
-        }
+    fun dispatch(action: Action) {
+        assertOnUiThread()
+        if (dispatching) throw IllegalStateException("Nested dispatch calls")
+        dispatching = true
+        interceptorChain.proceed(action)
+        dispatching = false
     }
 }

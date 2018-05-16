@@ -7,13 +7,10 @@ import io.reactivex.processors.PublishProcessor
 import org.jetbrains.annotations.TestOnly
 import java.lang.reflect.ParameterizedType
 
-abstract class Store<S : Any> : AutoCloseable {
+abstract class Store<S : Any> {
 
     open val properties: StoreProperties = StoreProperties()
 
-    //@Inject protected lateinit var dispatcher: Dispatcher
-
-    private val disposables = CompositeDisposable()
     private var _state: S? = null
     private val processor = PublishProcessor.create<S>()
 
@@ -47,15 +44,6 @@ abstract class Store<S : Any> : AutoCloseable {
             s.onNext(state)
             s.onComplete()
         }
-    }
-
-    fun Disposable.track() {
-        disposables.add(this)
-    }
-
-    //@CallSuper
-    override fun close() {
-        disposables.dispose()
     }
 
     @TestOnly
