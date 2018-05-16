@@ -9,10 +9,11 @@ import com.squareup.leakcanary.LeakCanary
 import mini.DebugTree
 import mini.Dispatcher
 import mini.Grove
+import mini.MiniActionReducer
 import kotlin.properties.Delegates
 
-private var _app: App by Delegates.notNull<App>()
-private var _dispatcher: Dispatcher by Delegates.notNull<Dispatcher>()
+private var _app: App by Delegates.notNull()
+private var _dispatcher: Dispatcher by Delegates.notNull()
 private var _appComponent: AppComponent? = null
 val app: App get() = _app
 val dispatcher: Dispatcher get() = _dispatcher
@@ -35,6 +36,7 @@ class App : Application() {
             .appModule(AppModule(this))
             .build()
         val stores = appComponent.stores()
+        _dispatcher.actionReducer = MiniActionReducer(stores)
         initStores(stores.values.toList())
 
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
