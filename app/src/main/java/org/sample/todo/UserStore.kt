@@ -45,24 +45,19 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
     }
 
-    @Reducer
-    public fun garroshIsOp(action: GarroshAction) {
+    @Reducer fun garroshIsOp(action: GarroshAction) {
     }
 
-    @Reducer
-    public fun illidanIsOp(action: IllidanAction) {
+    @Reducer fun illidanIsOp(action: IllidanAction) {
     }
 
-    @Reducer
-    public fun durdinIsMoreOp(action: DurdinAction) {
+    @Reducer fun durdinIsMoreOp(action: DurdinAction) {
     }
 
-    @Reducer
-    public fun damnAllMight(action: BecauseImHereAction) {
+    @Reducer fun damnAllMight(action: BecauseImHereAction) {
     }
 
-    @Reducer(priority = 150)
-    public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
+    @Reducer(priority = 150) fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 }
 
@@ -72,16 +67,13 @@ class MightStore @Inject constructor() : Store<StarcraftState>() {
 
     }
 
-    @Reducer
-    public fun damnAllMight(action: BecauseImHereAction) {
+    @Reducer fun damnAllMight(action: BecauseImHereAction) {
     }
 
-    @Reducer(priority = 150)
-    public fun fuckingDamnAllMight(action: CarolinaSmashAction) {
+    @Reducer(priority = 150) fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 
-    @Reducer
-    public fun kawaiNoDesuNeAllMight(action: PlusUltraAction) {
+    @Reducer fun kawaiNoDesuNeAllMight(action: PlusUltraAction) {
         state = state.copy(name = action.username)
     }
 }
