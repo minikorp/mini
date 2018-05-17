@@ -2,8 +2,6 @@ package mini.processor
 
 import com.squareup.kotlinpoet.*
 
-var depth = 0
-
 fun ClassName.wildcardType(): ParameterizedTypeName {
     val anyType = WildcardTypeName.subtypeOf(ANY) // <*>
     return ParameterizedTypeName.get(this, anyType) //Store<*>
@@ -33,11 +31,11 @@ fun mapTypeOf(keyClass: ClassName, valueClass: ClassName): ParameterizedTypeName
 
 var FunSpec.Builder.depth: Int by MutableFieldProperty { 0 }
 
-fun FunSpec.Builder.nestedBlock(format: String,
+fun FunSpec.Builder.nestedBlock(statement: String,
                                 vararg args: String = emptyArray(),
                                 func: FunSpec.Builder.() -> Unit): FunSpec.Builder {
     depth++
-    addIndentedStatement("$format {", args)
+    addIndentedStatement("$statement {", args)
     func()
     addIndentedStatement("}")
     depth--
@@ -51,8 +49,10 @@ fun FunSpec.Builder.indent(func: FunSpec.Builder.() -> Unit): FunSpec.Builder {
     return this
 }
 
-fun FunSpec.Builder.addIndentedStatement(statement: String, vararg args: Any): FunSpec.Builder {
-    val spaces = if (depth == 0) "" else "    ".repeat(depth)
+fun FunSpec.Builder.addIndentedStatement(statement: String,
+                                         vararg args: Any,
+                                         indent: String = "    "): FunSpec.Builder {
+    val spaces = if (depth == 0) "" else indent.repeat(depth)
     addStatement(spaces + statement, args)
     return this
 }
