@@ -13,10 +13,8 @@ import mini.MiniActionReducer
 import kotlin.properties.Delegates
 
 private var _app: App by Delegates.notNull()
-private var _dispatcher: Dispatcher by Delegates.notNull()
 private var _appComponent: AppComponent? = null
 val app: App get() = _app
-val dispatcher: Dispatcher get() = _dispatcher
 val appComponent: AppComponent get() = _appComponent!!
 
 class App : Application() {
@@ -26,7 +24,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         _app = this
-        _dispatcher = Dispatcher()
         if (BuildConfig.DEBUG) {
             Grove.plant(DebugTree(true))
         }
@@ -36,7 +33,8 @@ class App : Application() {
             .appModule(AppModule(this))
             .build()
         val stores = appComponent.stores()
-        _dispatcher.actionReducer = MiniActionReducer(stores)
+        val dispatcher = appComponent.dispatcher()
+        dispatcher.actionReducer = MiniActionReducer(stores)
         initStores(stores.values.toList())
 
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()

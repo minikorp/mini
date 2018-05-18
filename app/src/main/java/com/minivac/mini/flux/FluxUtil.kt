@@ -16,10 +16,10 @@ typealias LazyStoreMap = dagger.Lazy<Map<Class<*>, Store<*>>>
 fun initStores(uninitializedStores: Collection<Store<*>>) {
     val now = System.currentTimeMillis()
 
-    val stores = uninitializedStores.sortedBy { it.properties.initOrder }
+    val stores = uninitializedStores.toList()
 
     val initTimes = LongArray(stores.size)
-    for (i in 0..stores.size - 1) {
+    for (i in 0 until stores.size) {
         val start = System.currentTimeMillis()
         stores[i].init()
         stores[i].state //Create initial state

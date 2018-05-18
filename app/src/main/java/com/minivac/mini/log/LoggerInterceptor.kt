@@ -30,14 +30,14 @@ internal class LoggerInterceptor constructor(stores: Collection<Store<*>>) : Int
         val sb = StringBuilder()
         sb.append("┌────────────────────────────────────────────\n")
         sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
-                action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
-                .append("\n")
+            action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
+            .append("\n")
 
 
         stores.forEachIndexed { index, store ->
             val oldState = states[index]
             val newState = store.state
-            val fn = store.properties.logFn ?: { store.state.toString() }
+            val fn = { store.state.toString() }
             if (oldState !== newState) {
                 sb.append(String.format("│   %s", fn())).append("\n")
             }
