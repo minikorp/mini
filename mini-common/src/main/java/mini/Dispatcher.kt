@@ -1,6 +1,6 @@
 package mini
 
-class Dispatcher {
+class Dispatcher(val verifyThreads: Boolean = true) {
     lateinit var actionReducer: ActionReducer
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private var interceptorChain: Chain = buildChain()
@@ -50,7 +50,7 @@ class Dispatcher {
      * Can't be called from the main thread.
      */
     fun dispatchOnUiSync(action: Action) {
-        assertNotOnUiThread()
+        if (verifyThreads) assertNotOnUiThread()
         onUiSync { dispatch(action) }
     }
 

@@ -5,9 +5,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import mini.Action
-import mini.Reducer
-import mini.Store
+import mini.*
 import javax.inject.Inject
 
 @Module
@@ -62,9 +60,8 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 }
 
 @AppScope
-class MightStore @Inject constructor() : Store<StarcraftState>() {
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
     override fun init() {
-
     }
 
     @Reducer fun damnAllMight(action: BecauseImHereAction) {
@@ -73,8 +70,8 @@ class MightStore @Inject constructor() : Store<StarcraftState>() {
     @Reducer(priority = 150) fun fuckingDamnAllMight(action: CarolinaSmashAction) {
     }
 
-    @Reducer fun kawaiNoDesuNeAllMight(action: PlusUltraAction) {
-        state = state.copy(name = action.username)
+    //TODO: Validate both params S, Action, and return type S
+    @Reducer fun loadAllMight(/*state: S, */ action: PlusUltraAction): StarcraftState {
+        return state.copy(name = action.username)
     }
 }
-

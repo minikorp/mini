@@ -9,15 +9,13 @@ val uiHandler by lazy { Handler(Looper.getMainLooper()) }
 
 fun assertNotOnUiThread() {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        throw AssertionError(
-            "This method can not be called from the main application thread")
+        error("This method can not be called from the main application thread")
     }
 }
 
 fun assertOnUiThread() {
     if (Looper.myLooper() != Looper.getMainLooper()) {
-        throw AssertionError(
-            "This method can only be called from the main application thread")
+        error("This method can only be called from the main application thread")
     }
 }
 

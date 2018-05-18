@@ -18,6 +18,7 @@ import javax.inject.Inject
 @AppScope
 class LoggerStore @Inject constructor(
     context: Application,
+    val dispatcher: Dispatcher,
     val lazyStoreMap: LazyStoreMap) : Store<LoggerState>() {
 
     private val fileLogController = FileLogController(context)
