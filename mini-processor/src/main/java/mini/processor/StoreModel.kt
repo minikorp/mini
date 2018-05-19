@@ -9,6 +9,12 @@ class StoreModel(annotatedClass: Element) {
 
 class StoreMethod(reducerFunc: ReducerFuncModel) {
     val storeName = reducerFunc.parentClass.simpleName.toString()
-    val methodCall: String = "${storeName.toLowerCase()}.${reducerFunc.funcName}"
+    val stateGetter = "${storeName.toLowerCase()}.state"
+    val methodCall: String
     val priority: Int = reducerFunc.priority
+
+    init {
+        val constructor = if (reducerFunc.actionParamPosition == 0) "action,$stateGetter" else "$stateGetter, action"
+        methodCall = "${storeName.toLowerCase()}.setStateInternal(${storeName.toLowerCase()}.${reducerFunc.funcName}($constructor))"
+    }
 }

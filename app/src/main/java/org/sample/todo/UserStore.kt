@@ -5,7 +5,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import mini.*
+import mini.Action
+import mini.Dispatcher
+import mini.Reducer
+import mini.Store
 import javax.inject.Inject
 
 @Module
@@ -43,19 +46,29 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
     }
 
-    @Reducer fun garroshIsOp(action: GarroshAction) {
+    @Reducer
+    fun garroshIsOp(state : WarcraftState, action: GarroshAction): WarcraftState {
+        return state.copy(name = action.password)
     }
 
-    @Reducer fun illidanIsOp(action: IllidanAction) {
+    @Reducer
+    fun illidanIsOp(action: IllidanAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
     }
 
-    @Reducer fun durdinIsMoreOp(action: DurdinAction) {
+    @Reducer
+    fun durdinIsMoreOp(action: DurdinAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
     }
 
-    @Reducer fun damnAllMight(action: BecauseImHereAction) {
+    @Reducer
+    fun damnAllMight(action: BecauseImHereAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
     }
 
-    @Reducer(priority = 150) fun fuckingDamnAllMight(action: CarolinaSmashAction) {
+    @Reducer(priority = 150)
+    fun fuckingDamnAllMight(action: CarolinaSmashAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
     }
 }
 
@@ -64,14 +77,19 @@ class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<Starcra
     override fun init() {
     }
 
-    @Reducer fun damnAllMight(action: BecauseImHereAction) {
+    @Reducer
+    fun damnAllMight(state: StarcraftState, action: BecauseImHereAction): StarcraftState {
+        return state.copy(name = action.username)
     }
 
-    @Reducer(priority = 150) fun fuckingDamnAllMight(action: CarolinaSmashAction) {
+    @Reducer(priority = 150)
+    fun fuckingDamnAllMight(state: StarcraftState, action: CarolinaSmashAction): StarcraftState {
+        return state.copy(name = action.username)
     }
 
     //TODO: Validate both params S, Action, and return type S
-    @Reducer fun loadAllMight(/*state: S, */ action: PlusUltraAction): StarcraftState {
+    @Reducer
+    fun loadAllMight(state: StarcraftState, action: PlusUltraAction): StarcraftState {
         return state.copy(name = action.username)
     }
 }

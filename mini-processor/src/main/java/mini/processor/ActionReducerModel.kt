@@ -2,12 +2,22 @@ package mini.processor
 
 import com.squareup.kotlinpoet.*
 import mini.Action
+import javax.lang.model.type.DeclaredType
+import javax.lang.model.util.Types
 import javax.tools.StandardLocation
 
 class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
     private val reducersMaps = mutableMapOf<String, MutableList<ReducerFuncModel>>()
     private val actions = actionElements.map { it.action }
     private val stores = mutableListOf<StoreModel>()
+
+    companion object {
+        const val MINI_COMMON_PACKAGE_NAME = "mini"
+        const val MINI_PROCESSOR_PACKAGE_NAME = "mini.processor"
+        const val STORE_CLASS_NAME = "Store"
+        const val ACTION_REDUCER_CLASS_NAME = "MiniActionReducer"
+        const val ACTION_REDUCER_INTERFACE = "ActionReducer"
+    }
 
     init {
         actionElements
@@ -18,15 +28,15 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
 
     fun generateDispatcherFile() {
         //Generate FileSpec
-        val builder = FileSpec.builder("mini", "MiniActionReducer")
+        val builder = FileSpec.builder(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_CLASS_NAME)
         //Add Store imports
         stores.forEach { builder.addStaticImport(it.packageName, it.className) }
         //Add Action imports
         actions.forEach { builder.addStaticImport(it.packageName, it.actionName) }
         //Start generating file
         val kotlinFile = builder
-            .addType(TypeSpec.classBuilder("MiniActionReducer")
-                .addSuperinterface(ClassName("mini", "ActionReducer"))
+            .addType(TypeSpec.classBuilder(ACTION_REDUCER_CLASS_NAME)
+                .addSuperinterface(ClassName(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_INTERFACE))
                 .addMainConstructor()
                 .addStoreProperties()
                 .addDispatcherFunction()
@@ -34,7 +44,7 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
             .build()
 
         val kotlinFileObject = ProcessorUtils.env.filer.createResource(StandardLocation.SOURCE_OUTPUT,
-            "mini.processor", "${kotlinFile.name}.kt")
+            MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
         val openWriter = kotlinFileObject.openWriter()
         kotlinFile.writeTo(openWriter)
         openWriter.close()
@@ -70,7 +80,7 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
                             indent {
                                 addIndentedStatement("action as ${reduceBlock.actionName}")
                                 reduceBlock.methodCalls.forEach {
-                                    addIndentedStatement("${it.methodCall}(action)")
+                                    addIndentedStatement(it.methodCall)
                                 }
                             }
                         }
@@ -83,12 +93,8 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
     }
 
     private fun getStoreMapType(): ParameterizedTypeName {
-        val anyStoreType = ClassName("mini", "Store").wildcardType() //Store<*>
+        val anyStoreType = ClassName(MINI_COMMON_PACKAGE_NAME, STORE_CLASS_NAME).wildcardType() //Store<*>
         val anyClassType = ClassName("java.lang", "Class").wildcardType() //Class<*>
         return mapTypeOf(anyClassType, anyStoreType)
-    }
-
-    private fun getInterceptorListType(): ParameterizedTypeName {
-        return ClassName("", "Interceptor").arrayListType()
     }
 }
