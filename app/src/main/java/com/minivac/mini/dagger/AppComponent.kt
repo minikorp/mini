@@ -3,8 +3,7 @@ package com.minivac.mini.dagger
 import android.app.Application
 import android.content.Context
 import com.minivac.mini.flux.App
-import com.minivac.mini.flux.StoreMap
-import com.minivac.mini.log.LoggerModule
+import mini.StoreMap
 import dagger.Component
 import dagger.Module
 import dagger.Provides
@@ -19,12 +18,7 @@ interface AppComponent {
 }
 
 @AppScope
-@Component(modules = arrayOf(
-    AppModule::class,
-    WarcraftModule::class,
-    MightModule::class,
-    LoggerModule::class
-))
+@Component(modules = [(AppModule::class), (WarcraftModule::class), (MightModule::class)])
 
 interface DefaultAppComponent : AppComponent {
     fun inject(target: MainActivity)

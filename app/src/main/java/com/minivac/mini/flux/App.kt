@@ -7,9 +7,12 @@ import com.minivac.mini.dagger.AppModule
 import com.minivac.mini.dagger.DaggerDefaultAppComponent
 import com.squareup.leakcanary.LeakCanary
 import mini.DebugTree
-import mini.Dispatcher
 import mini.Grove
 import mini.MiniActionReducer
+import mini.initStores
+import mini.log.LoggerInterceptor
+import mini.log.LogsController
+import java.io.File
 import kotlin.properties.Delegates
 
 private var _app: App by Delegates.notNull()
@@ -34,6 +37,14 @@ class App : Application() {
             .build()
         val stores = appComponent.stores()
         val dispatcher = appComponent.dispatcher()
+        dispatcher.addInterceptor(LoggerInterceptor(stores.values))
+
+        val logsFolder = File(externalCacheDir, "logs")
+        val logsController = LogsController(logsFolder)
+        logsController.newFileLogWriter()?.run {
+            Grove.plant(this)
+        }
+
         dispatcher.actionReducer = MiniActionReducer(stores)
         initStores(stores.values.toList())
 

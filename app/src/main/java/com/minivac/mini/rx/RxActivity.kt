@@ -2,20 +2,14 @@ package com.minivac.mini.rx
 
 import android.app.Activity
 import android.support.annotation.CallSuper
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
+import mini.DefaultSubscriptionTracker
+import mini.SubscriptionTracker
 
-class RxActivity : Activity() {
-
-    private val disposables = CompositeDisposable()
+abstract class RxActivity : Activity(), SubscriptionTracker by DefaultSubscriptionTracker() {
 
     @CallSuper
     override fun onDestroy() {
         super.onDestroy()
-        disposables.clear()
-    }
-
-    fun Disposable.track() {
-        disposables.add(this)
+        cancelSubscriptions()
     }
 }

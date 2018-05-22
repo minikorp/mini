@@ -1,6 +1,6 @@
 package mini
 
-class Dispatcher(val verifyThreads: Boolean = true) {
+class Dispatcher(private val verifyThreads: Boolean = true) {
     lateinit var actionReducer: ActionReducer
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private var interceptorChain: Chain = buildChain()

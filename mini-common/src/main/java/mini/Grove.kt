@@ -8,7 +8,8 @@ import java.util.regex.Pattern
 
 typealias MsgFn = () -> Any?
 
-/** Logging for lazy people.
+/**
+ * Logging for lazy people.
  * Adapted from Jake Wharton's Timber
  * [https://github.com/JakeWharton/timber]
  * */
@@ -81,7 +82,7 @@ object Grove {
         val stackTrace = Throwable().stackTrace
         if (stackTrace.size <= stackIndex) {
             throw IllegalStateException(
-                    "Synthetic stacktrace didn't have enough elements: are you using proguard?")
+                "Synthetic stacktrace didn't have enough elements: are you using proguard?")
         }
         var i = stackIndex
         do {
