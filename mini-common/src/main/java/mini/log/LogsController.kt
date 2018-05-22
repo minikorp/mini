@@ -1,7 +1,5 @@
-package com.minivac.mini.log
+package mini.log
 
-import android.content.Context
-import android.support.v4.util.Pools
 import android.util.Log
 import mini.Grove
 import mini.Tree
@@ -14,38 +12,19 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
- * Factory for [FileTree].
+ * Factory for [FileLogWriter].
  * Multiple instances of this controller over the same folder are not safe.
  *
  * @param relativeLogFolderPath Path for the folder containing multiple log files.
  */
-class FileLogController(
-        val context: Context,
-        val relativeLogFolderPath: String = "logs",
-        val minLogLevel: Int = Log.VERBOSE) {
+class LogsController(val logsFolder: File) {
 
     companion object {
         private val FILE_NAME_DATE_FORMAT = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
     }
 
-    private var _currentFileTree: FileTree? = null
-    val currentFileTree: FileTree
-        get() = _currentFileTree!!
-
-    private val logsFolder: File? by lazy {
-        var root = context.getExternalFilesDir(null)
-        if (root == null) {
-            //Fall back to private directory
-            root = context.filesDir
-        }
-        val logRootDirectory = File(root.absolutePath, relativeLogFolderPath)
-        if (!logRootDirectory.exists()) {
-            if (!logRootDirectory.mkdir()) {
-                Grove.e { "Unable to create log directory, nothing will be written on disk" }
-                return@lazy null
-            }
-        }
-        return@lazy logRootDirectory
+    init {
+        if (!logsFolder.exists()) logsFolder.mkdirs()
     }
 
     /**
@@ -55,15 +34,11 @@ class FileLogController(
      *
      * @return The logger, or null if the file could not be created.
      */
-    fun newFileTree(): FileTree? {
-        if (logsFolder == null) return null
-
-        val logFileName = String.format("log-${FILE_NAME_DATE_FORMAT.format(Date())}.txt")
-        val logFile = File(logsFolder, logFileName)
+    fun newFileLogWriter(fileName: String = "log-${FILE_NAME_DATE_FORMAT.format(Date())}.txt",
+                         minLogLevel: Int = Log.VERBOSE): FileLogWriter? {
+        val logFile = File(logsFolder, fileName)
         Grove.d { "New session, logs will be stored in: ${logFile.absolutePath}" }
-        _currentFileTree?.exit()
-        _currentFileTree = FileTree(logFile, minLogLevel)
-        return _currentFileTree
+        return FileLogWriter(logFile, minLogLevel)
     }
 
     /**
@@ -75,15 +50,14 @@ class FileLogController(
      *
      * @return Deleted files count.
      */
-    fun deleteOldLogs(maxAge: Long, maxCount: Int = Int.MAX_VALUE): Int {
+    fun deleteOldLogs(maxAge: Long, maxCount: Int = Int.MAX_VALUE, filter: (File) -> Boolean): Int {
         var deleted = 0
-        val files = logsFolder?.listFiles()
-        files?.sortedByDescending(File::lastModified)?.apply {
+        val files = logsFolder.listFiles() ?: emptyArray()
+        files.filter(filter).sortedByDescending(File::lastModified).apply {
             for ((i, file) in this.withIndex()) {
                 val age = System.currentTimeMillis() - file.lastModified()
                 if (age > maxAge || i > maxCount) {
-                    val isCurrentLogFile = _currentFileTree?.file?.absolutePath == file.absolutePath
-                    if (!isCurrentLogFile && file.delete()) deleted++
+                    if (file.delete()) deleted++
                 }
             }
         }
@@ -93,20 +67,16 @@ class FileLogController(
 
 /**
  * Logger that writes asynchronously to a file.
- * Automatically infers the tag from the calling class.
- */
-class FileTree
-/**
+ * Automatically infers the tag from the calling class
+ *
  * Create a new FileTree instance that will write in a background thread
  * any incoming logs as long as the level is at least `minLevel`.
-
+ *
  * @param file     The file this logger will write.
  * @param minLevel The minimum message level that will be written (inclusive).
  */
-(val file: File, private val minLevel: Int) : Tree {
+class FileLogWriter(val file: File, private val minLevel: Int) : Tree {
     private val queue = ArrayBlockingQueue<LogLine>(100)
-    private val pool = Pools.SynchronizedPool<LogLine>(20)
-
     private val backgroundThread: Thread
     private val writer: Writer?
 
@@ -151,16 +121,11 @@ class FileTree
     }
 
     private fun enqueueLog(priority: Int, tag: String, message: String) {
-        var logLine: LogLine? = pool.acquire()
-        if (logLine == null) {
-            logLine = LogLine()
-        }
-
+        val logLine = LogLine()
         logLine.tag = tag
         logLine.message = message
         logLine.level = priority
         logLine.date.time = System.currentTimeMillis()
-
         queue.offer(logLine)
     }
 
@@ -175,7 +140,6 @@ class FileTree
                     }
                 }
                 logLine.clear()
-                pool.release(logLine)
             } catch (e: InterruptedException) {
                 break //We are done
             } catch (e: IOException) {
@@ -200,9 +164,9 @@ class FileTree
     }
 
     override fun toString(): String {
-        return "FileTree{" +
-                "file=" + file.absolutePath +
-                '}'
+        return "FileLogWriter{" +
+               "file=" + file.absolutePath +
+               '}'
     }
 
     private class LogLine {

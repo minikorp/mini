@@ -1,14 +1,9 @@
-package com.minivac.mini.flux
-
-import mini.Grove
-import mini.Store
+package mini
 
 /**
  * Handy alias to use with dagger
  */
 typealias StoreMap = Map<Class<*>, Store<*>>
-
-typealias LazyStoreMap = dagger.Lazy<Map<Class<*>, Store<*>>>
 
 /**
  * Sort and create Stores initial state.
@@ -21,7 +16,7 @@ fun initStores(uninitializedStores: Collection<Store<*>>) {
     val initTimes = LongArray(stores.size)
     for (i in 0 until stores.size) {
         val start = System.currentTimeMillis()
-        stores[i].init()
+        stores[i].initialize()
         stores[i].state //Create initial state
         initTimes[i] += System.currentTimeMillis() - start
     }
@@ -30,7 +25,7 @@ fun initStores(uninitializedStores: Collection<Store<*>>) {
 
     Grove.d { "┌ Application with ${stores.size} stores loaded in $elapsed ms" }
     Grove.d { "├────────────────────────────────────────────" }
-    for (i in 0..stores.size - 1) {
+    for (i in 0 until stores.size) {
         val store = stores[i]
         var boxChar = "├"
         if (store === stores[stores.size - 1]) {
@@ -38,8 +33,4 @@ fun initStores(uninitializedStores: Collection<Store<*>>) {
         }
         Grove.d { "$boxChar ${store.javaClass.simpleName} - ${initTimes[i]} ms" }
     }
-}
-
-fun disposeStores(stores: Iterable<Store<*>>) {
-    // stores.forEach { it.dispose() }
 }

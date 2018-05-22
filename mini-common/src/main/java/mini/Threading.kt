@@ -1,7 +1,6 @@
 package mini
 
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import java.util.concurrent.Semaphore
 
@@ -19,12 +18,9 @@ fun assertOnUiThread() {
     }
 }
 
-inline fun onUi(crossinline block: () -> Unit) {
-    uiHandler.post { block() }
-}
-
-inline fun onUiDelayed(delay: Long, crossinline block: () -> Unit) {
-    uiHandler.postDelayed({ block() }, delay)
+inline fun onUi(delayMs: Long = 0, crossinline block: () -> Unit) {
+    if (delayMs > 0) uiHandler.postDelayed({ block() }, delayMs)
+    else uiHandler.post { block() }
 }
 
 inline fun onUiSync(crossinline block: () -> Unit) {

@@ -42,7 +42,7 @@ data class StarcraftState(val name: String = "Anonymous")
 
 @AppScope
 class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
-    override fun init() {
+    override fun initialize() {
 
     }
 
@@ -74,7 +74,7 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
 @AppScope
 class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
-    override fun init() {
+    override fun initialize() {
     }
 
     @Reducer

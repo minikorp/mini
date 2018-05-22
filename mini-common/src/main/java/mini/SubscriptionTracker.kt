@@ -1,4 +1,4 @@
-package com.minivac.mini.rx
+package mini
 
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
@@ -8,7 +8,7 @@ interface SubscriptionTracker {
     /**
      * Clear Subscriptions.
      */
-    fun cancelSubscriptions(): Unit
+    fun cancelSubscriptions()
 
     /**
      * Start tracking a disposable.
