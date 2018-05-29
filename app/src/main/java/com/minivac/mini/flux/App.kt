@@ -2,19 +2,25 @@ package com.minivac.mini.flux
 
 import android.app.Application
 import com.minivac.mini.BuildConfig
-import com.minivac.mini.dagger.*
-import com.minivac.mini.log.DebugTree
-import com.minivac.mini.log.Grove
-import com.minivac.mini.misc.collectDeviceBuildInformation
+import com.minivac.mini.dagger.AppComponent
+import com.minivac.mini.dagger.AppModule
+import com.minivac.mini.dagger.DaggerDefaultAppComponent
 import com.squareup.leakcanary.LeakCanary
+import mini.DebugTree
+import mini.Grove
+import mini.MiniActionReducer
+import mini.initStores
+import mini.log.LoggerInterceptor
+import mini.log.LogsController
+import java.io.File
 import kotlin.properties.Delegates
 
-private var _app: App by Delegates.notNull<App>()
+private var _app: App by Delegates.notNull()
+private var _appComponent: AppComponent? = null
 val app: App get() = _app
+val appComponent: AppComponent get() = _appComponent!!
 
-class App :
-        Application(),
-        ComponentManager by DefaultComponentManager() {
+class App : Application() {
 
     val exceptionHandlers: MutableList<Thread.UncaughtExceptionHandler> = ArrayList()
 
@@ -23,39 +29,32 @@ class App :
         _app = this
         if (BuildConfig.DEBUG) {
             Grove.plant(DebugTree(true))
-            Grove.d { collectDeviceBuildInformation(this) }
         }
 
-        registerComponent(object : ComponentFactory<AppComponent> {
-            override fun createComponent(): AppComponent {
-                return DaggerAppComponent.builder()
-                        .appModule(AppModule(app))
-                        .build()
-            }
-
-            override val componentType = AppComponent::class
-        })
-
-        val appComponent = findComponent(AppComponent::class)
+        _appComponent = DaggerDefaultAppComponent
+            .builder()
+            .appModule(AppModule(this))
+            .build()
         val stores = appComponent.stores()
-        initStores(stores.values.toList())
+        val dispatcher = appComponent.dispatcher()
+        dispatcher.addInterceptor(LoggerInterceptor(stores.values))
 
-        registerSystemCallbacks(appComponent.dispatcher(), this)
+        val logsFolder = File(externalCacheDir, "logs")
+        val logsController = LogsController(logsFolder)
+        logsController.newFileLogWriter()?.run {
+            Grove.plant(this)
+        }
+
+        dispatcher.actionReducer = MiniActionReducer(stores)
+        initStores(stores.values.toList())
 
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
         exceptionHandlers.add(exceptionHandler)
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             exceptionHandlers.forEach { it.uncaughtException(thread, error) }
         }
-
         configureLeakCanary()
     }
-
-    override fun onTrimMemory(level: Int) {
-        super.onTrimMemory(level)
-        trimComponents(level)
-    }
-
 
     private fun configureLeakCanary() {
         if (LeakCanary.isInAnalyzerProcess(this)) return

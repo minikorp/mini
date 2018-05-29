@@ -1,57 +1,95 @@
 package org.sample.todo
 
-import com.minivac.mini.dagger.ActivityScope
-import com.minivac.mini.dagger.AppComponent
-import com.minivac.mini.dagger.ComponentFactory
-import com.minivac.mini.flux.*
+import com.minivac.mini.dagger.AppScope
 import dagger.Binds
 import dagger.Module
-import dagger.Subcomponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import mini.Action
+import mini.Dispatcher
+import mini.Reducer
+import mini.Store
 import javax.inject.Inject
 
-
-@ActivityScope
-@Subcomponent(modules = arrayOf(
-        UserModule::class
-))
-interface UserComponent : StoreHolderComponent {
-    fun inject(target: MainActivity)
-    fun inject(target: SecondActivity)
+@Module
+abstract class WarcraftModule {
+    @Binds
+    @AppScope
+    @IntoMap
+    @ClassKey(WarcraftStore::class)
+    abstract fun storeToMap(store: WarcraftStore): Store<*>
 }
-
-object UserComponentFactory : ComponentFactory<UserComponent> {
-    override fun createComponent() =
-            app.findComponent(AppComponent::class)
-                    .mainActivityComponent()
-                    .also { initStores(it.stores().values) }
-
-    override fun destroyComponent(component: UserComponent) {
-        disposeStores(component.stores().values)
-    }
-
-    override val componentType = UserComponent::class
-}
-
 
 @Module
-abstract class UserModule {
-    @Binds @ActivityScope @IntoMap @ClassKey(UserStore::class)
-    abstract fun storeToMap(store: UserStore): Store<*>
+abstract class MightModule {
+    @Binds
+    @AppScope
+    @IntoMap
+    @ClassKey(MightStore::class)
+    abstract fun storeToMap(store: MightStore): Store<*>
 }
 
-data class LoginUserAction(val username: String, val password: String) : Action
+data class GarroshAction(val username: String, val password: String) : Action
+data class IllidanAction(val username: String, val password: String) : Action
+data class DurdinAction(val username: String, val password: String) : Action
 
-data class UserState(val name: String = "Anonymous")
-@ActivityScope
-class UserStore @Inject constructor(val dispatcher: Dispatcher) : Store<UserState>() {
-    override fun init() {
-        dispatcher.subscribe(LoginUserAction::class)
-                .track()
-                .flowable()
-                .subscribe {
-                    state = state.copy(name = "${it.username} & ${it.password}")
-                }
+data class PlusUltraAction(val username: String, val password: String) : Action
+data class CarolinaSmashAction(val username: String, val password: String) : Action
+data class BecauseImHereAction(val username: String, val password: String) : Action
+
+data class WarcraftState(val name: String = "Anonymous")
+data class StarcraftState(val name: String = "Anonymous")
+
+@AppScope
+class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
+    override fun initialize() {
+
+    }
+
+    @Reducer
+    fun garroshIsOp(state : WarcraftState, action: GarroshAction): WarcraftState {
+        return state.copy(name = action.password)
+    }
+
+    @Reducer
+    fun illidanIsOp(action: IllidanAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
+    }
+
+    @Reducer
+    fun durdinIsMoreOp(action: DurdinAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
+    }
+
+    @Reducer
+    fun damnAllMight(action: BecauseImHereAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
+    }
+
+    @Reducer(priority = 150)
+    fun fuckingDamnAllMight(action: CarolinaSmashAction, state: WarcraftState): WarcraftState {
+        return state.copy(name = action.password)
+    }
+}
+
+@AppScope
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
+    override fun initialize() {
+    }
+
+    @Reducer
+    fun damnAllMight(state: StarcraftState, action: BecauseImHereAction): StarcraftState {
+        return state.copy(name = action.username)
+    }
+
+    @Reducer(priority = 150)
+    fun fuckingDamnAllMight(state: StarcraftState, action: CarolinaSmashAction): StarcraftState {
+        return state.copy(name = action.username)
+    }
+
+    //TODO: Validate both params S, Action, and return type S
+    @Reducer
+    fun loadAllMight(state: StarcraftState, action: PlusUltraAction): StarcraftState {
+        return state.copy(name = action.username)
     }
 }

@@ -29,7 +29,7 @@ inline fun <reified T : Activity> testActivity(intent: Intent): ActivityTestRule
 fun nthChildOf(parentMatcher: Matcher<View>, childPosition: Int): Matcher<View> {
     return object : TypeSafeMatcher<View>() {
         override fun describeTo(description: Description) {
-            description.appendText("with $childPosition child view of type parentMatcher")
+            description.appendText("with $childPosition child select of type parentMatcher")
         }
 
         override fun matchesSafely(view: View): Boolean {

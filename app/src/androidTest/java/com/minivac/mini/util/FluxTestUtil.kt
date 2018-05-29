@@ -5,7 +5,7 @@ import com.minivac.mini.flux.Action
 import com.minivac.mini.flux.Chain
 import com.minivac.mini.flux.Interceptor
 import com.minivac.mini.flux.app
-import com.minivac.mini.log.Grove
+import mini.Grove
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement

@@ -5,15 +5,15 @@ import android.os.Bundle
 import android.widget.TextView
 import com.minivac.mini.R
 import com.minivac.mini.flux.FluxActivity
+import mini.Dispatcher
 import javax.inject.Inject
 
-class MainActivity : FluxActivity<UserComponent>() {
+class MainActivity : FluxActivity() {
 
-    @Inject lateinit var userStore: UserStore
+    @Inject lateinit var dispatcher: Dispatcher
+    @Inject lateinit var userStore: WarcraftStore
 
-    override fun onCreateComponentFactory() = UserComponentFactory
-
-    val goSecond: TextView by lazy { findViewById(R.id.goSecondButton) as TextView }
+    val goSecond: TextView by lazy { findViewById<TextView>(R.id.goSecondButton) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,12 +24,12 @@ class MainActivity : FluxActivity<UserComponent>() {
             startActivity(Intent(this, SecondActivity::class.java))
         }
 
-        userStore.flowable()
-                .subscribe { goSecond.text = it.name }
-                .track()
+        userStore
+            .observe { goSecond.text = it.name }
+        
 
         if (savedInstanceState == null) {
-            dispatcher.dispatch(LoginUserAction("${userStore.state.name} Hello", "Reactive"))
+            dispatcher.dispatch(PlusUltraAction("${userStore.state.name} Hello", "Reactive"))
         }
     }
 }
