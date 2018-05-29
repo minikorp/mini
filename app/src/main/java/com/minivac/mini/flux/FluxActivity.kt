@@ -2,44 +2,20 @@ package com.minivac.mini.flux
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.minivac.mini.dagger.ComponentFactory
-import com.minivac.mini.dagger.ComponentManager
 import com.minivac.mini.dagger.inject
-import com.minivac.mini.rx.DefaultSubscriptionTracker
-import com.minivac.mini.rx.SubscriptionTracker
-import javax.inject.Inject
+import mini.DefaultSubscriptionTracker
+import mini.SubscriptionTracker
 
-
-abstract class FluxActivity<T : Any> :
-        AppCompatActivity(),
-        SubscriptionTracker by DefaultSubscriptionTracker(),
-        ComponentManager by app {
-
-    @Inject lateinit var dispatcher: Dispatcher
-    private val componentFactory: ComponentFactory<T> by lazy {
-        onCreateComponentFactory()
-    }
-
-    abstract fun onCreateComponentFactory(): ComponentFactory<T>
-
-    val component: T by lazy {
-        findComponent(componentFactory.componentType)
-    }
+abstract class FluxActivity : AppCompatActivity(),
+    SubscriptionTracker by DefaultSubscriptionTracker() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) {
-            app.registerComponent(componentFactory)
-        }
-        inject(component, this)
+        inject(appComponent, this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (isFinishing) {
-            //This won't be called if app is killed!
-            app.unregisterComponent(componentFactory)
-        }
         cancelSubscriptions()
     }
 }
