@@ -5,7 +5,7 @@ buildscript {
 
     repositories {
         jcenter()
-        maven { url 'https://maven.google.com' }
+        mavenCentral()
         google()
     }
 
@@ -14,18 +14,25 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
         classpath 'com.github.triplet.gradle:play-publisher:1.2.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
 }
 
 allprojects {
+    version = 1.0
+    group = "com.mini"
+
     repositories {
         jcenter()
         mavenCentral()
         maven { url "http://dl.bintray.com/jetbrains/spek" }
-        maven { url 'https://maven.google.com' }
         maven { url 'https://jitpack.io' }
         maven { url 'https://maven.fabric.io/public' }
     }
+}
+
+subprojects {
+    apply plugin: 'maven'
 }
 
 task clean(type: Delete) {
