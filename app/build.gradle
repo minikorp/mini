@@ -12,10 +12,15 @@ buildscript {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven { url "http://dl.bintray.com/jetbrains/spek" }
+    maven { url 'https://jitpack.io' }
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-
 
 //Kotlin
 kotlin {
@@ -70,6 +75,9 @@ dependencies {
 
     implementation project(":mini-common")
     kapt project(":mini-processor")
+    //Jitpack variant
+//    implementation 'com.github.pabloogc:mini:mini-common:1.0'
+//    kapt 'com.github.pabloogc:mini:mini-processor:1.0'
 
     //Support
     implementation "com.android.support:appcompat-v7:$support_version"
@@ -115,11 +123,6 @@ dependencies {
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-}
-
-repositories {
-    mavenCentral()
-    maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
 
