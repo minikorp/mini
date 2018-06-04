@@ -11,7 +11,9 @@ typealias StoreMap = Map<Class<*>, Store<*>>
 fun initStores(uninitializedStores: Collection<Store<*>>) {
     val now = System.currentTimeMillis()
 
-    val stores = uninitializedStores.toList()
+    val stores = uninitializedStores
+        .toList()
+        .sortedBy { it.properties[Store.INITIALIZE_ORDER_PROP] as? Int }
 
     val initTimes = LongArray(stores.size)
     for (i in 0 until stores.size) {
