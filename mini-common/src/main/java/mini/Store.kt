@@ -9,6 +9,12 @@ typealias StateCallback<S> = (S) -> Unit
 
 abstract class Store<S : Any> {
 
+    companion object {
+        const val INITIALIZE_ORDER_PROP = "store.initialize.order"
+    }
+
+    val properties: MutableMap<String, Any?> = HashMap()
+
     private var _state: S? = null
     val state: S
         get() {
@@ -17,7 +23,6 @@ abstract class Store<S : Any> {
         }
 
     private val observers: MutableList<StoreObserver<S>> = ArrayList()
-
     private val processor: PublishProcessor<S> = PublishProcessor.create()
     private val processorObserver: StateCallback<S> = object : StateCallback<S> {
         override fun invoke(state: S) {
@@ -27,6 +32,7 @@ abstract class Store<S : Any> {
 
     init {
         observe(processorObserver)
+        properties[INITIALIZE_ORDER_PROP] = 100
     }
 
     /**

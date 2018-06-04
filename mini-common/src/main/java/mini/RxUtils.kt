@@ -24,3 +24,15 @@ inline fun <T, U> Observable<T>.select(crossinline fn: (T) -> U?): Observable<U>
         else Observable.just(mapped)
     }.distinctUntilChanged()
 }
+
+/**
+ * Transform multiple stores into a single flowable that emits
+ * the store that changed instead of the new state.
+ */
+fun combineStores(vararg stores: Store<*>): Flowable<Store<*>> {
+    return stores
+        .map { store -> store.flowable().map { store } }
+        .reduce { acc, storeFlowable ->
+            acc.mergeWith(storeFlowable)
+        }
+}

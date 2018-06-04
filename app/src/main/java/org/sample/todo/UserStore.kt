@@ -42,9 +42,6 @@ data class StarcraftState(val name: String = "Anonymous")
 
 @AppScope
 class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
-    override fun initialize() {
-
-    }
 
     @Reducer
     fun garroshIsOp(state : WarcraftState, action: GarroshAction): WarcraftState {
@@ -74,8 +71,6 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
 @AppScope
 class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
-    override fun initialize() {
-    }
 
     @Reducer
     fun damnAllMight(state: StarcraftState, action: BecauseImHereAction): StarcraftState {
