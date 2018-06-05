@@ -1,12 +1,12 @@
 package mini
 
 class Dispatcher(private val verifyThreads: Boolean = true) {
-    lateinit var actionReducer: ActionReducer
+    val actionReducers: MutableList<ActionReducer> = ArrayList()
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private var interceptorChain: Chain = buildChain()
     private val actionReducerLink: Chain = object : Chain {
         override fun proceed(action: Action): Action {
-            actionReducer.reduce(action)
+            actionReducers.forEach { it.reduce(action) }
             return action
         }
     }

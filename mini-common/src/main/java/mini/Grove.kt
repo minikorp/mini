@@ -30,22 +30,22 @@ object Grove {
         forest = forest.filter { it != tree }.toTypedArray()
     }
 
-    inline fun v(throwable: Throwable? = null, msg: MsgFn) = log(VERBOSE, throwable, msg)
+    inline fun v(throwable: Throwable? = null, crossinline msg: MsgFn) = log(VERBOSE, throwable, msg)
     fun v(throwable: Throwable) = log(VERBOSE, throwable, { "Error" })
 
-    inline fun d(throwable: Throwable? = null, msg: MsgFn) = log(DEBUG, throwable, msg)
+    inline fun d(throwable: Throwable? = null, crossinline msg: MsgFn) = log(DEBUG, throwable, msg)
     fun d(throwable: Throwable) = log(DEBUG, throwable, { "Error" })
 
-    inline fun i(throwable: Throwable? = null, msg: MsgFn) = log(INFO, throwable, msg)
+    inline fun i(throwable: Throwable? = null, crossinline msg: MsgFn) = log(INFO, throwable, msg)
     fun i(throwable: Throwable) = log(INFO, throwable, { "Error" })
 
-    inline fun w(throwable: Throwable? = null, msg: MsgFn) = log(WARN, throwable, msg)
+    inline fun w(throwable: Throwable? = null, crossinline msg: MsgFn) = log(WARN, throwable, msg)
     fun w(throwable: Throwable) = log(WARN, throwable, { "Error" })
 
-    inline fun e(throwable: Throwable? = null, msg: MsgFn) = log(ERROR, throwable, msg)
+    inline fun e(throwable: Throwable? = null, crossinline msg: MsgFn) = log(ERROR, throwable, msg)
     fun e(throwable: Throwable) = log(ERROR, throwable, { "Error" })
 
-    inline fun wtf(throwable: Throwable? = null, msg: MsgFn) = log(ASSERT, throwable, msg)
+    inline fun wtf(throwable: Throwable? = null, crossinline msg: MsgFn) = log(ASSERT, throwable, msg)
     fun wtf(throwable: Throwable) = log(ASSERT, throwable, { "Error" })
 
     inline fun log(priority: Int, throwable: Throwable? = null, msg: MsgFn) {
@@ -68,13 +68,13 @@ object Grove {
 
     fun consumeTag(): String {
         val tag = explicitTag.get()
-        if (tag != null) {
-            explicitTag.remove()
-            return tag
-        } else if (debugTags) {
-            return createDebugTag(2)
-        } else {
-            return defaultTag
+        return when {
+            tag != null -> {
+                explicitTag.remove()
+                tag
+            }
+            debugTags -> createDebugTag(2)
+            else -> defaultTag
         }
     }
 
