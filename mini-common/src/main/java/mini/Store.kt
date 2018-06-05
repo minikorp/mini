@@ -4,13 +4,14 @@ import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import org.jetbrains.annotations.TestOnly
 import java.lang.reflect.ParameterizedType
+import kotlin.reflect.KClass
 
 typealias StateCallback<S> = (S) -> Unit
 
 abstract class Store<S : Any> {
 
     companion object {
-        const val INITIALIZE_ORDER_PROP = "store.initialize.order"
+        const val INITIALIZE_ORDER_PROP = "store.init.order"
     }
 
     val properties: MutableMap<String, Any?> = HashMap()
@@ -86,6 +87,13 @@ abstract class Store<S : Any> {
     @TestOnly
     fun resetState() {
         setStateInternal(initialState())
+    }
+
+    /** Utility alias for no code-gen subscription */
+    fun <T : Any> DynamicActionReducer.subscribe(klass: KClass<T>,
+                                                 priority: Int = DynamicActionReducer.DEFAULT_PRIORITY,
+                                                 cb: (S, T) -> S): ReducerSubscription<T> {
+        return this.subscribe(this@Store, klass, priority, cb)
     }
 
     class StoreObserver<S : Any>(private val store: Store<S>,
