@@ -6,10 +6,7 @@ import com.minivac.mini.dagger.AppComponent
 import com.minivac.mini.dagger.AppModule
 import com.minivac.mini.dagger.DaggerDefaultAppComponent
 import com.squareup.leakcanary.LeakCanary
-import mini.DebugTree
-import mini.Grove
-import mini.MiniActionReducer
-import mini.initStores
+import mini.*
 import mini.log.LoggerInterceptor
 import mini.log.LogsController
 import java.io.File
@@ -45,7 +42,8 @@ class App : Application() {
             Grove.plant(this)
         }
 
-        dispatcher.actionReducer = MiniActionReducer(stores)
+        dispatcher.actionReducers.add(MiniActionReducer(stores))
+        dispatcher.actionReducers.add(DynamicActionReducer())
         initStores(stores.values.toList())
 
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
