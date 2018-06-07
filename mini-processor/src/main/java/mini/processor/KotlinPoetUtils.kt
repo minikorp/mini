@@ -29,30 +29,4 @@ fun mapTypeOf(keyClass: ClassName, valueClass: ClassName): ParameterizedTypeName
     return ParameterizedTypeName.get(kotlinMapType, keyClass, valueClass)
 }
 
-var FunSpec.Builder.depth: Int by MutableFieldProperty { 0 }
-
-fun FunSpec.Builder.nestedBlock(statement: String,
-                                vararg args: String = emptyArray(),
-                                func: FunSpec.Builder.() -> Unit): FunSpec.Builder {
-    depth++
-    addIndentedStatement("$statement {", args)
-    func()
-    addIndentedStatement("}")
-    depth--
-    return this
-}
-
-fun FunSpec.Builder.indent(func: FunSpec.Builder.() -> Unit): FunSpec.Builder {
-    depth++
-    func()
-    depth--
-    return this
-}
-
-fun FunSpec.Builder.addIndentedStatement(statement: String,
-                                         vararg args: Any,
-                                         indent: String = "    "): FunSpec.Builder {
-    val spaces = if (depth == 0) "" else indent.repeat(depth)
-    addStatement(spaces + statement, args)
-    return this
-}
+fun linesOfCode(vararg linesOfCode: String) = CodeBlock.of(linesOfCode.joinToString(separator = "\n"))
