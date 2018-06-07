@@ -7,6 +7,7 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
+import javax.tools.Diagnostic
 
 object ProcessorUtils {
     lateinit var env: ProcessingEnvironment
@@ -49,5 +50,23 @@ fun TypeMirror.asDeclaredType(): DeclaredType = asDeclaredTypeOrNull()!!
 fun TypeMirror.asDeclaredTypeOrNull(): DeclaredType? = this as? DeclaredType
 
 fun Element.getSuperClass() = asTypeElement().superclass.asElement()
-fun Element.getSuperClassTypeParameter(position : Int) = asTypeElement().superclass.asDeclaredType().typeArguments[position].asElement()
+fun Element.getSuperClassTypeParameter(position: Int) = asTypeElement().superclass.asDeclaredType().typeArguments[position].asElement()
+
+fun compileCheck(message: String = "Compilation error", check: Boolean, element: Element? = null) {
+    if (check) return
+    else logError(message, element)
+}
+
+fun logError(message: String, element: Element? = null) {
+    logMessage(Diagnostic.Kind.ERROR, message, element)
+    error("Compilation aborted")
+}
+
+fun logWarning(message: String, element: Element? = null) {
+    logMessage(Diagnostic.Kind.MANDATORY_WARNING, message, element)
+}
+
+fun logMessage(kind: Diagnostic.Kind, message: String, element: Element? = null) {
+    if (DEBUG_MODE) env.messager.printMessage(kind, message, element)
+}
 
