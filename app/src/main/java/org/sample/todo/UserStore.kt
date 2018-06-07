@@ -59,7 +59,7 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
     }
 
     @Reducer
-    fun damnAllMight(action: BecauseImHereAction, state: WarcraftState): WarcraftState {
+    fun damnAllMight(action: BecauseImHereAction): WarcraftState {
         return state.copy(name = action.password)
     }
 
@@ -73,7 +73,7 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
 
     @Reducer
-    fun damnAllMight(state: StarcraftState, action: BecauseImHereAction): StarcraftState {
+    fun damnAllMight(action: BecauseImHereAction): StarcraftState {
         return state.copy(name = action.username)
     }
 
