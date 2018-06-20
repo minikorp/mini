@@ -37,54 +37,57 @@ data class PlusUltraAction(val username: String, val password: String) : Action
 data class CarolinaSmashAction(val username: String, val password: String) : Action
 data class BecauseImHereAction(val username: String, val password: String) : Action
 
+class SharedAction : Action
+
 data class WarcraftState(val name: String = "Anonymous")
-data class StarcraftState(val name: String = "Anonymous")
+data class HeroState(val name: String = "Anonymous")
 
 @AppScope
 class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
     @Reducer
-    fun garroshIsOp(state : WarcraftState, action: GarroshAction): WarcraftState {
+    fun garrosh(action: GarroshAction, state: WarcraftState): WarcraftState {
         return state.copy(name = action.password)
     }
 
     @Reducer
-    fun illidanIsOp(action: IllidanAction, state: WarcraftState): WarcraftState {
+    fun illidan(action: IllidanAction, state: WarcraftState): WarcraftState {
         return state.copy(name = action.password)
     }
 
     @Reducer
-    fun durdinIsMoreOp(action: DurdinAction, state: WarcraftState): WarcraftState {
+    fun durdin(action: DurdinAction, state: WarcraftState): WarcraftState {
         return state.copy(name = action.password)
     }
 
+    //Shard
     @Reducer
-    fun damnAllMight(action: BecauseImHereAction): WarcraftState {
-        return state.copy(name = action.password)
-    }
-
-    @Reducer(priority = 150)
-    fun fuckingDamnAllMight(action: CarolinaSmashAction, state: WarcraftState): WarcraftState {
-        return state.copy(name = action.password)
+    fun shared1(sharedAction: SharedAction): WarcraftState {
+        return state
     }
 }
 
 @AppScope
-class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<StarcraftState>() {
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroState>() {
 
     @Reducer
-    fun damnAllMight(action: BecauseImHereAction): StarcraftState {
+    fun carolina(action: BecauseImHereAction): HeroState {
         return state.copy(name = action.username)
     }
 
     @Reducer(priority = 150)
-    fun fuckingDamnAllMight(state: StarcraftState, action: CarolinaSmashAction): StarcraftState {
+    fun united(state: HeroState, action: CarolinaSmashAction): HeroState {
         return state.copy(name = action.username)
     }
 
-    //TODO: Validate both params S, Action, and return type S
     @Reducer
-    fun loadAllMight(state: StarcraftState, action: PlusUltraAction): StarcraftState {
+    fun ultra(state: HeroState, action: PlusUltraAction): HeroState {
         return state.copy(name = action.username)
+    }
+
+    //Shard
+    @Reducer
+    fun shared1(sharedAction: SharedAction): HeroState {
+        return state
     }
 }

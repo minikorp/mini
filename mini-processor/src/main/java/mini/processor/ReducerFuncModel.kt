@@ -6,7 +6,7 @@ import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.VariableElement
 
-class ReducerFuncModel(executableElement: ExecutableElement) {
+data class ReducerFuncModel(private val executableElement: ExecutableElement) {
     private val stateParamPosition: Int
     val action: ActionModel
     val actionParamPosition: Int

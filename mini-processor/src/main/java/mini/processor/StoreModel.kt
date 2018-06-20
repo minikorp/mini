@@ -14,9 +14,10 @@ class StoreMethod(reducerFunc: ReducerFuncModel) {
     private val stateGetter = "${storeName.toLowerCase()}.state"
 
     init {
-        val constructor = if (reducerFunc.state != null)
-            if (reducerFunc.actionParamPosition == 0) "action,$stateGetter" else "$stateGetter, action"
-        else "action"
+        val constructor =
+            if (reducerFunc.state != null)
+                if (reducerFunc.actionParamPosition == 0) "action, $stateGetter" else "$stateGetter, action"
+            else "action"
 
         methodCall = "${storeName.toLowerCase()}.setStateInternal(${storeName.toLowerCase()}.${reducerFunc.funcName}($constructor))"
     }

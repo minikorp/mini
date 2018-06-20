@@ -7,9 +7,9 @@ import javax.tools.StandardLocation
 
 const val DEBUG_MODE = false
 
-class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
+class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
     private val reducersMaps = mutableMapOf<ActionModel, MutableList<ReducerFuncModel>>()
-    private val stores = mutableListOf<StoreModel>()
+    private val stores: List<StoreModel>
 
     companion object {
         const val MINI_COMMON_PACKAGE_NAME = "mini"
@@ -21,11 +21,13 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
 
     init {
         logMessage(Diagnostic.Kind.NOTE, "Filtering actions")
-        actionElements
-                .filter { it.parentClass.isClass } //Check if superclass is store type
-                .forEach { reducersMaps.getOrPut(it.action) { mutableListOf() }.add(it) }
-        logMessage(Diagnostic.Kind.NOTE, "${actionElements.size} Actions retrieved. Starting stores mapping")
-        stores.addAll(reducersMaps.values.flatten().distinctBy { it.parentClass.toString() }.map { StoreModel(it.parentClass) })
+        //Reverse the map for code-gen
+        reducerFunctions
+            .forEach { reducersMaps.getOrPut(it.action) { ArrayList() }.add(it) }
+        logMessage(Diagnostic.Kind.NOTE, "${reducerFunctions.size} Actions retrieved. Starting stores mapping")
+        stores = reducersMaps.values
+            .flatten()
+            .distinctBy { it.parentClass.toString() }.map { StoreModel(it.parentClass) }
     }
 
     fun generateDispatcherFile() {
@@ -33,16 +35,16 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
         val builder = FileSpec.builder(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_CLASS_NAME)
         //Start generating file
         val kotlinFile = builder
-                .addType(TypeSpec.classBuilder(ACTION_REDUCER_CLASS_NAME)
-                        .addSuperinterface(ClassName(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_INTERFACE))
-                        .addMainConstructor()
-                        .addStoreProperties()
-                        .addDispatcherFunction()
-                        .build())
-                .build()
+            .addType(TypeSpec.classBuilder(ACTION_REDUCER_CLASS_NAME)
+                .addSuperinterface(ClassName(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_INTERFACE))
+                .addMainConstructor()
+                .addStoreProperties()
+                .addDispatcherFunction()
+                .build())
+            .build()
 
         val kotlinFileObject = ProcessorUtils.env.filer.createResource(StandardLocation.SOURCE_OUTPUT,
-                MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
+            MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
         val openWriter = kotlinFileObject.openWriter()
         kotlinFile.writeTo(openWriter)
         openWriter.close()
@@ -50,16 +52,16 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
 
     private fun TypeSpec.Builder.addMainConstructor(): TypeSpec.Builder {
         return primaryConstructor(FunSpec.constructorBuilder()
-                .addParameter("stores", getStoreMapType())
-                .build())
+            .addParameter("stores", getStoreMapType())
+            .build())
     }
 
     private fun TypeSpec.Builder.addStoreProperties(): TypeSpec.Builder {
         stores.forEach { storeModel ->
             val storeClass = ClassName(storeModel.packageName, storeModel.className)
             addProperty(PropertySpec.builder(storeModel.className.toLowerCase(), storeClass)
-                    .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", storeClass, storeClass))
-                    .build()
+                .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", storeClass, storeClass))
+                .build()
             )
         }
         return this
@@ -70,20 +72,17 @@ class ActionReducerModel(actionElements: List<ReducerFuncModel>) {
             addParameters(listOf("action" to Action::class).map { ParameterSpec.builder(it.first, it.second).build() })
             addModifiers(KModifier.OVERRIDE)
             addCode(linesOfCode(
-                    "action.tags.forEach { tag ->",
-                    "%>when (tag) {%>"))
+                "action.tags.forEach { tag ->",
+                "%>when (tag) {%>", ""))
             reducersMaps
-                    .map { ReduceBlockModel(it.key, it.value) }
-                    .forEach { reduceBlock ->
-                        val actionClass = ClassName(reduceBlock.action.packageName, reduceBlock.action.actionName)
-                        addCode(CodeBlock.of("%T::class.java -> {\n" +
-                                "%>action as %T", actionClass, actionClass))
-
-                        reduceBlock.methodCalls.forEach {
-                            logMessage(Diagnostic.Kind.NOTE, "${it.storeName} subscribe to action ${reduceBlock.action.actionName}")
-                            addCode(linesOfCode("", "${it.methodCall}%<", "}", ""))
-                        }
-                    }
+                .map { ReduceBlockModel(it.key, it.value) }
+                .forEach { reduceBlock ->
+                    val actionClass = ClassName(reduceBlock.action.packageName, reduceBlock.action.actionName)
+                    addCode(CodeBlock.of("%T::class.java -> {\n%>action as %T\n", actionClass, actionClass))
+                    addCode(reduceBlock.methodCalls
+                        .joinToString(separator = "\n") { it.methodCall })
+                    addCode(linesOfCode("%<", "}", ""))
+                }
             addCode(linesOfCode("%<", "}%<", "}", ""))
             return@with this
         }

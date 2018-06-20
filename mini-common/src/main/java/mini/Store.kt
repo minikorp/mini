@@ -91,7 +91,7 @@ abstract class Store<S : Any> {
 
     /** Utility alias for no code-gen subscription */
     fun <T : Any> DynamicActionReducer.subscribe(klass: KClass<T>,
-                                                 priority: Int = DynamicActionReducer.DEFAULT_PRIORITY,
+                                                 priority: Int = DEFAULT_REDUCER_PRIORITY,
                                                  cb: (S, T) -> S): ReducerSubscription<T> {
         return this.subscribe(this@Store, klass, priority, cb)
     }
