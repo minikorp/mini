@@ -7,10 +7,6 @@ import kotlin.reflect.KClass
 
 class DynamicActionReducer : ActionReducer {
 
-    companion object {
-        const val DEFAULT_PRIORITY = 100
-    }
-
     private val subscriptionCounter = AtomicInteger()
     private val subscriptionMap = HashMap<Class<*>, TreeSet<ReducerSubscription<Any>>?>()
 
@@ -24,7 +20,7 @@ class DynamicActionReducer : ActionReducer {
 
     fun <T : Any, S : Any, ST : Store<S>> subscribe(store: ST,
                                                     klass: KClass<T>,
-                                                    priority: Int = DEFAULT_PRIORITY,
+                                                    priority: Int = DEFAULT_REDUCER_PRIORITY,
                                                     cb: (S, T) -> S): ReducerSubscription<T> {
         val subscription = ReducerSubscription(
             reducer = this@DynamicActionReducer,
