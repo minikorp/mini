@@ -63,7 +63,7 @@ abstract class Store<S : Any> {
     }
 
     fun flowable(): Flowable<S> {
-        return processor
+        return processor.startWith(state)
     }
 
     /**
