@@ -8,7 +8,7 @@ import javax.tools.StandardLocation
 const val DEBUG_MODE = false
 
 class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
-    private val reducersMaps = mutableMapOf<ActionModel, MutableList<ReducerFuncModel>>()
+    private val reducersMaps = mutableMapOf<String, MutableList<ReducerFuncModel>>()
     private val stores: List<StoreModel>
 
     companion object {
@@ -23,11 +23,12 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
         logMessage(Diagnostic.Kind.NOTE, "Filtering actions")
         //Reverse the map for code-gen
         reducerFunctions
-            .forEach { reducersMaps.getOrPut(it.action) { ArrayList() }.add(it) }
+            .forEach { reducersMaps.getOrPut(it.action.actionName) { ArrayList() }.add(it) }
         logMessage(Diagnostic.Kind.NOTE, "${reducerFunctions.size} Actions retrieved. Starting stores mapping")
         stores = reducersMaps.values
             .flatten()
-            .distinctBy { it.parentClass.toString() }.map { StoreModel(it.parentClass) }
+            .distinctBy { it.parentClass.toString() }
+            .map { StoreModel(it.parentClass) }
     }
 
     fun generateDispatcherFile() {
@@ -75,12 +76,11 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
                 "action.tags.forEach { tag ->",
                 "%>when (tag) {%>", ""))
             reducersMaps
-                .map { ReduceBlockModel(it.key, it.value) }
+                .map { ReduceBlockModel(it.value[0].action, it.value) }
                 .forEach { reduceBlock ->
                     val actionClass = ClassName(reduceBlock.action.packageName, reduceBlock.action.actionName)
                     addCode(CodeBlock.of("%T::class.java -> {\n%>action as %T\n", actionClass, actionClass))
-                    addCode(reduceBlock.methodCalls
-                        .joinToString(separator = "\n") { it.methodCall })
+                    addCode(reduceBlock.methodCalls.joinToString(separator = "\n") { it.methodCall })
                     addCode(linesOfCode("%<", "}", ""))
                 }
             addCode(linesOfCode("%<", "}%<", "}", ""))
