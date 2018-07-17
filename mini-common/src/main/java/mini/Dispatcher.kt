@@ -1,15 +1,15 @@
 package mini
 
 class Dispatcher(private val verifyThreads: Boolean = true) {
-    val actionReducers: MutableList<ActionReducer> = ArrayList()
+    private val actionReducers: MutableList<ActionReducer> = ArrayList()
     private val interceptors: MutableList<Interceptor> = ArrayList()
-    private var interceptorChain: Chain = buildChain()
     private val actionReducerLink: Chain = object : Chain {
         override fun proceed(action: Action): Action {
             actionReducers.forEach { it.reduce(action) }
             return action
         }
     }
+    private var interceptorChain: Chain = buildChain()
     private var dispatching: Boolean = false
 
     private fun buildChain(): Chain {
@@ -18,6 +18,18 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
             object : Chain {
                 override fun proceed(action: Action): Action = interceptor(action, chain)
             }
+        }
+    }
+
+    fun addActionReducer(actionReducer: ActionReducer) {
+        synchronized(this) {
+            actionReducers.add(actionReducer)
+        }
+    }
+
+    fun removeActionReducer(actionReducer: ActionReducer) {
+        synchronized(this) {
+            actionReducers.remove(actionReducer)
         }
     }
 
@@ -55,7 +67,7 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
     }
 
     fun dispatch(action: Action) {
-        assertOnUiThread()
+        if (verifyThreads) assertOnUiThread()
         if (dispatching) throw IllegalStateException("Nested dispatch calls")
         dispatching = true
         interceptorChain.proceed(action)

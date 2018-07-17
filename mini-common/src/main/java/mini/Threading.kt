@@ -6,8 +6,12 @@ import java.util.concurrent.Semaphore
 
 val uiHandler by lazy { Handler(Looper.getMainLooper()) }
 
+fun isOnUi(): Boolean {
+    return Looper.myLooper() == Looper.getMainLooper()
+}
+
 fun assertNotOnUiThread() {
-    if (Looper.myLooper() == Looper.getMainLooper()) {
+    if (!isOnUi()) {
         error("This method can not be called from the main application thread")
     }
 }
@@ -24,11 +28,14 @@ inline fun onUi(delayMs: Long = 0, crossinline block: () -> Unit) {
 }
 
 inline fun onUiSync(crossinline block: () -> Unit) {
-    assertNotOnUiThread()
-    val sem = Semaphore(0)
-    onUi {
+    if (isOnUi()) {
         block()
-        sem.release()
+    } else {
+        val sem = Semaphore(0)
+        onUi {
+            block()
+            sem.release()
+        }
+        sem.acquireUninterruptibly()
     }
-    sem.acquireUninterruptibly()
 }

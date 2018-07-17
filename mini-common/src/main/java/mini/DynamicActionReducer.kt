@@ -34,13 +34,13 @@ class DynamicActionReducer : ActionReducer {
     private fun <T : Any> registerInternal(dispatcherSubscription: ReducerSubscription<T>): ReducerSubscription<T> {
         @Suppress("UNCHECKED_CAST")
         synchronized(this) {
-            subscriptionMap.getOrPut(dispatcherSubscription.tag, {
-                TreeSet({ a, b ->
+            subscriptionMap.getOrPut(dispatcherSubscription.tag) {
+                TreeSet { a, b ->
                     val p = a.priority.compareTo(b.priority)
                     if (p == 0) a.id.compareTo(b.id)
                     else p
-                })
-            })!!.add(dispatcherSubscription as ReducerSubscription<Any>)
+                }
+            }!!.add(dispatcherSubscription as ReducerSubscription<Any>)
         }
         return dispatcherSubscription
     }
