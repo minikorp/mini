@@ -42,8 +42,8 @@ class App : Application() {
             Grove.plant(this)
         }
 
-        dispatcher.actionReducers.add(MiniActionReducer(stores))
-        dispatcher.actionReducers.add(DynamicActionReducer())
+        dispatcher.addActionReducer(MiniActionReducer(stores))
+        dispatcher.addActionReducer(DynamicActionReducer())
         initStores(stores.values.toList())
 
         val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
