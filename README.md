@@ -53,7 +53,22 @@ class SessionStore : Store<SessionState>() {
 ```
 
 ####View changes
-TODO
+Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
+
+```kotlin
+  //Using RxJava  
+  userStore
+          .flowable()
+          .map { it.name }
+          .subscribe { updateUserName(it) }
+          
+  // Custom callback      
+  userStore
+          .observe { state -> updateUserName(state.name) }
+```  
+
+If you make use of the RxJava methods, you can make use of the `SubscriptionTracker` interface to keep track of the `Disposables` used on your activities and fragments.
+
 ####Select and combine
 TODO
 ####Tasks
@@ -62,8 +77,14 @@ TODO
 TODO
 ####UI Testing with Mini
 TODO
+
 ####Logging
-TODO
+Mini includes a custom `LoggerInterceptor` to log any change in your `Store` states produced from an `Action`. This will allow you to keep track of your actions, changes and side-effects more easily. 
+To add the LoggerInterceptor to your application you just need to add a single instance of it to your `Dispatcher` after initialize it in your `Application` class or dependency injection code.
+```kotlin
+val loggerInterceptor = CustomLoggerInterceptor(stores().values)
+dispatcher.addInterceptor(loggerInterceptor)
+```
 
 ## Setting Up
 
