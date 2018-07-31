@@ -9,6 +9,7 @@ import mini.Action
 import mini.Dispatcher
 import mini.Reducer
 import mini.Store
+import mini.log.SilentAction
 import javax.inject.Inject
 
 @Module
@@ -35,7 +36,7 @@ data class DurdinAction(val username: String, val password: String) : Action
 
 data class PlusUltraAction(val username: String, val password: String) : Action
 data class CarolinaSmashAction(val username: String, val password: String) : Action
-data class BecauseImHereAction(val username: String, val password: String) : Action
+data class BecauseImHereAction(val username: String, val password: String) : Action, SilentAction
 
 class SharedAction : Action
 
@@ -60,7 +61,7 @@ class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
         return state.copy(name = action.password)
     }
 
-    //Shard
+    //Shared
     @Reducer
     fun shared1(sharedAction: SharedAction): WarcraftState {
         return state
@@ -76,18 +77,28 @@ class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroSta
     }
 
     @Reducer(priority = 150)
-    fun united(state: HeroState, action: CarolinaSmashAction): HeroState {
+    fun united(action: CarolinaSmashAction, state: HeroState): HeroState {
         return state.copy(name = action.username)
     }
 
     @Reducer
-    fun ultra(state: HeroState, action: PlusUltraAction): HeroState {
+    fun ultra(action: PlusUltraAction, state: HeroState): HeroState {
         return state.copy(name = action.username)
     }
 
-    //Shard
+    //Shared
     @Reducer
     fun shared1(sharedAction: SharedAction): HeroState {
+        return state
+    }
+
+    @Reducer
+    fun genericReducer(sharedAction: Action): HeroState {
+        return state
+    }
+
+    @Reducer
+    fun genericReducer2(sharedAction: SilentAction): HeroState {
         return state
     }
 }

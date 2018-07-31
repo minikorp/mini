@@ -1,6 +1,5 @@
 package mini.processor
 
-import mini.processor.ProcessorUtils.env
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -9,9 +8,7 @@ import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
 import javax.tools.Diagnostic
 
-object ProcessorUtils {
-    lateinit var env: ProcessingEnvironment
-}
+lateinit var env: ProcessingEnvironment
 
 val Element.isMethod: Boolean get() = this.kind == ElementKind.METHOD
 
@@ -22,6 +19,16 @@ fun TypeMirror.asElement(): Element = asElementOrNull()!!
 fun TypeMirror.asElementOrNull(): Element? = env.typeUtils.asElement(this)
 
 fun TypeMirror.getSupertypes(): MutableList<out TypeMirror> = env.typeUtils.directSupertypes(this)
+
+fun TypeMirror.qualifiedName(): String {
+    //toString returns the full name
+    return toString()
+}
+
+fun Element.qualifiedName(): String {
+    //toString returns the full name
+    return toString()
+}
 
 fun Element.getPackageName(): String {
     //xxx.xxx.simpleName
@@ -35,7 +42,6 @@ infix fun TypeMirror.assignableTo(base: TypeMirror): Boolean {
     return env.typeUtils.isAssignable(base, this)
 }
 
-
 infix fun TypeMirror.isSubtypeOf(base: TypeMirror): Boolean {
     return env.typeUtils.isSubtype(this, base)
 }
@@ -48,6 +54,11 @@ fun TypeMirror.asTypeElementOrNull(): TypeElement? = asElementOrNull()?.asTypeEl
 
 fun TypeMirror.asDeclaredType(): DeclaredType = asDeclaredTypeOrNull()!!
 fun TypeMirror.asDeclaredTypeOrNull(): DeclaredType? = this as? DeclaredType
+
+infix fun TypeMirror.sameType(other: TypeMirror?): Boolean {
+    if (other == null) return false
+    return env.typeUtils.isSameType(this, other)
+}
 
 fun Element.getSuperClass() = asTypeElement().superclass.asElement()
 fun Element.getSuperClassTypeParameter(position: Int) = asTypeElement().superclass.asDeclaredType().typeArguments[position].asElement()
