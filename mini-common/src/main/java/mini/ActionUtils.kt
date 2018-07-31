@@ -9,7 +9,7 @@ private val actionTagsCache = HashMap<Class<*>, Set<Class<*>>>()
 /**
  * List of types this action may be observed by.
  */
-val Action.tags: Set<Class<*>>
+val Action.reflectedTags: Set<Class<*>>
     get() {
         return actionTagsCache.getOrPut(this::class.java) {
             return reflectActionTypes(this::class)

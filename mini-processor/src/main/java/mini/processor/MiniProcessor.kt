@@ -10,12 +10,13 @@ import javax.lang.model.element.TypeElement
 @SupportedAnnotationTypes("org.kotlin.annotationProcessor.reducer")
 @SupportedOptions(MiniProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
 class MiniProcessor : AbstractProcessor() {
+
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
 
-    override fun init(env: ProcessingEnvironment) {
-        ProcessorUtils.env = env
+    override fun init(environment: ProcessingEnvironment) {
+        env = environment
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {

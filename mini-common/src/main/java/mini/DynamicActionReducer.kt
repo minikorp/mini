@@ -11,7 +11,7 @@ class DynamicActionReducer : ActionReducer {
     private val subscriptionMap = HashMap<Class<*>, TreeSet<ReducerSubscription<Any>>?>()
 
     override fun reduce(action: Action) {
-        action.tags.forEach { tag ->
+        action.reflectedTags.forEach { tag ->
             subscriptionMap[tag]?.let { set ->
                 set.forEach { it.onAction(action) }
             }

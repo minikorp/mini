@@ -2,14 +2,17 @@ package mini.processor
 
 import com.squareup.kotlinpoet.*
 import mini.Action
-import javax.tools.Diagnostic
+import javax.lang.model.element.Modifier
 import javax.tools.StandardLocation
 
 const val DEBUG_MODE = false
 
-class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
-    private val reducersMaps = mutableMapOf<String, MutableList<ReducerFuncModel>>()
+class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
+    private val actionType = env.elementUtils.getTypeElement("mini.Action").asType()
     private val stores: List<StoreModel>
+    private val tags: List<TagModel>
+    private val actions: List<ActionModel>
+    private val actionToFunctionMap: Map<ActionModel, List<ReducerFuncModel>>
 
     companion object {
         const val MINI_COMMON_PACKAGE_NAME = "mini"
@@ -20,15 +23,32 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
     }
 
     init {
-        logMessage(Diagnostic.Kind.NOTE, "Filtering actions")
-        //Reverse the map for code-gen
-        reducerFunctions
-            .forEach { reducersMaps.getOrPut(it.action.actionName) { ArrayList() }.add(it) }
-        logMessage(Diagnostic.Kind.NOTE, "${reducerFunctions.size} Actions retrieved. Starting stores mapping")
-        stores = reducersMaps.values
+        stores = reducerFunctions
+            .distinctBy { it.storeElement.qualifiedName() }
+            .map {
+                StoreModel(
+                    fieldName = it.storeFieldName,
+                    element = it.storeElement)
+            }
+
+        actions = reducerFunctions.map { it.tag }
+            .filter {
+                //Take subtypes of action that are not abstract
+                it.isSubtypeOf(actionType) && !it.asElement().modifiers.contains(Modifier.ABSTRACT)
+            }
+            .map { ActionModel(it.asElement()) }
+            .distinctBy { it.element.qualifiedName() }
+
+        tags = actions.map { it.tags }
             .flatten()
-            .distinctBy { it.parentClass.toString() }
-            .map { StoreModel(it.parentClass) }
+            .distinctBy { it.typeMirror.qualifiedName() }
+
+        actionToFunctionMap = actions.map { actionModel ->
+            actionModel to reducerFunctions
+                .filter { it.tag in actionModel.tags.map { it.typeMirror } }
+                .sortedBy { it.priority }
+        }.toMap()
+
     }
 
     fun generateDispatcherFile() {
@@ -44,7 +64,7 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
                 .build())
             .build()
 
-        val kotlinFileObject = ProcessorUtils.env.filer.createResource(StandardLocation.SOURCE_OUTPUT,
+        val kotlinFileObject = env.filer.createResource(StandardLocation.SOURCE_OUTPUT,
             MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
         val openWriter = kotlinFileObject.openWriter()
         kotlinFile.writeTo(openWriter)
@@ -59,9 +79,9 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
 
     private fun TypeSpec.Builder.addStoreProperties(): TypeSpec.Builder {
         stores.forEach { storeModel ->
-            val storeClass = ClassName(storeModel.packageName, storeModel.className)
-            addProperty(PropertySpec.builder(storeModel.className.toLowerCase(), storeClass)
-                .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", storeClass, storeClass))
+            val typeName = storeModel.element.asType().asTypeName()
+            addProperty(PropertySpec.builder(storeModel.fieldName, typeName)
+                .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", typeName, typeName))
                 .build()
             )
         }
@@ -72,20 +92,36 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
         val reduceBuilder = with(FunSpec.builder("reduce")) {
             addParameters(listOf("action" to Action::class).map { ParameterSpec.builder(it.first, it.second).build() })
             addModifiers(KModifier.OVERRIDE)
-            addCode(linesOfCode(
-                "action.tags.forEach { tag ->",
-                "%>when (tag) {%>", ""))
-            reducersMaps
-                .map { ReduceBlockModel(it.value[0].action, it.value) }
-                .forEach { reduceBlock ->
-                    val actionClass = ClassName(reduceBlock.action.packageName, reduceBlock.action.actionName)
-                    addCode(CodeBlock.of("%T::class.java -> {\n%>action as %T\n", actionClass, actionClass))
-                    addCode(reduceBlock.methodCalls.joinToString(separator = "\n") { it.methodCall })
-                    addCode(linesOfCode("%<", "}", ""))
+
+            addStatement("when(action) {%>")
+            actionToFunctionMap
+                .filterValues { !it.isEmpty() }
+                .forEach { actionModel, reducers ->
+                    addStatement("is %T -> {%>", actionModel.element.asType().asTypeName())
+                    reducers.forEach { reducer ->
+
+                        val storeFieldName = reducer.storeFieldName
+
+                        fun callString(): CodeBlock {
+                            return if (reducer.hasStateParameter) {
+                                CodeBlock.of("action, $storeFieldName.state")
+                            } else {
+                                CodeBlock.of("action")
+                            }
+                        }
+
+                        addCode(CodeBlock.builder()
+                            .add("$storeFieldName.setStateInternal(")
+                            .add("$storeFieldName.${reducer.funcName}(${callString()})")
+                            .add(")\n")
+                            .build())
+                    }
+                    addStatement("%<}")
                 }
-            addCode(linesOfCode("%<", "}%<", "}", ""))
+            addStatement("%<}")
             return@with this
         }
+
         return addFunction(reduceBuilder.build())
     }
 
@@ -93,5 +129,10 @@ class ActionReducerModel(reducerFunctions: List<ReducerFuncModel>) {
         val anyStoreType = ClassName(MINI_COMMON_PACKAGE_NAME, STORE_CLASS_NAME).wildcardType() //Store<*>
         val anyClassType = ClassName("java.lang", "Class").wildcardType() //Class<*>
         return mapTypeOf(anyClassType, anyStoreType)
+    }
+
+    private fun getActionTagMapType(): ParameterizedTypeName {
+        val anyClassType = ClassName("kotlin.reflect", "KClass").wildcardType() //Class<*>
+        return mapTypeOf(anyClassType, anyClassType.listTypeName())
     }
 }

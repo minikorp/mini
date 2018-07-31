@@ -5,7 +5,7 @@ import io.reactivex.schedulers.Schedulers
 import mini.*
 
 /** Actions implementing this interface won't log anything */
-interface SilentActionTag
+interface SilentAction : Action
 
 class LoggerInterceptor constructor(stores: Collection<Store<*>>,
                                     private val logInBackground: Boolean = false) : Interceptor {
@@ -15,19 +15,19 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
     private var actionCounter: Long = 0
 
     override fun invoke(action: Action, chain: Chain): Action {
-        if (action is SilentActionTag) return chain.proceed(action) //Do nothing
+        if (action is SilentAction) return chain.proceed(action) //Do nothing
 
-        val beforeStates: Array<Any> = Array(stores.size, { _ -> Unit })
-        val afterStates: Array<Any> = Array(stores.size, { _ -> Unit })
+        val beforeStates: Array<Any> = Array(stores.size) { _ -> Unit }
+        val afterStates: Array<Any> = Array(stores.size) { _ -> Unit }
 
-        stores.forEachIndexed({ idx, store -> beforeStates[idx] = store.state })
+        stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
         val start = System.currentTimeMillis()
         val timeSinceLastAction = Math.min(start - lastActionTime, 9999)
         lastActionTime = start
         actionCounter++
         val out = chain.proceed(action)
         val processTime = System.currentTimeMillis() - start
-        stores.forEachIndexed({ idx, store -> afterStates[idx] = store.state })
+        stores.forEachIndexed { idx, store -> afterStates[idx] = store.state }
 
         Completable.fromAction {
             val sb = StringBuilder()
