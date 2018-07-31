@@ -6,9 +6,13 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
+import javax.lang.model.util.Elements
+import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
 lateinit var env: ProcessingEnvironment
+lateinit var elementUtils: Elements
+lateinit var typeUtils: Types
 
 val Element.isMethod: Boolean get() = this.kind == ElementKind.METHOD
 
@@ -16,9 +20,9 @@ val Element.isClass: Boolean get() = this.kind == ElementKind.CLASS
 
 fun TypeMirror.asElement(): Element = asElementOrNull()!!
 
-fun TypeMirror.asElementOrNull(): Element? = env.typeUtils.asElement(this)
+fun TypeMirror.asElementOrNull(): Element? = typeUtils.asElement(this)
 
-fun TypeMirror.getSupertypes(): MutableList<out TypeMirror> = env.typeUtils.directSupertypes(this)
+fun TypeMirror.getSupertypes(): MutableList<out TypeMirror> = typeUtils.directSupertypes(this)
 
 fun TypeMirror.qualifiedName(): String {
     //toString returns the full name
@@ -39,11 +43,11 @@ fun Element.getPackageName(): String {
 }
 
 infix fun TypeMirror.assignableTo(base: TypeMirror): Boolean {
-    return env.typeUtils.isAssignable(base, this)
+    return typeUtils.isAssignable(base, this)
 }
 
 infix fun TypeMirror.isSubtypeOf(base: TypeMirror): Boolean {
-    return env.typeUtils.isSubtype(this, base)
+    return typeUtils.isSubtype(this, base)
 }
 
 fun Element.asTypeElement(): TypeElement = asTypeElementOrNull()!!
@@ -57,7 +61,7 @@ fun TypeMirror.asDeclaredTypeOrNull(): DeclaredType? = this as? DeclaredType
 
 infix fun TypeMirror.sameType(other: TypeMirror?): Boolean {
     if (other == null) return false
-    return env.typeUtils.isSameType(this, other)
+    return typeUtils.isSameType(this, other)
 }
 
 fun Element.getSuperClass() = asTypeElement().superclass.asElement()
