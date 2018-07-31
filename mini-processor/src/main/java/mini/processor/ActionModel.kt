@@ -14,7 +14,7 @@ class ActionModel(val element: Element) {
     }
 
     private fun recursiveActionTags(mirror: TypeMirror): List<TypeMirror> {
-        return (env.typeUtils.directSupertypes(mirror) ?: emptyList())
+        return (typeUtils.directSupertypes(mirror) ?: emptyList())
             .map { recursiveActionTags(it) }
             .flatten()
             .plus(mirror)

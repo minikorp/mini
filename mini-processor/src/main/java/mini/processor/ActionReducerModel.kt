@@ -2,13 +2,14 @@ package mini.processor
 
 import com.squareup.kotlinpoet.*
 import mini.Action
+import org.jetbrains.annotations.TestOnly
 import javax.lang.model.element.Modifier
 import javax.tools.StandardLocation
 
 const val DEBUG_MODE = false
 
 class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
-    private val actionType = env.elementUtils.getTypeElement("mini.Action").asType()
+    private val actionType = elementUtils.getTypeElement("mini.Action").asType()
     private val stores: List<StoreModel>
     private val tags: List<TagModel>
     private val actions: List<ActionModel>
@@ -135,4 +136,20 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
         val anyClassType = ClassName("kotlin.reflect", "KClass").wildcardType() //Class<*>
         return mapTypeOf(anyClassType, anyClassType.listTypeName())
     }
+
+    @TestOnly
+    fun generateStoreProperties(className : String) =  TypeSpec.classBuilder(className).addStoreProperties()
+
+    @TestOnly
+    fun generateMainConstructor(className : String) =  TypeSpec.classBuilder(className).addMainConstructor()
+
+    @TestOnly
+    fun generateReduceFunc(className : String) =  TypeSpec.classBuilder(className).addDispatcherFunction()
+
+    @TestOnly
+    fun generateActionReducer(className : String, packageName : String) =  TypeSpec.classBuilder(className).
+            addSuperinterface(ClassName(packageName, ACTION_REDUCER_INTERFACE))
+            .addMainConstructor()
+            .addStoreProperties()
+            .addDispatcherFunction()
 }

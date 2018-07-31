@@ -44,7 +44,7 @@ data class ReducerFuncModel(private val executableElement: ExecutableElement) {
     }
 
     private fun isStoreState(element: VariableElement): Boolean {
-        return storeElement.getSuperClassTypeParameter(0).asType() == element.asType()
+        return storeElement.getSuperClassTypeParameter(0).asType().qualifiedName() == element.asType().qualifiedName()
     }
 
     private fun isPublicMethod(element: ExecutableElement): Boolean {
