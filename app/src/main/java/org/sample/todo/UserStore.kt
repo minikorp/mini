@@ -43,62 +43,34 @@ class SharedAction : Action
 data class WarcraftState(val name: String = "Anonymous")
 data class HeroState(val name: String = "Anonymous")
 
+interface GenericAction : Action
+interface SubGenericAction : GenericAction
+class ConcreteAction : SubGenericAction
+
 @AppScope
 class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
     @Reducer
-    fun garrosh(action: GarroshAction, state: WarcraftState): WarcraftState {
-        return state.copy(name = action.password)
+    fun reduceGeneric(action: GenericAction, state: WarcraftState): WarcraftState {
+        //This branch should appear after reduceSubGeneric
+        return state
     }
 
     @Reducer
-    fun illidan(action: IllidanAction, state: WarcraftState): WarcraftState {
-        return state.copy(name = action.password)
+    fun reduceSubGeneric(action: SubGenericAction, state: WarcraftState): WarcraftState {
+        return state
     }
 
     @Reducer
-    fun durdin(action: DurdinAction, state: WarcraftState): WarcraftState {
-        return state.copy(name = action.password)
+    fun reduceConcrete(action: ConcreteAction, state: WarcraftState): WarcraftState {
+        return state
     }
 
-    //Shared
     @Reducer
-    fun shared1(sharedAction: SharedAction): WarcraftState {
+    fun reduceAction(action: Action, state: WarcraftState): WarcraftState {
         return state
     }
 }
 
 @AppScope
-class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroState>() {
-
-    @Reducer
-    fun carolina(action: BecauseImHereAction): HeroState {
-        return state.copy(name = action.username)
-    }
-
-    @Reducer(priority = 150)
-    fun united(action: CarolinaSmashAction, state: HeroState): HeroState {
-        return state.copy(name = action.username)
-    }
-
-    @Reducer
-    fun ultra(action: PlusUltraAction, state: HeroState): HeroState {
-        return state.copy(name = action.username)
-    }
-
-    //Shared
-    @Reducer
-    fun shared1(sharedAction: SharedAction): HeroState {
-        return state
-    }
-
-    @Reducer
-    fun genericReducer(sharedAction: Action): HeroState {
-        return state
-    }
-
-    @Reducer
-    fun genericReducer2(sharedAction: SilentAction): HeroState {
-        return state
-    }
-}
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroState>()

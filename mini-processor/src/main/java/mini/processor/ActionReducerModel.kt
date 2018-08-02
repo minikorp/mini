@@ -3,7 +3,6 @@ package mini.processor
 import com.squareup.kotlinpoet.*
 import mini.Action
 import org.jetbrains.annotations.TestOnly
-import javax.lang.model.element.Modifier
 import javax.tools.StandardLocation
 
 const val DEBUG_MODE = false
@@ -12,8 +11,8 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
     private val actionType = elementUtils.getTypeElement("mini.Action").asType()
     private val stores: List<StoreModel>
     private val tags: List<TagModel>
-    private val actions: List<ActionModel>
-    private val actionToFunctionMap: Map<ActionModel, List<ReducerFuncModel>>
+    private val reducerParameters: List<ReducerFunctionParameterModel>
+    private val actionToFunctionMap: Map<ReducerFunctionParameterModel, List<ReducerFuncModel>>
 
     companion object {
         const val MINI_COMMON_PACKAGE_NAME = "mini"
@@ -32,23 +31,28 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
                     element = it.storeElement)
             }
 
-        actions = reducerFunctions.map { it.tag }
-            .filter {
-                //Take subtypes of action that are not abstract
-                it.isSubtypeOf(actionType) && !it.asElement().modifiers.contains(Modifier.ABSTRACT)
-            }
-            .map { ActionModel(it.asElement()) }
+        reducerParameters = reducerFunctions.map { it.tag }
+            .map { ReducerFunctionParameterModel(it.asElement()) }
             .distinctBy { it.element.qualifiedName() }
 
-        tags = actions.map { it.tags }
+        tags = reducerParameters.map { it.tags }
             .flatten()
             .distinctBy { it.typeMirror.qualifiedName() }
 
-        actionToFunctionMap = actions.map { actionModel ->
-            actionModel to reducerFunctions
-                .filter { it.tag in actionModel.tags.map { it.typeMirror } }
+        actionToFunctionMap = reducerParameters.map { parameterModel ->
+            parameterModel to reducerFunctions
+                .filter { it.tag in parameterModel.tags.map { it.typeMirror } }
                 .sortedBy { it.priority }
-        }.toMap()
+        }.toMap().toSortedMap(Comparator { a, b ->
+            val aType = a.element.asType()
+            val bType = b.element.asType()
+            //More generic types go lower in the when branch
+            when {
+                aType isSameType bType -> 0
+                aType isSubtypeOf bType -> -1
+                else -> 1
+            }
+        })
 
     }
 
@@ -94,31 +98,36 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
             addParameters(listOf("action" to Action::class).map { ParameterSpec.builder(it.first, it.second).build() })
             addModifiers(KModifier.OVERRIDE)
 
-            addStatement("when(action) {%>")
-            actionToFunctionMap
-                .filterValues { !it.isEmpty() }
-                .forEach { actionModel, reducers ->
-                    addStatement("is %T -> {%>", actionModel.element.asType().asTypeName())
-                    reducers.forEach { reducer ->
-
-                        val storeFieldName = reducer.storeFieldName
-
-                        fun callString(): CodeBlock {
-                            return if (reducer.hasStateParameter) {
-                                CodeBlock.of("action, $storeFieldName.state")
-                            } else {
-                                CodeBlock.of("action")
-                            }
-                        }
-
-                        addCode(CodeBlock.builder()
-                            .add("$storeFieldName.setStateInternal(")
-                            .add("$storeFieldName.${reducer.funcName}(${callString()})")
-                            .add(")\n")
-                            .build())
-                    }
-                    addStatement("%<}")
+            addStatement("when (action) {%>")
+            val whenBranches = actionToFunctionMap.filterValues { !it.isEmpty() }
+            var index = 0
+            whenBranches.forEach { parameterModel, reducers ->
+                if (index == whenBranches.size - 1 && parameterModel.element.asType() isSameType actionType) {
+                    addStatement("else -> {%>")
+                } else {
+                    addStatement("is %T -> {%>", parameterModel.element.asType().asTypeName())
                 }
+                index++
+
+                reducers.forEach { reducer ->
+                    val storeFieldName = reducer.storeFieldName
+
+                    fun callString(): CodeBlock {
+                        return if (reducer.hasStateParameter) {
+                            CodeBlock.of("action, $storeFieldName.state")
+                        } else {
+                            CodeBlock.of("action")
+                        }
+                    }
+
+                    addCode(CodeBlock.builder()
+                        .add("$storeFieldName.setStateInternal(")
+                        .add("$storeFieldName.${reducer.funcName}(${callString()})")
+                        .add(")\n")
+                        .build())
+                }
+                addStatement("%<}")
+            }
             addStatement("%<}")
             return@with this
         }
@@ -138,18 +147,17 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
     }
 
     @TestOnly
-    fun generateStoreProperties(className : String) =  TypeSpec.classBuilder(className).addStoreProperties()
+    fun generateStoreProperties(className: String) = TypeSpec.classBuilder(className).addStoreProperties()
 
     @TestOnly
-    fun generateMainConstructor(className : String) =  TypeSpec.classBuilder(className).addMainConstructor()
+    fun generateMainConstructor(className: String) = TypeSpec.classBuilder(className).addMainConstructor()
 
     @TestOnly
-    fun generateReduceFunc(className : String) =  TypeSpec.classBuilder(className).addDispatcherFunction()
+    fun generateReduceFunc(className: String) = TypeSpec.classBuilder(className).addDispatcherFunction()
 
     @TestOnly
-    fun generateActionReducer(className : String, packageName : String) =  TypeSpec.classBuilder(className).
-            addSuperinterface(ClassName(packageName, ACTION_REDUCER_INTERFACE))
-            .addMainConstructor()
-            .addStoreProperties()
-            .addDispatcherFunction()
+    fun generateActionReducer(className: String, packageName: String) = TypeSpec.classBuilder(className).addSuperinterface(ClassName(packageName, ACTION_REDUCER_INTERFACE))
+        .addMainConstructor()
+        .addStoreProperties()
+        .addDispatcherFunction()
 }

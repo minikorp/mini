@@ -3,7 +3,7 @@ package mini.processor
 import javax.lang.model.element.Element
 import javax.lang.model.type.TypeMirror
 
-class ActionModel(val element: Element) {
+class ReducerFunctionParameterModel(val element: Element) {
     private val actionName = element.simpleName.toString()
     val tags: List<TagModel> = recursiveActionTags(element.asType())
         .map { TagModel(it) }
