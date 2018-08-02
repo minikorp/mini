@@ -8,6 +8,13 @@ import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeMirror
 
 data class ReducerFuncModel(private val executableElement: ExecutableElement) {
+    companion object {
+        const val PARAMS_SIZE_ERROR = "Reducer functions must receive an action, and optionally the state of the store"
+        const val PARAMS_ORDER_ERROR = "Reducer functions second parameter must be the store state"
+        const val RETURN_STATE_ERROR = "Reducer functions must return the state of the store as a parameter"
+        const val PUBLIC_FUN_ERROR = "Reducer functions must be public"
+    }
+
     val tag: TypeMirror
     val funcName: String = executableElement.simpleName.toString()
     val storeElement: Element = executableElement.enclosingElement
@@ -18,29 +25,25 @@ data class ReducerFuncModel(private val executableElement: ExecutableElement) {
     init {
         val paramsSize = executableElement.parameters.size
 
-        compileCheck(message = "Reducer functions must receive an action, and optionally the state of the store",
-            check = paramsSize in 1..2,
-            element = executableElement)  //We must receive an action and the state is optional
-        compileCheck(message = "Reducer functions must return the state of the store as a parameter",
-            check = executableElement.returnType isSubtypeOf storeElement.getSuperClassTypeParameter(0).asType(),
-            element = executableElement)
-        compileCheck(message = "Reducer functions must be public",
-            check = isPublicMethod(executableElement),
-            element = executableElement)
+        compileCheck(message = PARAMS_SIZE_ERROR,
+                check = paramsSize in 1..2,
+                element = executableElement)  //We must receive an action and the state is optional
+        compileCheck(message = RETURN_STATE_ERROR,
+                check = executableElement.returnType isSubtypeOf storeElement.getSuperClassTypeParameter(0).asType(),
+                element = executableElement)
+        compileCheck(message = PUBLIC_FUN_ERROR,
+                check = isPublicMethod(executableElement),
+                element = executableElement)
 
         hasStateParameter = paramsSize == 2
         if (hasStateParameter) {
-            compileCheck(message = "Reducer functions second parameter must be the store state",
-                check = isStoreState(executableElement.parameters[1]),
-                element = executableElement
+            compileCheck(message = PARAMS_ORDER_ERROR,
+                    check = isStoreState(executableElement.parameters[1]),
+                    element = executableElement
             )
         }
 
         tag = executableElement.parameters[0].asType()
-    }
-
-    private fun isAnAction(element: VariableElement): Boolean {
-        return element.asType().getSupertypes().any { it.asElement().qualifiedName() == "mini.Action" }
     }
 
     private fun isStoreState(element: VariableElement): Boolean {

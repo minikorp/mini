@@ -24,25 +24,25 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
 
     init {
         stores = reducerFunctions
-            .distinctBy { it.storeElement.qualifiedName() }
-            .map {
-                StoreModel(
-                    fieldName = it.storeFieldName,
-                    element = it.storeElement)
-            }
+                .distinctBy { it.storeElement.qualifiedName() }
+                .map {
+                    StoreModel(
+                            fieldName = it.storeFieldName,
+                            element = it.storeElement)
+                }
 
         reducerParameters = reducerFunctions.map { it.tag }
-            .map { ReducerFunctionParameterModel(it.asElement()) }
-            .distinctBy { it.element.qualifiedName() }
+                .map { ReducerFunctionParameterModel(it.asElement()) }
+                .distinctBy { it.element.qualifiedName() }
 
         tags = reducerParameters.map { it.tags }
-            .flatten()
-            .distinctBy { it.typeMirror.qualifiedName() }
+                .flatten()
+                .distinctBy { it.typeMirror.qualifiedName() }
 
         actionToFunctionMap = reducerParameters.map { parameterModel ->
             parameterModel to reducerFunctions
-                .filter { it.tag in parameterModel.tags.map { it.typeMirror } }
-                .sortedBy { it.priority }
+                    .filter { it.tag.qualifiedName() in parameterModel.tags.map { it.typeMirror.qualifiedName() } }
+                    .sortedBy { it.priority }
         }.toMap().toSortedMap(Comparator { a, b ->
             val aType = a.element.asType()
             val bType = b.element.asType()
@@ -61,16 +61,16 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
         val builder = FileSpec.builder(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_CLASS_NAME)
         //Start generating file
         val kotlinFile = builder
-            .addType(TypeSpec.classBuilder(ACTION_REDUCER_CLASS_NAME)
-                .addSuperinterface(ClassName(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_INTERFACE))
-                .addMainConstructor()
-                .addStoreProperties()
-                .addDispatcherFunction()
-                .build())
-            .build()
+                .addType(TypeSpec.classBuilder(ACTION_REDUCER_CLASS_NAME)
+                        .addSuperinterface(ClassName(MINI_COMMON_PACKAGE_NAME, ACTION_REDUCER_INTERFACE))
+                        .addMainConstructor()
+                        .addStoreProperties()
+                        .addDispatcherFunction()
+                        .build())
+                .build()
 
         val kotlinFileObject = env.filer.createResource(StandardLocation.SOURCE_OUTPUT,
-            MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
+                MINI_PROCESSOR_PACKAGE_NAME, "${kotlinFile.name}.kt")
         val openWriter = kotlinFileObject.openWriter()
         kotlinFile.writeTo(openWriter)
         openWriter.close()
@@ -78,17 +78,17 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
 
     private fun TypeSpec.Builder.addMainConstructor(): TypeSpec.Builder {
         return primaryConstructor(FunSpec.constructorBuilder()
-            .addParameter("stores", getStoreMapType())
-            .build())
+                .addParameter("stores", getStoreMapType())
+                .build())
     }
 
     private fun TypeSpec.Builder.addStoreProperties(): TypeSpec.Builder {
         stores.forEach { storeModel ->
             val typeName = storeModel.element.asType().asTypeName()
             addProperty(PropertySpec.builder(storeModel.fieldName, typeName)
-                .addModifiers(KModifier.PRIVATE)
-                .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", typeName, typeName))
-                .build()
+                    .addModifiers(KModifier.PRIVATE)
+                    .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", typeName, typeName))
+                    .build()
             )
         }
         return this
@@ -122,10 +122,10 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
                     }
 
                     addCode(CodeBlock.builder()
-                        .add("$storeFieldName.setStateInternal(")
-                        .add("$storeFieldName.${reducer.funcName}(${callString()})")
-                        .add(")\n")
-                        .build())
+                            .add("$storeFieldName.setStateInternal(")
+                            .add("$storeFieldName.${reducer.funcName}(${callString()})")
+                            .add(")\n")
+                            .build())
                 }
                 addStatement("%<}")
             }
@@ -157,8 +157,9 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
     fun generateReduceFunc(className: String) = TypeSpec.classBuilder(className).addDispatcherFunction()
 
     @TestOnly
-    fun generateActionReducer(className: String, packageName: String) = TypeSpec.classBuilder(className).addSuperinterface(ClassName(packageName, ACTION_REDUCER_INTERFACE))
-        .addMainConstructor()
-        .addStoreProperties()
-        .addDispatcherFunction()
+    fun generateActionReducer(className: String, packageName: String) = TypeSpec.classBuilder(className)
+            .addSuperinterface(ClassName(packageName, ACTION_REDUCER_INTERFACE))
+            .addMainConstructor()
+            .addStoreProperties()
+            .addDispatcherFunction()
 }

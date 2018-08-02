@@ -23,8 +23,8 @@ class MiniProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Reducer::class.java)
-            .map { it.canonicalName }
-            .toMutableSet()
+                .map { it.canonicalName }
+                .toMutableSet()
     }
 
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -32,9 +32,9 @@ class MiniProcessor : AbstractProcessor() {
         if (annotatedElements.isEmpty()) return false
 
         val actionMethods = annotatedElements
-            .filterNotNull()
-            .filter { it.isMethod }
-            .map { ReducerFuncModel(it as ExecutableElement) }
+                .filterNotNull()
+                .filter { it.isMethod }
+                .map { ReducerFuncModel(it as ExecutableElement) }
 
         val reducerModel = ActionReducerModel(actionMethods)
         reducerModel.generateDispatcherFile()

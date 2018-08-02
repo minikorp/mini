@@ -74,7 +74,7 @@ fun compileCheck(message: String = "Compilation error", check: Boolean, element:
 
 fun logError(message: String, element: Element? = null) {
     logMessage(Diagnostic.Kind.ERROR, message, element)
-    error("Compilation aborted")
+    error("Compilation aborted. Reason : $message")
 }
 
 fun logWarning(message: String, element: Element? = null) {
