@@ -51,26 +51,32 @@ class ConcreteAction : SubGenericAction
 class WarcraftStore @Inject constructor() : Store<WarcraftState>() {
 
     @Reducer
-    fun reduceGeneric(action: GenericAction, state: WarcraftState): WarcraftState {
+    fun reduceGeneric(action: GenericAction): WarcraftState {
         //This branch should appear after reduceSubGeneric
         return state
     }
 
     @Reducer
-    fun reduceSubGeneric(action: SubGenericAction, state: WarcraftState): WarcraftState {
+    fun reduceSubGeneric(action: SubGenericAction): WarcraftState {
         return state
     }
 
     @Reducer
-    fun reduceConcrete(action: ConcreteAction, state: WarcraftState): WarcraftState {
+    fun reduceConcrete(action: ConcreteAction): WarcraftState {
         return state
     }
 
     @Reducer
-    fun reduceAction(action: Action, state: WarcraftState): WarcraftState {
+    fun reduceAction(action: Action): WarcraftState {
         return state
     }
 }
 
 @AppScope
-class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroState>()
+class MightStore @Inject constructor(val dispatcher: Dispatcher) : Store<HeroState>() {
+
+    @Reducer
+    fun reduceConcrete(action: ConcreteAction): HeroState {
+        return state
+    }
+}

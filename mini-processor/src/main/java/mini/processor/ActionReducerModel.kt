@@ -86,6 +86,7 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
         stores.forEach { storeModel ->
             val typeName = storeModel.element.asType().asTypeName()
             addProperty(PropertySpec.builder(storeModel.fieldName, typeName)
+                .addModifiers(KModifier.PRIVATE)
                 .initializer(CodeBlock.of("stores.get(%T::class.java) as %T", typeName, typeName))
                 .build()
             )
