@@ -69,14 +69,62 @@ Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a
 
 If you make use of the RxJava methods, you can make use of the `SubscriptionTracker` interface to keep track of the `Disposables` used on your activities and fragments.
 
-####Select and combine
-TODO
 ####Tasks
-TODO
+A Task is a basic object to represent an ongoing process. They should be used in the state of our `Store` to represent ongoing processes that must be represented in the UI.
+Having the next code:
+
+```kotlin
+
+data class LoginAction(val username: String, val password: String)
+data class LoginCompleteAction(val loginTask: Task,
+                               val user: User?)
+
+data class SessionState(val loginTask: Task = taskIdle(),
+                        val loggedUser: User? = null)
+
+class SessionStore @Inject constructor(val controller: SessionController) : Store<SessionState>() {
+    @Reducer
+    fun login(action: LoginAction): SessionState {
+        controller.login(action.username, action.password)
+        return state.copy(loginTask = taskRunning(), loggedUser = null)
+    }
+
+    @Reducer
+    fun loginComplete(action: LoginCompleteAction): SessionState {
+        return state.copy(loginTask = action.loginTask, loggedUser = action.user)
+    }
+}
+```
+The workflow will be:
+
+- View dispatch `LoginAction`.
+- Store changes his `LoginTask` status to running and call though his SessionController which will do all the async work to log in the given user.
+- View shows an Spinner when `LoginTask` is in running state.
+- The async call ends and `LoginCompleteAction` is dispatched on UI, sending a null `User` and an error state `Task` if the async work failed or a success `Task` and an `User`.
+- The Store changes his state to the given values from `LoginCompleteAction`.
+- The View redirect to the HomeActivity if the task was success or shows an error if not.
+
+####Rx Utils
+Mini includes some utility extensions over RxJava 2.0 to make easier listen state changes over the `Stores`.
+
+- `mapNotNull`: Will emit only not null values over the given `map` clause.
+- `select`: Like `mapNotNull` but avoiding repeated values.
+- `onNextTerminalState`: Used to map a `Task` inside an state and listen the next terminal state(Success - Error). Executing a different closure depending of the result of the task.
+
 ####Navigation
-TODO
-####UI Testing with Mini
-TODO
+To avoid loops over when working with navigation based on a process result. You will need to make use of `onNextTerminalState` after dispatch and `Action` that starts a process which result could navigate to a different screen.
+For example:
+```kotlin
+  fun login(username: String, password: String) {
+        dispatcher.dispatch(LoginAction(username, password))
+        sessionStore.flowable()
+                .onNextTerminalState(taskMapFn = { it.loginTask },
+                        successFn = { navigateToLogin() },
+                        failureFn = { showError(it) })
+    }
+```
+
+If we continually listen the changes of a `Task` and we navigate to a specific screen when the `Task` becomes successful. The state will stay on SUCCESS and if we navigate back to the last screen we will be redirected again.
 
 ####Logging
 Mini includes a custom `LoggerInterceptor` to log any change in your `Store` states produced from an `Action`. This will allow you to keep track of your actions, changes and side-effects more easily. 
