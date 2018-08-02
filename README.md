@@ -4,7 +4,7 @@ Mini is a minimal Kotlin and Flux architecture with a mix of useful features.
 ### Introduction
 TODO
 ## How to Use
-#### Actions
+### Actions
 Actions are helpers that pass data to the Dispatcher. They represent use cases of our application and are the start point of any change made during the application lifetime.
 
 ```kotlin
@@ -12,7 +12,7 @@ data class LoginAction(val username: String,
                        val password: String) : Action
 ```
 
-#### Dispatcher
+### Dispatcher
 The dispatcher receives these Actions and broadcast payloads to registered callbacks. The instance of the Dispatcher must be unique across the whole application and it will execute all the logic in the main thread making all the code synchronous.   
 
 ```kotlin
@@ -27,7 +27,7 @@ dispatcher.dispatchOnUi(LoginAction(username = "user", password = "123"))
 dispatcher.dispatchOnUiSync(LoginAction(username = "user", password = "123"))
 ```
 
-#### Store
+### Store
 The Stores act as containers for application state & logic. The real work in the application is done in the Stores. The Stores registered to listen in on the actions of the Dispatcher will do accordingly and update the Views.
 
 The Stores represent the application though States. An State is a group of information that represent all the application needed information for the logic that this store is taking care of.
@@ -52,7 +52,7 @@ class SessionStore : Store<SessionState>() {
 }
 ```
 
-#### View changes
+### View changes
 Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
 
 ```kotlin
@@ -69,7 +69,7 @@ Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a
 
 If you make use of the RxJava methods, you can make use of the `SubscriptionTracker` interface to keep track of the `Disposables` used on your activities and fragments.
 
-#### Tasks
+### Tasks
 A Task is a basic object to represent an ongoing process. They should be used in the state of our `Store` to represent ongoing processes that must be represented in the UI.
 Having the next code:
 
@@ -104,14 +104,14 @@ The workflow will be:
 - The Store changes his state to the given values from `LoginCompleteAction`.
 - The View redirect to the HomeActivity if the task was success or shows an error if not.
 
-#### Rx Utils
+### Rx Utils
 Mini includes some utility extensions over RxJava 2.0 to make easier listen state changes over the `Stores`.
 
 - `mapNotNull`: Will emit only not null values over the given `map` clause.
 - `select`: Like `mapNotNull` but avoiding repeated values.
 - `onNextTerminalState`: Used to map a `Task` inside an state and listen the next terminal state(Success - Error). Executing a different closure depending of the result of the task.
 
-#### Navigation
+### Navigation
 To avoid loops over when working with navigation based on a process result. You will need to make use of `onNextTerminalState` after dispatch and `Action` that starts a process which result could navigate to a different screen.
 For example:
 ```kotlin
@@ -126,7 +126,7 @@ For example:
 
 If we continually listen the changes of a `Task` and we navigate to a specific screen when the `Task` becomes successful. The state will stay on SUCCESS and if we navigate back to the last screen we will be redirected again.
 
-#### Logging
+### Logging
 Mini includes a custom `LoggerInterceptor` to log any change in your `Store` states produced from an `Action`. This will allow you to keep track of your actions, changes and side-effects more easily. 
 To add the LoggerInterceptor to your application you just need to add a single instance of it to your `Dispatcher` after initialize it in your `Application` class or dependency injection code.
 ```kotlin
@@ -177,7 +177,7 @@ fun login_redirects_to_home_with_success_task() {
 
 ## Setting Up
 
-####Import the library
+### Import the library
 To setup Mini in your application, first you will need to add the library itself together with the annotation processor:
 ```groovy
 implementation 'com.github.pabloogc:Mini:1.0.5'
@@ -185,7 +185,7 @@ annotationProcessor 'com.github.pabloogc.Mini:mini-processor:1.0.5'
 androidTestImplementation 'com.github.pabloogc.Mini:mini-android-testing:1.0.5' //Optional
 ```
 
-####Setting up your App file
+### Setting up your App file
 After setting it up on your gradle application. You will need to initialize a `Dispatcher` unique instance in your application together with a list of `Stores`. To achieve this you can use your favorite dependency injection framework.
 
 With your Dispatcher and Stores ready, you will need to add the `MiniActionReducer` which is auto-generated depending of your `Stores` and `Reducers`. 
