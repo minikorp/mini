@@ -59,7 +59,7 @@ fun TypeMirror.asTypeElementOrNull(): TypeElement? = asElementOrNull()?.asTypeEl
 fun TypeMirror.asDeclaredType(): DeclaredType = asDeclaredTypeOrNull()!!
 fun TypeMirror.asDeclaredTypeOrNull(): DeclaredType? = this as? DeclaredType
 
-infix fun TypeMirror.sameType(other: TypeMirror?): Boolean {
+infix fun TypeMirror.isSameType(other: TypeMirror?): Boolean {
     if (other == null) return false
     return typeUtils.isSameType(this, other)
 }

@@ -17,6 +17,8 @@ class MiniProcessor : AbstractProcessor() {
 
     override fun init(environment: ProcessingEnvironment) {
         env = environment
+        typeUtils = env.typeUtils
+        elementUtils = env.elementUtils
     }
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
