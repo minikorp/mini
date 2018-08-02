@@ -1,7 +1,6 @@
 apply plugin: 'kotlin'
 apply from: "../jitpack.gradle"
 
-
 dependencies {
     compile project(":mini-common")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
