@@ -7,7 +7,6 @@ import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes("org.kotlin.annotationProcessor.reducer")
 @SupportedOptions(MiniProcessor.KAPT_KOTLIN_GENERATED_OPTION_NAME)
 class MiniProcessor : AbstractProcessor() {
 

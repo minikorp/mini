@@ -17,10 +17,13 @@ abstract class Store<S : Any> {
     val properties: MutableMap<String, Any?> = HashMap()
 
     private var _state: S? = null
-    val state: S
+    var state: S
         get() {
             if (_state == null) _state = initialState()
             return _state!!
+        }
+        protected set(value) {
+            setStateInternal(value)
         }
 
     private val observers: MutableList<StoreObserver<S>> = ArrayList()
