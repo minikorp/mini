@@ -1,11 +1,13 @@
 # Mini
-Mini is a minimal Kotlin and Flux architecture with a mix of useful features.
+Mini is a minimal Flux architecture written in Kotlin that also adds a mix of useful features to build UIs fast.
 
-### Introduction
-TODO
+### Purpose
+You should use this library if you aim to develop a reactive application with good performance (no reflection using code-gen).
+Feature development using Mini is fast compared to traditional architectures (like CLEAN or MVP), low boilerplate and state based models make feature integration and bugfixing easy as well as removing several families of problems like concurrency or view consistency across screens.
+
 ## How to Use
 ### Actions
-Actions are helpers that pass data to the Dispatcher. They represent use cases of our application and are the start point of any change made during the application lifetime.
+Actions are helpers that pass data to the Dispatcher. They represent use cases of our application and are the start point of any state change made during the application lifetime. 
 
 ```kotlin
 data class LoginAction(val username: String,
@@ -13,26 +15,26 @@ data class LoginAction(val username: String,
 ```
 
 ### Dispatcher
-The dispatcher receives these Actions and broadcast payloads to registered callbacks. The instance of the Dispatcher must be unique across the whole application and it will execute all the logic in the main thread making all the code synchronous.   
+The dispatcher receives Actions and broadcast payloads to registered callbacks. The instance of the Dispatcher must be unique across the whole application and it will execute all the logic in the main thread making state muations synchronous. 
 
 ```kotlin
 //Dispatch the action in the current Thread
 dispatcher.dispatch(LoginAction(username = "user", password = "123"))
 
-//Dispatch the action in the UI Thread
+//Dispatch the action in the UI Thread, this action will be processed in the next event loop
 dispatcher.dispatchOnUi(LoginAction(username = "user", password = "123"))
 
 //Post and event that will dispatch the action on the Ui thread 
-//and block until the dispatch is complete.
+//and block until the dispatch is complete. Only useful when calling from a background thread.
 dispatcher.dispatchOnUiSync(LoginAction(username = "user", password = "123"))
 ```
 
 ### Store
-The Stores act as containers for application state & logic. The real work in the application is done in the Stores. The Stores registered to listen in on the actions of the Dispatcher will do accordingly and update the Views.
+The Stores are holders for application state and state mutation logic. In order to do so they expose pure reducer functions that are later invoked by the dispatcher.
 
-The Stores represent the application though States. An State is a group of information that represent all the application needed information for the logic that this store is taking care of.
+The state is plain object (usually a data class) that holds all information needed to display the view. State should always be inmutable. State classes should avoid using framework elements (View, Camera, Cursor...) in order to facilitate testing.
 
-Finally, Stores are subscribed to different actions expecting to change the application state when this action is dispatched. Mini manages this using the `@Reducer` annotation. Which should be used together with a **non-private function that receives an Action as parameter**. It can also receive a state for unitary testing purposes. 
+Stores subscribe to actions to change the application state after a dispatch. Mini generates the code that links dispatcher actions and stores using the `@Reducer` annotation over a **non-private function that receives an Action as parameter**. It can also receive a state for unitary testing purposes. 
 ```kotlin
 data class SessionState(val loginTask : Task = taskIdle(),
                         val loggedUsername : String? = null)
@@ -46,11 +48,14 @@ class SessionStore : Store<SessionState>() {
     }
 
     @Reducer
-    fun loginComplete(action: LoginCompleteAction, state: SessionState): WarcraftState {
+    fun loginComplete(action: LoginCompleteAction, state: SessionState): SessionState {
         return state.copy(loginTask = taskSuccess(), loggedUsername = action.name)
     }
 }
 ```
+
+### Generated code
+MiniActionReducer explanation. //TODO
 
 ### View changes
 Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
