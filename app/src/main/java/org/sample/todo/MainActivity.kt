@@ -4,15 +4,15 @@ import android.os.Bundle
 import android.view.View
 import com.minivac.mini.R
 import kotlinx.android.synthetic.main.activity_main.*
-import org.sample.todo.core.flux.FluxActivity
 import mini.TaskStatus
 import mini.onNextTerminalState
 import mini.select
+import org.sample.todo.core.flux.FluxActivity
 import javax.inject.Inject
 
 class MainActivity : FluxActivity() {
 
-    @Inject lateinit var testStore: TestStore
+    @Inject lateinit var testStore: DemoStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

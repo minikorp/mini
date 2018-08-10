@@ -5,7 +5,6 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.VariableElement
-import javax.lang.model.type.TypeMirror
 
 data class ReducerFuncModel(private val executableElement: ExecutableElement) {
     companion object {
@@ -15,7 +14,7 @@ data class ReducerFuncModel(private val executableElement: ExecutableElement) {
         const val PUBLIC_FUN_ERROR = "Reducer functions must be public"
     }
 
-    val tag: TypeMirror
+    val parameterType: ReducerFunctionParameterModel
     val funcName: String = executableElement.simpleName.toString()
     val storeElement: Element = executableElement.enclosingElement
     val storeFieldName = storeElement.simpleName.toString().toLowerCase()
@@ -43,7 +42,7 @@ data class ReducerFuncModel(private val executableElement: ExecutableElement) {
             )
         }
 
-        tag = executableElement.parameters[0].asType()
+        parameterType = ReducerFunctionParameterModel(executableElement.parameters[0])
     }
 
     private fun isStoreState(element: VariableElement): Boolean {

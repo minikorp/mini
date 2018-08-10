@@ -2,7 +2,7 @@ package mini.processor
 
 import com.google.testing.compile.CompilationRule
 import mini.Action
-import mini.Reducer
+import mini.ReducerFun
 import mini.Store
 import org.junit.Before
 import org.junit.Rule
@@ -23,45 +23,45 @@ class ReducerErrorsTest {
     internal class DummyStateTwo
 
     internal class NoParamsStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun helloDarknessMyOldFriend() = state
     }
 
     internal class ToManyParamsStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun youAreNotPrepared(action: DummyAction, state: DummyState, potato: Any) = state
     }
 
     internal class NoReturnStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun jonhWickDog(action: DummyAction, state: DummyState) {
         }
     }
 
     internal class NoReturnStateStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun whyThanos(action: DummyAction, state: DummyState): String {
             return "I don't want to go Mr.Stark"
         }
     }
 
     internal class PrivateStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         private fun whyThanos(action: DummyAction, state: DummyState) = state
     }
 
     internal class ProtectedStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         protected fun whyThanos(action: DummyAction, state: DummyState) = state
     }
 
     internal class NotOrdererStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun doYouKnowTheWae(state: DummyState, action: DummyAction) = state
     }
 
     internal class WrongStateStore : Store<DummyState>() {
-        @Reducer
+        @ReducerFun
         fun pepe(action: DummyAction, state: DummyStateTwo) = DummyState()
     }
 

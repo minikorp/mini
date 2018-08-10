@@ -3,16 +3,16 @@ package mini.processor
 import com.squareup.kotlinpoet.*
 import mini.Action
 import org.jetbrains.annotations.TestOnly
+import javax.lang.model.type.TypeMirror
 import javax.tools.StandardLocation
 
 const val DEBUG_MODE = false
 
-class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
+class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>,
+                         private val extraActionTypes: List<TypeMirror>) {
     private val actionType = elementUtils.getTypeElement("mini.Action").asType()
     private val stores: List<StoreModel>
-    private val tags: List<TagModel>
-    private val reducerParameters: List<ReducerFunctionParameterModel>
-    private val actionToFunctionMap: Map<ReducerFunctionParameterModel, List<ReducerFuncModel>>
+    private val typeToReducersList: List<Pair<TypeMirror, List<ReducerFuncModel>>>
 
     companion object {
         const val MINI_COMMON_PACKAGE_NAME = "mini"
@@ -31,29 +31,31 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
                     element = it.storeElement)
             }
 
-        reducerParameters = reducerFunctions.map { it.tag }
-            .map { ReducerFunctionParameterModel(it.asElement()) }
-            .distinctBy { it.element.qualifiedName() }
+        val typesFromReducers = reducerFunctions
+            .map { it.parameterType.element.asType() }
+        //.filter { Modifier.FINAL in it.asTypeElement().modifiers }
 
-        tags = reducerParameters.map { it.tags }
-            .flatten()
-            .distinctBy { it.typeMirror.qualifiedName() }
+        val actionTypes = (extraActionTypes + typesFromReducers)
+            .distinctBy { it.asTypeName() }
 
-        actionToFunctionMap = reducerParameters.map { parameterModel ->
-            parameterModel to reducerFunctions
-                .filter { it.tag.qualifiedName() in parameterModel.tags.map { it.typeMirror.qualifiedName() } }
-                .sortedBy { it.priority }
-        }.toMap().toSortedMap(Comparator { a, b ->
-            val aType = a.element.asType()
-            val bType = b.element.asType()
-            //More generic types go lower in the when branch
-            when {
-                aType isSameType bType -> 0
-                aType isSubtypeOf bType -> -1
-                else -> 1
-            }
-        })
-
+        typeToReducersList =
+            actionTypes.map { actionType ->
+                val functions = reducerFunctions.filter {
+                    actionType isSubtypeOf it.parameterType.element.asType()
+                }
+                actionType to functions.sortedBy { it.priority }
+            }.sortedWith(
+                Comparator { a, b ->
+                    val aType = a.first
+                    val bType = b.first
+                    //More generic types go lower in the when branch
+                    when {
+                        aType isSubtypeOf bType -> 1
+                        bType isSubtypeOf aType -> -1
+                        else -> 0
+                    }
+                }
+            )
     }
 
     fun generateDispatcherFile() {
@@ -101,16 +103,11 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>) {
             addModifiers(KModifier.OVERRIDE)
 
             addStatement("when (action) {%>")
-            val whenBranches = actionToFunctionMap.filterValues { !it.isEmpty() }
-            var index = 0
-            whenBranches.forEach { parameterModel, reducers ->
-                if (index == whenBranches.size - 1 && parameterModel.element.asType() isSameType actionType) {
-                    addStatement("else -> {%>")
-                } else {
-                    addStatement("is %T -> {%>", parameterModel.element.asType().asTypeName())
-                }
-                index++
-
+            val whenBranches = typeToReducersList.filter { (_, reducers) ->
+                !reducers.isEmpty()
+            }
+            whenBranches.forEach { (parameterType, reducers) ->
+                addStatement("is %T -> {%>", parameterType.asTypeName())
                 reducers.forEach { reducer ->
                     val storeFieldName = reducer.storeFieldName
 
