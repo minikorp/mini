@@ -1,5 +1,6 @@
 package mini.processor
 
+import mini.ActionType
 import mini.Reducer
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
@@ -27,15 +28,18 @@ class MiniProcessor : AbstractProcessor() {
     }
 
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        val annotatedElements = roundEnv.getElementsAnnotatedWith(Reducer::class.java)
-        if (annotatedElements.isEmpty()) return false
+        val annotatedFunctions = roundEnv.getElementsAnnotatedWith(Reducer::class.java)
+        val annotatedClasses = roundEnv.getElementsAnnotatedWith(ActionType::class.java)
+        if (annotatedFunctions.isEmpty()) return false
 
-        val actionMethods = annotatedElements
+        val reducerFunctions = annotatedFunctions
                 .filterNotNull()
                 .filter { it.isMethod }
                 .map { ReducerFuncModel(it as ExecutableElement) }
 
-        val reducerModel = ActionReducerModel(actionMethods)
+        val actionTypes = annotatedClasses.map { it.asType() }
+
+        val reducerModel = ActionReducerModel(reducerFunctions, actionTypes)
         reducerModel.generateDispatcherFile()
 
         return true

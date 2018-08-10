@@ -3,7 +3,7 @@ package mini.processor
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.compile.CompilationRule
 import mini.Action
-import mini.Reducer
+import mini.ReducerFun
 import mini.Store
 import org.junit.Before
 import org.junit.Rule
@@ -28,21 +28,21 @@ class ProcessorTest {
     internal data class DeadliftState(val value: Int = 0)
 
     internal class BodyweightStore : Store<BodyweightState>() {
-        @Reducer
+        @ReducerFun
         fun doPullUps(action: PullUpAction): BodyweightState = state.copy(value = action.value)
 
-        @Reducer
+        @ReducerFun
         fun rest(action: RestAction, oldState: BodyweightState): BodyweightState = oldState.copy(value = action.value)
     }
 
     internal class GymStore : Store<DeadliftState>() {
-        @Reducer
+        @ReducerFun
         fun workout(action: GymAction): DeadliftState = state.copy(value = 1)
 
-        @Reducer
+        @ReducerFun
         fun heavyLifting(action: DeadliftAction): DeadliftState = state.copy(value = action.value)
 
-        @Reducer
+        @ReducerFun
         fun rest(action: RestAction): DeadliftState = state.copy(value = action.value)
 
     }
