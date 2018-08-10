@@ -1,18 +1,19 @@
 package org.sample.todo
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
-import com.minivac.mini.flux.FluxActivity
-import mini.Grove
-import javax.inject.Inject
+import com.minivac.mini.R
+import org.sample.todo.core.flux.FluxActivity
 
 class SecondActivity : FluxActivity() {
 
-    @Inject lateinit var userStore: WarcraftStore
+    companion object {
+        fun newIntent(context: Context): Intent = Intent(context, SecondActivity::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Toast.makeText(this, "hey: ${userStore.state.name}", Toast.LENGTH_SHORT).show()
-        Grove.d { "Created" }
+        setContentView(R.layout.activity_two)
     }
 }

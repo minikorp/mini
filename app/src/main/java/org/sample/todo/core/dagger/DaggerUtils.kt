@@ -1,4 +1,4 @@
-package com.minivac.mini.dagger
+package org.sample.todo.core.dagger
 
 /**
  * Look for an injection method in the component and invoke it.

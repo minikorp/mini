@@ -1,35 +1,60 @@
 package org.sample.todo
 
-import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
+import android.view.View
 import com.minivac.mini.R
-import com.minivac.mini.flux.FluxActivity
-import mini.Dispatcher
+import kotlinx.android.synthetic.main.activity_main.*
+import org.sample.todo.core.flux.FluxActivity
+import mini.TaskStatus
+import mini.onNextTerminalState
+import mini.select
 import javax.inject.Inject
 
 class MainActivity : FluxActivity() {
 
-    @Inject lateinit var dispatcher: Dispatcher
-    @Inject lateinit var userStore: WarcraftStore
-
-    val goSecond: TextView by lazy { findViewById<TextView>(R.id.goSecondButton) }
+    @Inject lateinit var testStore: TestStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
+        initializeInterface()
+        startStoreChanges()
+    }
 
-        goSecond.setOnClickListener {
-            startActivity(Intent(this, SecondActivity::class.java))
-        }
+    private fun startStoreChanges() {
+        testStore.flowable()
+            .select { it.text }
+            .subscribe { miniText.text = it }
+            .track()
 
-        userStore
-            .observe { goSecond.text = it.name }
-        
+        testStore.flowable()
+            .select { it.getTextTask }
+            .subscribe {
+                when (it.status) {
+                    TaskStatus.RUNNING -> progressBar.visibility = View.VISIBLE
+                    TaskStatus.SUCCESS -> progressBar.visibility = View.GONE
+                    TaskStatus.ERROR -> progressBar.visibility = View.GONE
+                }
+            }.track()
+    }
 
-        if (savedInstanceState == null) {
-            dispatcher.dispatch(PlusUltraAction("${userStore.state.name} Hello", "Reactive"))
-        }
+    private fun initializeInterface() {
+        dispatchButton.setOnClickListener { dispatcher.dispatch(ChangeTextAction("Feels good man")) }
+        startBgTaskButton.setOnClickListener { dispatcher.dispatch(GetDataAction()) }
+        navigateButton.setOnClickListener { navigate() }
+    }
+
+    private fun navigate() {
+        progressBar.visibility = View.VISIBLE
+        dispatcher.dispatch(NavigationAction())
+
+        testStore.flowable()
+            .onNextTerminalState(taskMapFn = { it.navigationTask },
+                successFn = {
+                    progressBar.visibility = View.GONE
+                    startActivity(SecondActivity.newIntent(this))
+                },
+                failureFn = { progressBar.visibility = View.GONE })
+            .track()
     }
 }
