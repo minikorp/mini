@@ -50,8 +50,8 @@ class ActionReducerModel(private val reducerFunctions: List<ReducerFuncModel>,
                     val bType = b.first
                     //More generic types go lower in the when branch
                     when {
-                        aType isSubtypeOf bType -> 1
-                        bType isSubtypeOf aType -> -1
+                        aType isSubtypeOf bType -> -1
+                        bType isSubtypeOf aType -> 1
                         else -> 0
                     }
                 }
