@@ -186,7 +186,7 @@ fun login_redirects_to_home_with_success_task() {
 To setup Mini in your application, first you will need to add the library itself together with the annotation processor:
 ```groovy
 implementation 'com.github.pabloogc:Mini:1.0.5'
-annotationProcessor 'com.github.pabloogc.Mini:mini-processor:1.0.5'
+kapt 'com.github.pabloogc.Mini:mini-processor:1.0.5'
 androidTestImplementation 'com.github.pabloogc.Mini:mini-android-testing:1.0.5' //Optional
 ```
 
