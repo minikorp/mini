@@ -1,6 +1,6 @@
 package mini
 
-class Dispatcher(private val verifyThreads: Boolean = true) {
+class Dispatcher {
     private val actionReducers: MutableList<ActionReducer> = ArrayList()
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private val actionReducerLink: Chain = object : Chain {
@@ -10,7 +10,7 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
         }
     }
     private var interceptorChain: Chain = buildChain()
-    private var dispatching: Boolean = false
+    private var dispatching: Action? = null
 
     private fun buildChain(): Chain {
         return interceptors.fold(actionReducerLink)
@@ -48,29 +48,27 @@ class Dispatcher(private val verifyThreads: Boolean = true) {
     }
 
     /**
-     * Post an event that will dispatch the action on the Ui thread
-     * and return immediately.
+     * Dispatch an action on the main thread synchronously.
+     * This method will block the caller if it's not
+     * the main thread.
      */
-    fun dispatchOnUi(action: Action) {
-        onUi { dispatch(action) }
+    fun dispatch(action: Action) {
+        onUiSync {
+            if (dispatching != null) {
+                throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
+                                            "$dispatching. Nested action: $action ")
+            }
+            dispatching = action
+            interceptorChain.proceed(action)
+            dispatching = null
+        }
     }
 
     /**
-     * Post and event that will dispatch the action on the Ui thread
-     * and block until the dispatch is complete.
-     *
-     * Can't be called from the main thread.
+     * Post an event that will dispatch the action on the UI thread
+     * and return immediately.
      */
-    fun dispatchOnUiSync(action: Action) {
-        if (verifyThreads) assertNotOnUiThread()
-        onUiSync { dispatch(action) }
-    }
-
-    fun dispatch(action: Action) {
-        if (verifyThreads) assertOnUiThread()
-        if (dispatching) throw IllegalStateException("Nested dispatch calls")
-        dispatching = true
-        interceptorChain.proceed(action)
-        dispatching = false
+    fun dispatchAsync(action: Action) {
+        onUi { dispatch(action) }
     }
 }
