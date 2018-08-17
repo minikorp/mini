@@ -84,7 +84,7 @@ class DemoStore @Inject constructor(val dispatcher: Dispatcher) : Store<DemoStat
             Grove.i { "Download Start" }
             Thread.sleep(1000)
             Grove.i { "Download End" }
-            dispatcher.dispatchOnUi(DataRetrievedAction(taskSuccess(), "I got some data from the cloud"))
+            dispatcher.dispatch(DataRetrievedAction(taskSuccess(), "I got some data from the cloud"))
         }
     }
 
@@ -93,7 +93,7 @@ class DemoStore @Inject constructor(val dispatcher: Dispatcher) : Store<DemoStat
             Grove.i { "navigation dependent task start" }
             Thread.sleep(1000)
             Grove.i { "navigation dependent task end" }
-            dispatcher.dispatchOnUi(NavigationConditionCompleteAction(taskSuccess()))
+            dispatcher.dispatch(NavigationConditionCompleteAction(taskSuccess()))
         }
     }
 }
