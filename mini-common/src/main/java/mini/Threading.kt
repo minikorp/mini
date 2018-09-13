@@ -30,18 +30,18 @@ inline fun onUi(delayMs: Long = 0, crossinline block: () -> Unit) {
 }
 
 inline fun onUiSync(crossinline block: () -> Unit) {
-    if (isOnUi()) {
-        block()
-    } else {
-        uiHandler.postSync(block)
-    }
+    uiHandler.postSync(block)
 }
 
 inline fun Handler.postSync(crossinline block: () -> Unit) {
-    val sem = Semaphore(0)
-    post {
+    if (Looper.myLooper() == this.looper) {
         block()
-        sem.release()
+    } else {
+        val sem = Semaphore(0)
+        post {
+            block()
+            sem.release()
+        }
+        sem.acquireUninterruptibly()
     }
-    sem.acquireUninterruptibly()
 }
