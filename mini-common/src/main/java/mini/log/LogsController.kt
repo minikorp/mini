@@ -1,8 +1,6 @@
 package mini.log
 
 import android.util.Log
-import mini.Grove
-import mini.Tree
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
@@ -187,15 +185,14 @@ class FileLogWriter(val file: File, private val minLevel: Int) : Tree {
         }
 
         internal fun format(): List<String> {
-            message?.let {
-                val lines = it.split('\n').dropLastWhile(String::isEmpty)
-                val levelString: String
-                when (level) {
-                    Log.DEBUG -> levelString = "D"
-                    Log.INFO -> levelString = "I"
-                    Log.WARN -> levelString = "W"
-                    Log.ERROR -> levelString = "E"
-                    else -> levelString = "V"
+            message?.let { msg ->
+                val lines = msg.split('\n').dropLastWhile(String::isEmpty)
+                val levelString = when (level) {
+                    Log.DEBUG -> "D"
+                    Log.INFO -> "I"
+                    Log.WARN -> "W"
+                    Log.ERROR -> "E"
+                    else -> "V"
                 }
                 //[29-04-1993 01:02:34.567 D/SomeTag: The value to Log]
                 val prelude = "[${LOG_FILE_DATE_FORMAT.format(date)}] $levelString/$tag"

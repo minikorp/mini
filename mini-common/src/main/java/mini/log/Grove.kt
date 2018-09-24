@@ -1,4 +1,4 @@
-package mini
+package mini.log
 
 import android.util.Log
 import android.util.Log.*
