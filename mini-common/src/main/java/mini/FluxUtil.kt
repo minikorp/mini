@@ -1,5 +1,7 @@
 package mini
 
+import mini.log.Grove
+
 /**
  * Handy alias to use with dagger
  */

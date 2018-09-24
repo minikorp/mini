@@ -1,6 +1,6 @@
 package mini.performance
 
-import mini.Grove
+import mini.log.Grove
 
 inline fun time(crossinline block: () -> Unit): Long {
     val start = System.currentTimeMillis()
