@@ -7,7 +7,7 @@ buildscript {
         rx_android_version = "2.0.2"
         leak_canary_version = "1.5"
         butterkinfe_version = "8.4.0"
-        support_version = "26.0.1"
+        support_version = "27.0.0"
         target_sdk_version = 26
     }
 }
@@ -34,7 +34,7 @@ kotlin {
 //Android
 android {
     compileSdkVersion target_sdk_version
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "com.minivac.mini"
@@ -78,7 +78,7 @@ dependencies {
     implementation project(":mini-common")
     kapt project(":mini-processor")
 
-    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     //Support
     implementation "com.android.support:appcompat-v7:$support_version"
@@ -93,9 +93,11 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
     kapt "com.google.dagger:dagger-android-processor:$dagger_version"
 
-    //Rx
-    implementation "io.reactivex.rxjava2:rxjava:$rx_version"
-    implementation "io.reactivex.rxjava2:rxandroid:$rx_android_version"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation project(":mini-android-testing")
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.agoda.kakao:kakao:1.4.0'
 }
 
 
