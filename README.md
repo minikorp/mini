@@ -18,15 +18,11 @@ data class LoginAction(val username: String,
 The dispatcher receives Actions and broadcast payloads to registered callbacks. The instance of the Dispatcher must be unique across the whole application and it will execute all the logic in the main thread making state muations synchronous. 
 
 ```kotlin
-//Dispatch the action in the current Thread
+//Dispatch an action on the main thread synchronously
 dispatcher.dispatch(LoginAction(username = "user", password = "123"))
 
-//Dispatch the action in the UI Thread, this action will be processed in the next event loop
-dispatcher.dispatchOnUi(LoginAction(username = "user", password = "123"))
-
-//Post and event that will dispatch the action on the Ui thread 
-//and block until the dispatch is complete. Only useful when calling from a background thread.
-dispatcher.dispatchOnUiSync(LoginAction(username = "user", password = "123"))
+//Post an event that will dispatch the action on the UI thread and return immediately.
+dispatcher.dispatchAsync(LoginAction(username = "user", password = "123"))
 ```
 
 ### Store
@@ -55,7 +51,15 @@ class SessionStore : Store<SessionState>() {
 ```
 
 ### Generated code
-MiniActionReducer explanation. //TODO
+Mini uses an annotation processor to generate code automatically based on the `@Reducer` annotations in your code.
+Annotating a function inside a `Store` with `@Reducer` will generate all the code needed to call the right methods of your stores when an `Action` goes though the `Dispatcher`.
+
+A method annotated with `@Reducer` must:
+- Receive a class that inherits from `Action` by parameter
+- Return an State of the same type that the store which contains the function
+- Optionally, it can receive also another `State` as second parameter. This is useful for unitary testing purposes.
+
+All the generated code is contained inside the class `MiniActionReducer`.
 
 ### View changes
 Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
@@ -79,13 +83,11 @@ A Task is a basic object to represent an ongoing process. They should be used in
 Having the next code:
 
 ```kotlin
-
 data class LoginAction(val username: String, val password: String)
-data class LoginCompleteAction(val loginTask: Task,
-                               val user: User?)
-
-data class SessionState(val loginTask: Task = taskIdle(),
-                        val loggedUser: User? = null)
+data class LoginCompleteAction(val loginTask: Task, val user: User?)
+```
+```kotlin
+data class SessionState(val loginTask: Task = taskIdle(), val loggedUser: User? = null)
 
 class SessionStore @Inject constructor(val controller: SessionController) : Store<SessionState>() {
     @Reducer
@@ -185,9 +187,9 @@ fun login_redirects_to_home_with_success_task() {
 ### Import the library
 To setup Mini in your application, first you will need to add the library itself together with the annotation processor:
 ```groovy
-implementation 'com.github.pabloogc:Mini:1.0.5'
-kapt 'com.github.pabloogc.Mini:mini-processor:1.0.5'
-androidTestImplementation 'com.github.pabloogc.Mini:mini-android-testing:1.0.5' //Optional
+implementation 'com.github.pabloogc:Mini:1.1.0'
+kapt 'com.github.pabloogc.Mini:mini-processor:1.1.0'
+androidTestImplementation 'com.github.pabloogc.Mini:mini-android-testing:1.1.0' //Optional
 ```
 
 ### Setting up your App file

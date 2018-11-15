@@ -11,7 +11,7 @@ import org.junit.runners.model.Statement
  */
 class TestDispatcherRule(val dispatcher: Dispatcher) : TestRule {
 
-    private val testInterceptor = TestDispatcherInterceptor()
+    val testInterceptor = TestDispatcherInterceptor()
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
