@@ -12,7 +12,6 @@ import org.sample.session.store.LoginCompleteAction
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-
 interface SessionController {
     fun loginWithCredentials(email: String?, password: String?)
 
@@ -24,8 +23,8 @@ class SessionControllerImpl @Inject constructor(private val dispatcher: Dispatch
 
     @SuppressLint("CheckResult")
     override fun loginWithCredentials(email: String?, password: String?) {
-        if (email == null || password == null) {
-            dispatcher.dispatch(
+        if (email.isNullOrEmpty() || password.isNullOrEmpty()) {
+            dispatcher.dispatchAsync(
                 LoginCompleteAction(
                     user = null,
                     emailVerified = false,
@@ -34,6 +33,7 @@ class SessionControllerImpl @Inject constructor(private val dispatcher: Dispatch
             )
             return
         }
+
         //Fake backend call
         Completable.timer(2, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io())

@@ -13,7 +13,8 @@ import org.sample.session.controller.SessionControllerImpl
 import javax.inject.Inject
 
 @AppScope
-class SessionStore @Inject constructor(private val controller: SessionController) : Store<SessionState>() {
+class SessionStore
+@Inject constructor(private val controller: SessionController) : Store<SessionState>() {
 
     @Reducer
     fun loginWithCredentials(a: LoginWithCredentialsAction): SessionState {
@@ -28,13 +29,21 @@ class SessionStore @Inject constructor(private val controller: SessionController
         return state.copy(
             loggedUser = a.user,
             loginTask = a.task,
-            logged = a.user != null,
-            verified = a.emailVerified
+            logged = a.user != null
         )
     }
 
     @Reducer
-    fun signOut(a: SignOutAction): SessionState {
+    fun onUpdateEmailAction(a: UpdateEmailAction): SessionState {
+        return state.copy(
+            loggedUser = state.loggedUser?.copy(
+                email = a.newEmail
+            )
+        )
+    }
+
+    @Reducer
+    fun onSignOut(a: SignOutAction): SessionState {
         controller.signOut()
         return initialState()
     }
@@ -42,13 +51,9 @@ class SessionStore @Inject constructor(private val controller: SessionController
 
 @Module
 abstract class SessionModule {
-    @Binds
-    @AppScope
-    @IntoMap
-    @ClassKey(SessionStore::class)
+    @Binds @AppScope @IntoMap @ClassKey(SessionStore::class)
     abstract fun provideSessionStore(store: SessionStore): Store<*>
 
-    @Binds
-    @AppScope
+    @Binds @AppScope
     abstract fun bindSessionController(impl: SessionControllerImpl): SessionController
 }

@@ -2,13 +2,17 @@ package mini.log
 
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
-import mini.*
+import mini.Action
+import mini.Chain
+import mini.Interceptor
+import mini.Store
 
 /** Actions implementing this interface won't log anything */
 interface SilentAction : Action
 
 class LoggerInterceptor constructor(stores: Collection<Store<*>>,
-                                    private val logInBackground: Boolean = false) : Interceptor {
+                                    private val logInBackground: Boolean = false,
+                                    private val tag: String = "MiniLog") : Interceptor {
 
     private val stores = stores.toList()
     private var lastActionTime = System.currentTimeMillis()
@@ -55,7 +59,7 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
             }
 
             sb.append("└────────────────────────────────────────────\n")
-            Grove.d { sb.toString() }
+            Grove.tag(tag).d { sb.toString() }
         }.let {
             if (logInBackground) it.subscribeOn(Schedulers.single())
             else it

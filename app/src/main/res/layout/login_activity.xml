@@ -33,6 +33,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/grey"
                 android:hint="@string/email"
+                android:importantForAutofill="no"
                 android:inputType="textEmailAddress"
                 android:layout_gravity="center_vertical"
                 android:layout_marginBottom="30dp" />

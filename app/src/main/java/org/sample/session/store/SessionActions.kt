@@ -21,3 +21,8 @@ data class LoginCompleteAction(
     val user: User? = null,
     val emailVerified: Boolean = false,
     val task: Task) : Action
+
+/**
+ * Update user's email.
+ */
+data class UpdateEmailAction(val newEmail: String) : Action
