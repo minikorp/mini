@@ -29,11 +29,11 @@ inline fun onUi(delayMs: Long = 0, crossinline block: () -> Unit) {
     else uiHandler.post { block() }
 }
 
-inline fun onUiSync(crossinline block: () -> Unit) {
+inline fun <T> onUiSync(crossinline block: () -> T) {
     uiHandler.postSync(block)
 }
 
-inline fun Handler.postSync(crossinline block: () -> Unit) {
+inline fun <T> Handler.postSync(crossinline block: () -> T) {
     if (Looper.myLooper() == this.looper) {
         block()
     } else {

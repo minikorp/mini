@@ -8,7 +8,7 @@ import mini.Interceptor
 import mini.Store
 
 /** Actions implementing this interface won't log anything */
-interface SilentAction : Action
+@Action interface SilentAction
 
 class LoggerInterceptor constructor(stores: Collection<Store<*>>,
                                     private val logInBackground: Boolean = false,
@@ -18,11 +18,11 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
     private var lastActionTime = System.currentTimeMillis()
     private var actionCounter: Long = 0
 
-    override fun invoke(action: Action, chain: Chain): Action {
+    override fun invoke(action: Any, chain: Chain): Any {
         if (action is SilentAction) return chain.proceed(action) //Do nothing
 
-        val beforeStates: Array<Any> = Array(stores.size) { _ -> Unit }
-        val afterStates: Array<Any> = Array(stores.size) { _ -> Unit }
+        val beforeStates: Array<Any> = Array(stores.size) { Unit }
+        val afterStates: Array<Any> = Array(stores.size) { Unit }
 
         stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
         val start = System.currentTimeMillis()
@@ -35,18 +35,11 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
 
         Completable.fromAction {
             val sb = StringBuilder()
+            sb.append('\n')
             sb.append("┌────────────────────────────────────────────\n")
             sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
                 action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
                 .append("\n")
-
-            // Log whether an interceptor changed the action and display the resulting action
-            if (out != action) {
-                sb.append(String.format("│   %s", "=== Action has been intercepted, result: ===")).append("\n")
-                sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
-                    out.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, out))
-                    .append("\n")
-            }
 
             for (i in beforeStates.indices) {
                 val oldState = beforeStates[i]

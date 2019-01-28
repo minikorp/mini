@@ -4,10 +4,10 @@ import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import org.jetbrains.annotations.TestOnly
 import java.lang.reflect.ParameterizedType
-import kotlin.reflect.KClass
 
-typealias StateCallback<S> = (S) -> Unit
-
+/**
+ * State holder.
+ */
 abstract class Store<S : Any> {
 
     companion object {
@@ -17,25 +17,20 @@ abstract class Store<S : Any> {
     val properties: MutableMap<String, Any?> = HashMap()
 
     private var _state: S? = null
-    var state: S
+
+    fun setState(state: S) {
+        setStateInternal(state)
+    }
+
+    val state: S
         get() {
             if (_state == null) _state = initialState()
             return _state!!
         }
-        protected set(value) {
-            setStateInternal(value)
-        }
 
-    private val observers: MutableList<StoreObserver<S>> = ArrayList()
     private val processor: PublishProcessor<S> = PublishProcessor.create()
-    private val processorObserver: StateCallback<S> = object : StateCallback<S> {
-        override fun invoke(state: S) {
-            processor.onNext(state)
-        }
-    }
 
     init {
-        observe(processorObserver)
         properties[INITIALIZE_ORDER_PROP] = 100
     }
 
@@ -59,12 +54,6 @@ abstract class Store<S : Any> {
         }
     }
 
-    fun observe(cb: StateCallback<S>): StoreObserver<S> {
-        val observer = StoreObserver(this, cb)
-        observers.add(observer)
-        return observer
-    }
-
     fun flowable(): Flowable<S> {
         return processor.startWith(state)
     }
@@ -72,13 +61,11 @@ abstract class Store<S : Any> {
     /**
      * This a private api that needs to be public for code-gen purposes.
      * Never call this method.
-     * */
+     */
     fun setStateInternal(newState: S) {
         if (newState != _state) {
             _state = newState
-            observers.forEach {
-                it.onStateChanged(state)
-            }
+            processor.onNext(_state)
         }
     }
 
@@ -90,23 +77,5 @@ abstract class Store<S : Any> {
     @TestOnly
     fun resetState() {
         setStateInternal(initialState())
-    }
-
-    /** Utility alias for no code-gen subscription */
-    fun <T : Any> DynamicActionReducer.subscribe(klass: KClass<T>,
-                                                 priority: Int = DEFAULT_REDUCER_PRIORITY,
-                                                 cb: (S, T) -> S): ReducerSubscription<T> {
-        return this.subscribe(this@Store, klass, priority, cb)
-    }
-
-    class StoreObserver<S : Any>(private val store: Store<S>,
-                                 private val cb: StateCallback<S>) {
-        internal fun onStateChanged(state: S) {
-            cb(state)
-        }
-
-        fun dispose() {
-            store.observers.remove(this)
-        }
     }
 }

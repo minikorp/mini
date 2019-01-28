@@ -12,7 +12,7 @@ typealias MsgFn = () -> Any?
  * Logging for lazy people.
  * Adapted from Jake Wharton's Timber
  * [https://github.com/JakeWharton/timber]
- * */
+ */
 object Grove {
 
     private val ANONYMOUS_CLASS_PATTERN = Pattern.compile("(\\$\\d+)+$")

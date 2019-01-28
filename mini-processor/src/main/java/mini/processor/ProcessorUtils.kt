@@ -10,6 +10,7 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
+private const val DEBUG_MODE = false
 lateinit var env: ProcessingEnvironment
 lateinit var elementUtils: Elements
 lateinit var typeUtils: Types

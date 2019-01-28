@@ -1,7 +1,22 @@
 package mini
 
+import java.lang.annotation.Inherited
+
 /**
- * Abstraction over anything that can be dispatched
- * to avoid type bugs (dispatching a non-action object).
+ * Mark a type as action for code generation. All actions must include this annotation
+ * or dispatcher won't work properly.
+ *
+ * This action is inherited by [BaseAction] or just added directly.
  */
-interface Action
+@Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+@Inherited
+annotation class Action
+
+/**
+ * Base action that carries [Action] annotation.
+ */
+@Action
+abstract class BaseAction
+
+internal val actionTypesMap: MutableMap<Class<*>, List<Class<*>>> = HashMap()

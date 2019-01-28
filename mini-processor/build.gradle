@@ -5,7 +5,7 @@ dependencies {
     compile project(":mini-common")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile 'com.github.yanex:takenoko:0.1'
-    compile 'com.squareup:kotlinpoet:0.7.0'
+    compile 'com.squareup:kotlinpoet:1.0.1'
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.testing.compile:compile-testing:0.15'
