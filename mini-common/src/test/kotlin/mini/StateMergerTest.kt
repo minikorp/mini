@@ -7,7 +7,7 @@ class StateMergerTest {
 
     @Test
     fun merge_states_produces_the_correct_state() {
-        class DummyStore : Store<String>() {
+        class DummyStore : Store<String>(Dispatcher()) {
             override fun initialState() = ""
         }
 

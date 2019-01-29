@@ -10,7 +10,7 @@ class RxUtilsTest {
 
     data class TestModel(val someString: String? = null)
     data class TestState(val someTask: Task = taskIdle())
-    class TestStore : Store<TestState>()
+    class TestStore : Store<TestState>(Dispatcher())
 
     private val testProcessor = PublishProcessor.create<TestModel>()
     private val subscriptionTracker = CompositeDisposable()

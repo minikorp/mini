@@ -8,10 +8,13 @@ import java.lang.reflect.ParameterizedType
 /**
  * State holder.
  */
-abstract class Store<S : Any> {
+abstract class Store<S : Any>(val dispatcher: Dispatcher) {
 
     companion object {
         const val INITIALIZE_ORDER_PROP = "store.init.order"
+    }
+
+    init {
     }
 
     val properties: MutableMap<String, Any?> = HashMap()
@@ -20,6 +23,10 @@ abstract class Store<S : Any> {
 
     fun setState(state: S) {
         setStateInternal(state)
+    }
+
+    fun setState(fn: S.() -> Unit) {
+
     }
 
     val state: S
@@ -58,14 +65,13 @@ abstract class Store<S : Any> {
         return processor.startWith(state)
     }
 
-    /**
-     * This a private api that needs to be public for code-gen purposes.
-     * Never call this method.
-     */
-    fun setStateInternal(newState: S) {
-        if (newState != _state) {
-            _state = newState
-            processor.onNext(_state)
+    private fun setStateInternal(newState: S) {
+        onUiSync {
+            //Need state mutation to happen on UI thread
+            if (newState != _state) {
+                _state = newState
+                processor.onNext(_state)
+            }
         }
     }
 

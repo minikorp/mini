@@ -1,5 +1,6 @@
 package mini.processor
 
+import com.squareup.kotlinpoet.FileSpec
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -9,6 +10,7 @@ import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
+import javax.tools.StandardLocation
 
 private const val DEBUG_MODE = false
 lateinit var env: ProcessingEnvironment
@@ -86,3 +88,12 @@ fun logMessage(kind: Diagnostic.Kind, message: String, element: Element? = null)
     if (DEBUG_MODE) env.messager.printMessage(kind, message, element)
 }
 
+//KotlinPoet utils
+
+fun FileSpec.writeToFile() {
+    val kotlinFileObject = env.filer
+        .createResource(StandardLocation.SOURCE_OUTPUT, packageName, "$name.kt")
+    val openWriter = kotlinFileObject.openWriter()
+    writeTo(openWriter)
+    openWriter.close()
+}
