@@ -1,32 +1,27 @@
 package org.sample
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import com.minikorp.grove.ConsoleLogTree
+import com.minikorp.grove.Grove
 import kotlinx.android.synthetic.main.home_activity.*
 import mini.*
-import mini.log.DebugTree
-import mini.log.Grove
-import mini.log.LoggerInterceptor
 
 class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscriptionTracker() {
 
     private val dispatcher = Dispatcher(Mini.actionTypes)
     private val dummyStore = DummyStore(dispatcher)
 
-    companion object {
-        fun newIntent(context: Context): Intent = Intent(context, SampleActivity::class.java)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
-        Grove.plant(DebugTree())
+        Grove.plant(ConsoleLogTree())
         val stores = listOf(dummyStore)
 
         Mini.register(dispatcher, stores)
-        dispatcher.addInterceptor(LoggerInterceptor(stores))
+        dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
+            Grove.tag(tag).d { msg }
+        }))
 
         dummyStore.flowable().subscribe {
             email.text = it.text

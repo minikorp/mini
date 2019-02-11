@@ -1,9 +1,8 @@
-package com.durmin.mini_android_testing
+package mini.test
 
-import mini.Action
+import mini.BaseAction
 import mini.Chain
 import mini.Interceptor
-import mini.log.Grove
 import java.util.*
 
 /**
@@ -11,18 +10,17 @@ import java.util.*
  */
 class TestDispatcherInterceptor : Interceptor {
 
-    private val mutedActions = LinkedList<Action>()
+    private val mutedActions = LinkedList<Any>()
     /** Replace all actions with dummy ones */
-    override fun invoke(action: Action, chain: Chain): Action {
-        Grove.d { "Muted: $action" }
+    override fun invoke(action: Any, chain: Chain): Any {
         mutedActions.add(action)
         return TestOnlyAction
     }
 
-    val actions: List<Action> get() = mutedActions
+    val actions: List<Any> get() = mutedActions
 }
 
 /**
  * Action for testing purposes.
  */
-object TestOnlyAction : Action
+object TestOnlyAction : BaseAction()

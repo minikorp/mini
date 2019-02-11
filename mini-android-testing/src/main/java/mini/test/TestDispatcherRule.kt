@@ -1,4 +1,4 @@
-package com.durmin.mini_android_testing
+package mini.test
 
 import mini.Dispatcher
 import org.junit.rules.TestRule

@@ -1,6 +1,6 @@
-package mini.performance
+package mini
 
-import mini.log.Grove
+import android.util.Log
 
 inline fun time(crossinline block: () -> Unit): Long {
     val start = System.currentTimeMillis()
@@ -14,18 +14,22 @@ inline fun timeNS(crossinline block: () -> Unit): Long {
     return System.nanoTime() - start
 }
 
-inline fun <T> timeLog(message: String, crossinline block: () -> T): T {
+inline fun <T> timeLog(message: String,
+                       tag: String = "Performance",
+                       crossinline block: () -> T): T {
     val start = System.currentTimeMillis()
     val out = block()
     val elapsed = System.currentTimeMillis() - start
-    Grove.d { "$message - $elapsed" }
+    Log.d(tag, "$message - $elapsed")
     return out
 }
 
-inline fun <T> timeNSLog(message: String, crossinline block: () -> T): T {
+inline fun <T> timeNSLog(message: String,
+                         tag: String = "Performance",
+                         crossinline block: () -> T): T {
     val start = System.nanoTime()
     val out = block()
     val elapsed = System.nanoTime() - start
-    Grove.d { "$message - $elapsed" }
+    Log.d(tag, "$message - $elapsed")
     return out
 }

@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        espresso_version = '3.0.1'
+        espresso_version = '3.1.0-alpha4'
     }
 }
 
@@ -12,7 +12,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
-    compile "com.android.support.test.espresso:espresso-core:$espresso_version"
+    compile "androidx.test.espresso:espresso-core:$espresso_version"
 }
 
 apply plugin: 'idea'

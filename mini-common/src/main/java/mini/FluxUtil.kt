@@ -1,6 +1,8 @@
 package mini
 
-import mini.log.Grove
+import android.util.Log
+
+private const val TAG = "FluxUtil"
 
 /**
  * Handy alias to use with dagger
@@ -27,14 +29,14 @@ fun initStores(uninitializedStores: Collection<Store<*>>) {
 
     val elapsed = System.currentTimeMillis() - now
 
-    Grove.d { "┌ Application with ${stores.size} stores loaded in $elapsed ms" }
-    Grove.d { "├────────────────────────────────────────────" }
+    Log.d(TAG, "┌ Application with ${stores.size} stores loaded in $elapsed ms")
+    Log.d(TAG, "├────────────────────────────────────────────")
     for (i in 0 until stores.size) {
         val store = stores[i]
         var boxChar = "├"
         if (store === stores[stores.size - 1]) {
             boxChar = "└"
         }
-        Grove.d { "$boxChar ${store.javaClass.simpleName} - ${initTimes[i]} ms" }
+        Log.d(TAG, "$boxChar ${store.javaClass.simpleName} - ${initTimes[i]} ms")
     }
 }
