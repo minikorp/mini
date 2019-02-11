@@ -8,7 +8,7 @@ import java.lang.reflect.ParameterizedType
 /**
  * State holder.
  */
-abstract class Store<S : Any>(val dispatcher: Dispatcher) {
+abstract class Store<S : Any> {
 
     companion object {
         const val INITIALIZE_ORDER_PROP = "store.init.order"
@@ -21,17 +21,33 @@ abstract class Store<S : Any>(val dispatcher: Dispatcher) {
 
     private var _state: S? = null
 
-    fun setState(state: S) {
+    /** Set new state, equivalent to [newState]*/
+    protected fun setState(state: S) {
         setStateInternal(state)
     }
 
-    fun setState(fn: S.() -> Unit) {
+    /** Hook for write only property */
+    protected var newState: S
+        get() = throw UnsupportedOperationException("This is a write only property")
+        set(value) = setStateInternal(value)
 
+    /**
+     * Same as property, suffix style
+     */
+    protected fun S.newState(): S {
+        setStateInternal(this)
+        return this
     }
 
     val state: S
         get() {
-            if (_state == null) _state = initialState()
+            if (_state == null) {
+                synchronized(this) {
+                    if (_state == null) {
+                        _state = initialState()
+                    }
+                }
+            }
             return _state!!
         }
 

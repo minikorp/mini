@@ -9,8 +9,8 @@ import mini.*
 
 class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscriptionTracker() {
 
-    private val dispatcher = Dispatcher(Mini.actionTypes)
-    private val dummyStore = DummyStore(dispatcher)
+    private val dispatcher = Dispatcher()
+    private val dummyStore = DummyStore()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,7 +18,7 @@ class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscr
         Grove.plant(ConsoleLogTree())
         val stores = listOf(dummyStore)
 
-        Mini.register(dispatcher, stores)
+        MiniGen.initialize(dispatcher, stores)
         dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
             Grove.tag(tag).d { msg }
         }))
@@ -48,17 +48,17 @@ data class ActionOne(override val text: String) : ActionInterface, SampleAbstrac
 @Action class ActionTwo(val text: String)
 
 data class DummyState(val text: String = "dummy")
-class DummyStore(dispatcher: Dispatcher) : Store<DummyState>(dispatcher) {
+class DummyStore : Store<DummyState>() {
 
     @Reducer fun onInterfaceAction(a: ActionInterface) {
 
     }
 
     @Reducer fun onSampleAction(a: ActionOne) {
-        setState(state.copy(text = a.text))
+        newState = state.copy(text = a.text)
     }
 
     @Reducer fun anotherAction(a: ActionTwo) {
-        setState(state.copy(text = a.text))
+        state.copy(text = a.text).newState()
     }
 }

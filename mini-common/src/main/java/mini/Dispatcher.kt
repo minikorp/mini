@@ -9,7 +9,9 @@ import java.util.*
  * If map is empty, the runtime type itself will be used. If using code generation,
  * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
  */
-class Dispatcher(val actionTypes: Map<Class<*>, List<Class<*>>> = emptyMap()) {
+class Dispatcher {
+
+    var actionTypes: Map<Class<*>, List<Class<*>>> = emptyMap()
 
     private val subscriptionCaller: Chain = object : Chain {
         override fun proceed(action: Any): Any {

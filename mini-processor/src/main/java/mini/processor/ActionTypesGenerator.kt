@@ -20,7 +20,7 @@ object ActionTypesGenerator {
                 .parameterizedBy(anyClassTypeName, listTypeName)
 
             val prop = PropertySpec.builder("actionTypes", mapType)
-                .addAnnotation(JvmField::class)
+                .addModifiers(KModifier.PRIVATE)
                 //⇤⇥«»
                 .initializer(CodeBlock.builder()
                     .add("mapOf(\n⇥")

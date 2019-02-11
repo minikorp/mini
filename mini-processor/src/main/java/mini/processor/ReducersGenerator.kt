@@ -16,7 +16,6 @@ object ReducersGenerator {
 
         val whenBlock = CodeBlock.builder()
             //⇤⇥«»
-            .beginControlFlow("stores.forEach { store ->")
             .addStatement("when (store) {").indent()
             .apply {
                 reducers.forEach { (storeName, reducers) ->
@@ -32,29 +31,39 @@ object ReducersGenerator {
                 }
             }
             .unindent().addStatement("}")
-            .endControlFlow()
             .build()
 
         val storeTypeName = Store::class.asTypeName().parameterizedBy(STAR)
         val listOfStoresTypeName = List::class.asTypeName().parameterizedBy(storeTypeName)
 
-        val registerListFunction = FunSpec.builder("register")
-            .addAnnotation(JvmStatic::class)
+        val registerListFn = FunSpec.builder("register")
+            .addModifiers(KModifier.PRIVATE)
             .addParameter("dispatcher", Dispatcher::class)
             .addParameter("stores", listOfStoresTypeName)
+            .beginControlFlow("stores.forEach { store ->")
+            .addStatement("register(dispatcher, store)")
+            .endControlFlow()
+            .build()
+
+        val registerOneFn = FunSpec.builder("register")
+            .addModifiers(KModifier.PRIVATE)
+            .addParameter("dispatcher", Dispatcher::class)
+            .addParameter("store", storeTypeName)
             .addCode(whenBlock)
             .build()
 
-        val registerOneFunction = FunSpec.builder("register")
-            .addAnnotation(JvmStatic::class)
+        val initDispatcherFn = FunSpec.builder("initialize")
             .addParameter("dispatcher", Dispatcher::class)
-            .addParameter("store", storeTypeName)
-            .addCode(CodeBlock.of(
-                "register(dispatcher, listOf(store))"
-            )).build()
+            .addParameter("stores", listOfStoresTypeName)
+            .addCode(CodeBlock.builder()
+                .addStatement("dispatcher.actionTypes = actionTypes")
+                .addStatement("register(dispatcher, stores)")
+                .build())
+            .build()
 
-        container.addFunction(registerOneFunction)
-        container.addFunction(registerListFunction)
+        container.addFunction(registerOneFn)
+        container.addFunction(registerListFn)
+        container.addFunction(initDispatcherFn)
 
     }
 }

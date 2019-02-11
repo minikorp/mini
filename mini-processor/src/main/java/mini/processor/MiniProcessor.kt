@@ -32,8 +32,9 @@ class MiniProcessor : AbstractProcessor() {
 
         if (roundActions.isEmpty()) return false
 
-        val file = FileSpec.builder("mini", "Mini")
-        val container = TypeSpec.objectBuilder("Mini")
+        val className = "MiniGen"
+        val file = FileSpec.builder("mini", className)
+        val container = TypeSpec.objectBuilder(className)
         container.addKdoc("Automatically generated, do not edit.\n")
 
         //Get non-abstract actions
