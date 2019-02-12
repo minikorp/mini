@@ -3,6 +3,7 @@ apply from: "../jitpack.gradle"
 
 dependencies {
     compile project(":mini-common")
+    compileOnly group: 'com.google.android', name: 'android', version: '4.1.1.4'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile 'com.github.yanex:takenoko:0.1'
     compile 'io.github.classgraph:classgraph:4.6.32'

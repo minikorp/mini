@@ -53,6 +53,7 @@ object ReducersGenerator {
             .build()
 
         val initDispatcherFn = FunSpec.builder("initialize")
+            .addModifiers(KModifier.OVERRIDE)
             .addParameter("dispatcher", Dispatcher::class)
             .addParameter("stores", listOfStoresTypeName)
             .addCode(CodeBlock.builder()

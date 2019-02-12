@@ -76,6 +76,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":mini-common")
+    implementation project(":mini-runtime")
     kapt project(":mini-processor")
 
     //Misc

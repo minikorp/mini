@@ -31,9 +31,7 @@ abstract class Store<S : Any> {
         get() = throw UnsupportedOperationException("This is a write only property")
         set(value) = setStateInternal(value)
 
-    /**
-     * Same as property, suffix style
-     */
+    /** Same as property, suffix style */
     protected fun S.newState(): S {
         setStateInternal(this)
         return this
@@ -82,18 +80,20 @@ abstract class Store<S : Any> {
     }
 
     private fun setStateInternal(newState: S) {
-        onUiSync {
-            //Need state mutation to happen on UI thread
-            if (newState != _state) {
-                _state = newState
-                processor.onNext(_state)
-            }
+        assertOnUiThread()
+        //Need state mutation to happen on UI thread
+        if (newState != _state) {
+            _state = newState
+            processor.onNext(_state)
         }
     }
 
+    /** Thread safe, since espresso runs in it's own thread */
     @TestOnly
     fun setTestState(other: S) {
-        setStateInternal(other)
+        onUiSync {
+            setStateInternal(other)
+        }
     }
 
     @TestOnly

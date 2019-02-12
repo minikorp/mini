@@ -18,7 +18,9 @@ class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscr
         Grove.plant(ConsoleLogTree())
         val stores = listOf(dummyStore)
 
-        MiniGen.initialize(dispatcher, stores)
+        //MiniGen.initialize(dispatcher, stores)
+        MiniRuntime.initialize(dispatcher, stores)
+
         dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
             Grove.tag(tag).d { msg }
         }))

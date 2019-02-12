@@ -1,6 +1,8 @@
 package mini
 
+import io.reactivex.disposables.Disposable
 import java.util.*
+import kotlin.reflect.KClass
 
 /**
  * Hub for actions.
@@ -55,10 +57,15 @@ class Dispatcher {
     }
 
     @Suppress("UNCHECKED_CAST")
-    inline fun <reified A> register(priority: Int = 100, noinline callback: (A) -> Unit): Registration {
+    inline fun <reified A : Any> register(priority: Int = 100, noinline callback: (A) -> Unit): Registration {
+        return register(A::class, priority, callback)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> register(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Registration {
         synchronized(subscriptions) {
-            val reg = Registration(A::class.java, priority, callback as (Any) -> Unit)
-            val set = subscriptions.getOrPut(A::class.java) {
+            val reg = Registration(this, clazz.java, priority, callback as (Any) -> Unit)
+            val set = subscriptions.getOrPut(clazz.java) {
                 TreeSet(kotlin.Comparator { a, b -> a.priority.compareTo(b.priority) })
             }
             set.add(reg)
@@ -97,5 +104,15 @@ class Dispatcher {
         onUi { dispatch(action) }
     }
 
-    data class Registration(val type: Class<*>, val priority: Int, val fn: (Any) -> Unit)
+    data class Registration(val dispatcher: Dispatcher,
+                            val type: Class<*>,
+                            val priority: Int, val fn: (Any) -> Unit) : Disposable {
+        var disposed = false
+        override fun isDisposed(): Boolean = disposed
+
+        override fun dispose() {
+            dispatcher.unregister(this)
+            disposed = true
+        }
+    }
 }
