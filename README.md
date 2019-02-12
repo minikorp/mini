@@ -7,15 +7,12 @@ Feature development using Mini is fast compared to traditional architectures (li
 
 ## How to Use
 ### Actions
-Actions are helpers that pass data to the Dispatcher. They represent use cases of our application and are the start point of any state change made during the application lifetime. 
 
-```kotlin
-data class LoginAction(val username: String,
-                       val password: String) : Action
-```
+🚧WIP🚧
 
 ### Dispatcher
-The dispatcher receives Actions and broadcast payloads to registered callbacks. The instance of the Dispatcher must be unique across the whole application and it will execute all the logic in the main thread making state muations synchronous. 
+
+🚧WIP🚧
 
 ```kotlin
 //Dispatch an action on the main thread synchronously
@@ -30,36 +27,13 @@ The Stores are holders for application state and state mutation logic. In order 
 
 The state is plain object (usually a data class) that holds all information needed to display the view. State should always be inmutable. State classes should avoid using framework elements (View, Camera, Cursor...) in order to facilitate testing.
 
-Stores subscribe to actions to change the application state after a dispatch. Mini generates the code that links dispatcher actions and stores using the `@Reducer` annotation over a **non-private function that receives an Action as parameter**. It can also receive a state for unitary testing purposes. 
-```kotlin
-data class SessionState(val loginTask : Task = taskIdle(),
-                        val loggedUsername : String? = null)
-                        
+Stores subscribe to actions to change the application state after a dispatch. Mini generates the code that links dispatcher actions and stores using the `@Reducer` annotation over a **non-private function that receives an Action as parameter**.
 
-class SessionStore : Store<SessionState>() {
-
-    @Reducer
-    fun login(action: LoginAction): SessionState {
-        return state.copy(loginTask = taskRunning())
-    }
-
-    @Reducer
-    fun loginComplete(action: LoginCompleteAction, state: SessionState): SessionState {
-        return state.copy(loginTask = taskSuccess(), loggedUsername = action.name)
-    }
-}
-```
+🚧WIP🚧
 
 ### Generated code
-Mini uses an annotation processor to generate code automatically based on the `@Reducer` annotations in your code.
-Annotating a function inside a `Store` with `@Reducer` will generate all the code needed to call the right methods of your stores when an `Action` goes though the `Dispatcher`.
 
-A method annotated with `@Reducer` must:
-- Receive a class that inherits from `Action` by parameter
-- Return an State of the same type that the store which contains the function
-- Optionally, it can receive also another `State` as second parameter. This is useful for unitary testing purposes.
-
-All the generated code is contained inside the class `MiniActionReducer`.
+🚧WIP🚧
 
 ### View changes
 Each ``Store`` exposes a custom `StoreCallback` though the method `observe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
@@ -185,25 +159,9 @@ fun login_redirects_to_home_with_success_task() {
 ## Setting Up
 
 ### Import the library
-To setup Mini in your application, first you will need to add the library itself together with the annotation processor:
-```groovy
-implementation 'com.github.pabloogc:Mini:1.1.0'
-kapt 'com.github.pabloogc.Mini:mini-processor:1.1.0'
-androidTestImplementation 'com.github.pabloogc.Mini:mini-android-testing:1.1.0' //Optional
-```
+
+🚧WIP🚧
 
 ### Setting up your App file
-After setting it up on your gradle application. You will need to initialize a `Dispatcher` unique instance in your application together with a list of `Stores`. To achieve this you can use your favorite dependency injection framework.
 
-With your Dispatcher and Stores ready, you will need to add the `MiniActionReducer` which is auto-generated depending of your `Stores` and `Reducers`. 
-
-Finally, if you want to add *action-state* changes logging to your application you can add the `LoggerInterceptor` provided by the library or create your own one.  
-```kotlin
-val actionReducer = MiniActionReducer(stores = stores())
-val loggerInterceptor = CustomLoggerInterceptor(stores().values)
-
-dispatcher.addActionReducer(actionReducer)
-dispatcher.addInterceptor(loggerInterceptor) //Optional
-
-FluxUtil.initStores(stores())
-```
+🚧WIP🚧
