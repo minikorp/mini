@@ -16,7 +16,7 @@ object MiniRuntime : MiniInitializer {
                     if (fn.parameters.size != 2) { //param 0 is `this`
                         throw IllegalArgumentException("Function should have 1 argument for action")
                     }
-                    val actionType = fn.parameters[0].type.jvmErasure
+                    val actionType = fn.parameters[1].type.jvmErasure
                     val priority = annotation!!.priority
                     dispatcher.register(clazz = actionType, priority = priority, callback = {
                         fn.call(store, it)
