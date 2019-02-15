@@ -1,6 +1,5 @@
 package mini
 
-import org.omg.CORBA.Object
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
