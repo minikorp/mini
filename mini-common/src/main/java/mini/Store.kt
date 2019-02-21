@@ -92,12 +92,10 @@ abstract class Store<S : Any> {
     @TestOnly
     fun setTestState(other: S) {
         onUiSync {
-            setStateInternal(other)
+            if (newState != _state) {
+                _state = newState
+                processor.onNext(other)
+            }
         }
-    }
-
-    @TestOnly
-    fun resetState() {
-        setStateInternal(initialState())
     }
 }
