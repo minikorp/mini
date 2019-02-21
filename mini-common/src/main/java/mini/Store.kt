@@ -30,10 +30,7 @@ abstract class Store<S : Any> {
     /** Hook for write only property */
     protected var newState: S
         get() = throw UnsupportedOperationException("This is a write only property")
-        set(value) {
-            assertOnUiThread()
-            setStateInternal(value)
-        }
+        set(value) = setState(value)
 
     /** Same as property, suffix style */
     protected fun S.asNewState(): S {
