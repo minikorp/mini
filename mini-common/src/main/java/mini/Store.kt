@@ -21,18 +21,23 @@ abstract class Store<S : Any> {
 
     private var _state: S? = null
 
-    /** Set new state, equivalent to [newState]*/
+    /** Set new state, equivalent to [asNewState]*/
     protected fun setState(state: S) {
+        assertOnUiThread()
         setStateInternal(state)
     }
 
     /** Hook for write only property */
     protected var newState: S
         get() = throw UnsupportedOperationException("This is a write only property")
-        set(value) = setStateInternal(value)
+        set(value) {
+            assertOnUiThread()
+            setStateInternal(value)
+        }
 
     /** Same as property, suffix style */
-    protected fun S.newState(): S {
+    protected fun S.asNewState(): S {
+        assertOnUiThread()
         setStateInternal(this)
         return this
     }
@@ -80,8 +85,7 @@ abstract class Store<S : Any> {
     }
 
     private fun setStateInternal(newState: S) {
-        assertOnUiThread()
-        //Need state mutation to happen on UI thread
+        //State mutation should to happen on UI thread
         if (newState != _state) {
             _state = newState
             processor.onNext(_state)
@@ -92,10 +96,7 @@ abstract class Store<S : Any> {
     @TestOnly
     fun setTestState(other: S) {
         onUiSync {
-            if (newState != _state) {
-                _state = newState
-                processor.onNext(other)
-            }
+            setStateInternal(other)
         }
     }
 }

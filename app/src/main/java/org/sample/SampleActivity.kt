@@ -61,6 +61,6 @@ class DummyStore : Store<DummyState>() {
     }
 
     @Reducer fun anotherAction(a: ActionTwo) {
-        state.copy(text = a.text).newState()
+        state.copy(text = a.text).asNewState()
     }
 }
