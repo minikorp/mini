@@ -65,7 +65,7 @@ abstract class Store<S : Any> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    protected open fun initialState(): S {
+    open fun initialState(): S {
         val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
             as Class<S>
         try {
@@ -89,11 +89,21 @@ abstract class Store<S : Any> {
         }
     }
 
-    /** Thread safe, since espresso runs in it's own thread */
+    /** Test only method, don't use in app code */
     @TestOnly
-    fun setTestState(other: S) {
-        onUiSync {
-            setStateInternal(other)
+    fun setTestState(s: S) {
+        if (isAndroid) {
+            onUiSync {
+                setStateInternal(s)
+            }
+        } else {
+            setStateInternal(s)
         }
+    }
+
+    /** Set state back to initial default */
+    @TestOnly
+    fun resetState() {
+        setTestState(initialState())
     }
 }
