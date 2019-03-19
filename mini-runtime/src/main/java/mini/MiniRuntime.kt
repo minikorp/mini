@@ -3,6 +3,7 @@ package mini
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
+import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
 
 object MiniRuntime : MiniInitializer {
@@ -16,6 +17,11 @@ object MiniRuntime : MiniInitializer {
                     if (fn.parameters.size != 2) { //param 0 is `this`
                         throw IllegalArgumentException("Function should have 1 argument for action")
                     }
+
+                    if (fn.returnType.javaType != Void.TYPE) {
+                        throw IllegalArgumentException("Reducers shouldn't have return value")
+                    }
+
                     val actionType = fn.parameters[1].type.jvmErasure
                     val priority = annotation!!.priority
                     dispatcher.register(clazz = actionType, priority = priority, callback = {
@@ -43,11 +49,9 @@ object MiniRuntime : MiniInitializer {
     private class ReflectedType(val clazz: KClass<*>, val depth: Int)
 
     class ReflectiveActionTypesMap : Map<Class<*>, List<Class<*>>> {
-
         private val genericTypes = listOf(
             Object::class.java
         )
-
         private val map = HashMap<Class<*>, List<Class<*>>>()
         override val entries: Set<Map.Entry<Class<*>, List<Class<*>>>> = map.entries
         override val keys: Set<Class<*>> = map.keys

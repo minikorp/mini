@@ -18,6 +18,7 @@ dependencies {
     compile "io.reactivex.rxjava2:rxjava:$rx_version"
 
     testCompile 'junit:junit:4.12'
+    testImplementation "org.amshove.kluent:kluent:1.44"
 }
 
 apply plugin: 'idea'

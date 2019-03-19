@@ -2,6 +2,7 @@ package mini
 
 import io.reactivex.disposables.Disposable
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
@@ -66,7 +67,12 @@ class Dispatcher {
         synchronized(subscriptions) {
             val reg = Registration(this, clazz.java, priority, callback as (Any) -> Unit)
             val set = subscriptions.getOrPut(clazz.java) {
-                TreeSet(kotlin.Comparator { a, b -> a.priority.compareTo(b.priority) })
+                TreeSet(kotlin.Comparator { a, b ->
+                    //Sort by priority, then by id for equal priority
+                    val p = a.priority.compareTo(b.priority)
+                    if (p == 0) a.id.compareTo(b.id)
+                    else p
+                })
             }
             set.add(reg)
             return reg
@@ -85,15 +91,22 @@ class Dispatcher {
      * the main thread.
      */
     fun dispatch(action: Any) {
-        onUiSync {
-            if (dispatching != null) {
-                throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
-                                            "$dispatching. Nested action: $action ")
-            }
-            dispatching = action
-            interceptorChain.proceed(action)
-            dispatching = null
+        if (isAndroid) {
+            onUiSync { doDispatch(action) }
+        } else {
+            doDispatch(action)
         }
+    }
+
+    @Suppress("NOTHING_TO_INLINE") //Inlined so it doesn't appear in stack trace
+    private inline fun doDispatch(action: Any) {
+        if (dispatching != null) {
+            throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
+                                        "$dispatching. Nested action: $action ")
+        }
+        dispatching = action
+        interceptorChain.proceed(action)
+        dispatching = null
     }
 
     /**
@@ -104,15 +117,39 @@ class Dispatcher {
         onUi { dispatch(action) }
     }
 
-    data class Registration(val dispatcher: Dispatcher,
-                            val type: Class<*>,
-                            val priority: Int, val fn: (Any) -> Unit) : Disposable {
+    /**
+     * Handle for a dispatcher subscription.
+     */
+    class Registration(val dispatcher: Dispatcher,
+                       val type: Class<*>,
+                       val priority: Int, val fn: (Any) -> Unit) : Disposable {
+
+        companion object {
+            private val idCounter = AtomicInteger()
+        }
+
+        val id = idCounter.getAndIncrement()
         var disposed = false
+
+        @Synchronized
         override fun isDisposed(): Boolean = disposed
 
+        @Synchronized
         override fun dispose() {
             dispatcher.unregister(this)
             disposed = true
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as Registration
+            if (id != other.id) return false
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return id
         }
     }
 }

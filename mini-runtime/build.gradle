@@ -9,5 +9,6 @@ dependencies {
     compile 'io.github.classgraph:classgraph:4.6.32'
 
     testCompile 'junit:junit:4.12'
-    testCompile 'com.google.testing.compile:compile-testing:0.15'
+    testCompile "org.amshove.kluent:kluent:1.44"
+
 }
