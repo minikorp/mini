@@ -4,20 +4,19 @@ import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.Semaphore
 
-val uiHandler by lazy { Handler(Looper.getMainLooper()) }
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun isOnUi(): Boolean {
-    return Looper.myLooper() == Looper.getMainLooper()
+val uiHandler by lazy {
+    Handler(Looper.getMainLooper())
 }
 
 fun assertNotOnUiThread() {
-    if (!isOnUi()) {
+    if (!isAndroid) return
+    if (Looper.myLooper() != Looper.getMainLooper()) {
         error("This method can not be called from the main application thread")
     }
 }
 
 fun assertOnUiThread() {
+    if (!isAndroid) return
     if (Looper.myLooper() != Looper.getMainLooper()) {
         error("This method can only be called from the main application thread")
     }
@@ -43,16 +42,5 @@ inline fun <T> Handler.postSync(crossinline block: () -> T) {
             sem.release()
         }
         sem.acquireUninterruptibly()
-    }
-}
-
-/**
- * Check if running on android device / emulator or jvm
- */
-internal val isAndroid by lazy {
-    try {
-        android.os.Build.VERSION.SDK_INT != 0
-    } catch (e: Throwable) {
-        false
     }
 }

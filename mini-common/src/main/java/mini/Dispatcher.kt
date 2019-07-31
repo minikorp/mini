@@ -1,6 +1,6 @@
 package mini
 
-import io.reactivex.disposables.Disposable
+import java.io.Closeable
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -12,14 +12,12 @@ import kotlin.reflect.KClass
  * If map is empty, the runtime type itself will be used. If using code generation,
  * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
  */
-class Dispatcher {
-
-    var actionTypes: Map<Class<*>, List<Class<*>>> = emptyMap()
+class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) {
 
     private val subscriptionCaller: Chain = object : Chain {
         override fun proceed(action: Any): Any {
             synchronized(subscriptions) {
-                val types = actionTypes[action::class.java] ?: listOf(action::class.java)
+                val types = actionTypes[action::class] ?: listOf(action::class)
                 types.forEach { type ->
                     subscriptions[type]?.forEach { it.fn(action) }
                 }
@@ -31,7 +29,7 @@ class Dispatcher {
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private var interceptorChain: Chain = buildChain()
     private var dispatching: Any? = null
-    val subscriptions: MutableMap<Class<*>, MutableSet<Registration>> = HashMap()
+    internal val subscriptions: MutableMap<KClass<*>, MutableSet<DispatcherSubscription>> = HashMap()
 
     private fun buildChain(): Chain {
         return interceptors.fold(subscriptionCaller) { chain, interceptor ->
@@ -57,16 +55,15 @@ class Dispatcher {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    inline fun <reified A : Any> register(priority: Int = 100, noinline callback: (A) -> Unit): Registration {
-        return register(A::class, priority, callback)
+    inline fun <reified A : Any> subscribe(priority: Int = 100, noinline callback: (A) -> Unit): Closeable {
+        return subscribe(A::class, priority, callback)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> register(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Registration {
+    fun <T : Any> subscribe(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Closeable {
         synchronized(subscriptions) {
-            val reg = Registration(this, clazz.java, priority, callback as (Any) -> Unit)
-            val set = subscriptions.getOrPut(clazz.java) {
+            val reg = DispatcherSubscription(this, clazz, priority, callback as (Any) -> Unit)
+            val set = subscriptions.getOrPut(clazz) {
                 TreeSet(kotlin.Comparator { a, b ->
                     //Sort by priority, then by id for equal priority
                     val p = a.priority.compareTo(b.priority)
@@ -79,7 +76,7 @@ class Dispatcher {
         }
     }
 
-    fun unregister(registration: Registration) {
+    fun unregister(registration: DispatcherSubscription) {
         synchronized(subscriptions) {
             subscriptions[registration.type]?.remove(registration)
         }
@@ -87,8 +84,10 @@ class Dispatcher {
 
     /**
      * Dispatch an action on the main thread synchronously.
-     * This method will block the caller if it's not
-     * the main thread.
+     * This method will block the caller until all listeners have handled the event,
+     * usually the main thread.
+     *
+     * Use [dispatchAsync] to avoid this.
      */
     fun dispatch(action: Any) {
         if (isAndroid) {
@@ -98,8 +97,19 @@ class Dispatcher {
         }
     }
 
-    @Suppress("NOTHING_TO_INLINE") //Inlined so it doesn't appear in stack trace
-    private inline fun doDispatch(action: Any) {
+    /**
+     * Post an event that will dispatch the action on the UI thread
+     * and return immediately.
+     */
+    fun dispatchAsync(action: Any) {
+        if (isAndroid) {
+            onUi { dispatch(action) }
+        } else {
+            dispatch(action) //Just dispatch it
+        }
+    }
+
+    private fun doDispatch(action: Any) {
         if (dispatching != null) {
             throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
                                         "$dispatching. Nested action: $action ")
@@ -110,46 +120,25 @@ class Dispatcher {
     }
 
     /**
-     * Post an event that will dispatch the action on the UI thread
-     * and return immediately.
-     */
-    fun dispatchAsync(action: Any) {
-        onUi { dispatch(action) }
-    }
-
-    /**
      * Handle for a dispatcher subscription.
      */
-    class Registration(val dispatcher: Dispatcher,
-                       val type: Class<*>,
-                       val priority: Int, val fn: (Any) -> Unit) : Disposable {
-
+    data class DispatcherSubscription internal constructor(val dispatcher: Dispatcher,
+                                                           val type: KClass<*>,
+                                                           val priority: Int, val fn: (Any) -> Unit) : Closeable {
         companion object {
             private val idCounter = AtomicInteger()
         }
 
-        val id = idCounter.getAndIncrement()
-        var disposed = false
-
-        @Synchronized
-        override fun isDisposed(): Boolean = disposed
-
-        @Synchronized
-        override fun dispose() {
+        override fun close() {
+            if (disposed) return
             dispatcher.unregister(this)
             disposed = true
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            other as Registration
-            if (id != other.id) return false
-            return true
-        }
+        //Alias for close
+        fun dispose() = close()
 
-        override fun hashCode(): Int {
-            return id
-        }
+        val id = idCounter.getAndIncrement()
+        var disposed = false
     }
 }
