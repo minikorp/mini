@@ -28,7 +28,7 @@ object ReducersGenerator {
                 reducers.forEach { (containerName, reducerFunctions) ->
                     addStatement("is %T -> {", containerName).indent()
                     reducerFunctions.forEach { function ->
-                        addStatement("c.add(dispatcher.register<%T>(priority=%L) { container.%N(it) })",
+                        addStatement("c.add(dispatcher.subscribe<%T>(priority=%L) { container.%N(it) })",
                             function.function.parameters[0].asType(), //Action type
                             function.priority, //Priority
                             function.function.simpleName //Function name
@@ -43,20 +43,20 @@ object ReducersGenerator {
             .addStatement("return c")
             .build()
 
-        val registerOneFn = FunSpec.builder("register")
+        val registerOneFn = FunSpec.builder("subscribe")
             .addParameter("dispatcher", Dispatcher::class)
             .addParameter("container", reducerContainerType)
             .returns(Closeable::class)
             .addCode(whenBlock)
             .build()
 
-        val registerListFn = FunSpec.builder("register")
+        val registerListFn = FunSpec.builder("subscribe")
             .addParameter("dispatcher", Dispatcher::class)
             .addParameter("containers", reducerContainerListType)
             .returns(Closeable::class)
             .addStatement("val c = %T()", CompositeCloseable::class)
             .beginControlFlow("containers.forEach { container ->")
-            .addStatement("c.add(register(dispatcher, container))")
+            .addStatement("c.add(subscribe(dispatcher, container))")
             .endControlFlow()
             .addStatement("return c")
             .build()

@@ -4,6 +4,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
+import kotlin.math.min
 
 /** Actions implementing this interface won't log anything */
 @Action interface SilentAction
@@ -21,12 +22,12 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
     override fun invoke(action: Any, chain: Chain): Any {
         if (action is SilentAction) return chain.proceed(action) //Do nothing
 
-        val beforeStates: Array<Any> = Array(stores.size) { Unit }
-        val afterStates: Array<Any> = Array(stores.size) { Unit }
+        val beforeStates: Array<Any?> = Array(stores.size) { Unit }
+        val afterStates: Array<Any?> = Array(stores.size) { Unit }
 
         stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
         val start = System.currentTimeMillis()
-        val timeSinceLastAction = Math.min(start - lastActionTime, 9999)
+        val timeSinceLastAction = min(start - lastActionTime, 9999)
         lastActionTime = start
         actionCounter++
 

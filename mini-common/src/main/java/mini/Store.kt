@@ -1,25 +1,33 @@
 package mini
 
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import org.jetbrains.annotations.TestOnly
+import java.io.Closeable
 import java.lang.reflect.ParameterizedType
+import java.util.*
 
 /**
  * State holder.
  */
-abstract class Store<S : Any> {
+abstract class Store<S> : Closeable {
 
-    private val channel = BroadcastChannel<S>(Channel.UNLIMITED)
-    private var _state: S? = null
+    companion object {
+        val NO_STATE = Any()
+    }
+
+    class StoreSubscription internal constructor(private val store: Store<*>,
+                                                 private val fn: Any) : Closeable {
+        override fun close() {
+            store.listeners.remove(fn)
+        }
+    }
+
+    private var _state: Any? = NO_STATE
+    private val listeners = Vector<(S) -> Unit>()
 
     /** Set new state, equivalent to [asNewState]*/
     protected fun setState(state: S) {
         assertOnUiThread()
-        setStateInternal(state)
+        performStateChange(state)
     }
 
     /** Hook for write only property */
@@ -30,20 +38,27 @@ abstract class Store<S : Any> {
     /** Same as property, suffix style */
     protected fun S.asNewState(): S {
         assertOnUiThread()
-        setStateInternal(this)
+        performStateChange(this)
         return this
+    }
+
+    fun subscribe(hotStart: Boolean = true, fn: (S) -> Unit): Closeable {
+        listeners.add(fn)
+        if (hotStart) fn(state)
+        return StoreSubscription(this, fn)
     }
 
     val state: S
         get() {
-            if (_state == null) {
+            if (_state === NO_STATE) {
                 synchronized(this) {
-                    if (_state == null) {
+                    if (_state === NO_STATE) {
                         _state = initialState()
                     }
                 }
             }
-            return _state!!
+            @Suppress("UNCHECKED_CAST")
+            return _state as S
         }
 
     /**
@@ -66,20 +81,14 @@ abstract class Store<S : Any> {
         }
     }
 
-    private fun setStateInternal(newState: S) {
+    private fun performStateChange(newState: S) {
         //State mutation should to happen on UI thread
         if (newState != _state) {
             _state = newState
-            channel.offer(newState)
+            listeners.forEach {
+                it(newState)
+            }
         }
-    }
-
-    fun flow(): Flow<S> {
-        return channel.openSubscription().consumeAsFlow()
-    }
-
-    fun channel(): ReceiveChannel<S> {
-        return channel.openSubscription()
     }
 
     /** Test only method, don't use in app code */
@@ -87,10 +96,10 @@ abstract class Store<S : Any> {
     fun setTestState(s: S) {
         if (isAndroid) {
             onUiSync {
-                setStateInternal(s)
+                performStateChange(s)
             }
         } else {
-            setStateInternal(s)
+            performStateChange(s)
         }
     }
 
@@ -99,4 +108,11 @@ abstract class Store<S : Any> {
     fun resetState() {
         setTestState(initialState())
     }
+
+    final override fun close() {
+        listeners.clear() //Remove all listeners
+        onClose()
+    }
+
+    open fun onClose() = Unit
 }

@@ -1,9 +1,10 @@
 package org.sample
 
 import android.os.Bundle
+import com.mini.android.FluxActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
-import com.mini.android.FluxActivity
+import kotlinx.android.synthetic.main.home_activity.*
 import mini.*
 
 class SampleActivity : FluxActivity() {
@@ -14,26 +15,22 @@ class SampleActivity : FluxActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
-        Grove.plant(ConsoleLogTree())
+
         val stores = listOf(dummyStore)
+        MiniGen.subscribe(dispatcher, stores).track()
+        stores.forEach { it.initialize() }
 
-        MiniGen.register(dispatcher, stores)
+        dummyStore.subscribe {
+            demo_text.text = it.text
+        }
 
+        Grove.plant(ConsoleLogTree())
         dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
             Grove.tag(tag).d { msg }
         }))
 
-        dummyStore.flow()
-            .collectOnUi {
-                it.text
-            }
-
-        dispatcher.dispatch(ActionOne("1"))
+        dispatcher.dispatch(ActionOne(""))
         dispatcher.dispatch(ActionTwo("2"))
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }
 
@@ -50,9 +47,7 @@ data class ActionOne(override val text: String) : ActionInterface, SampleAbstrac
 data class DummyState(val text: String = "dummy")
 class DummyStore : Store<DummyState>() {
 
-    @Reducer
-    fun onInterfaceAction(a: ActionInterface) {
-
+    @Reducer fun onInterfaceAction(a: ActionInterface) {
     }
 
     @Reducer fun onSampleAction(a: ActionOne) {

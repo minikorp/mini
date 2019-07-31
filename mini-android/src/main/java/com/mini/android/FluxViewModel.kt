@@ -2,21 +2,15 @@ package com.mini.android
 
 import androidx.annotation.CallSuper
 import androidx.lifecycle.ViewModel
-import mini.CompositeCloseable
-import java.io.Closeable
+import mini.CloseableTracker
+import mini.DefaultCloseableTracker
 
-abstract class FluxViewModel : ViewModel() {
-
-    private val compositeCloseable = CompositeCloseable()
-
-    fun <T : Closeable> T.track(): T {
-        compositeCloseable.add(this)
-        return this
-    }
+abstract class FluxViewModel : ViewModel(),
+    CloseableTracker by DefaultCloseableTracker() {
 
     @CallSuper
     override fun onCleared() {
         super.onCleared()
-        compositeCloseable.close()
+        clearCloseables()
     }
 }

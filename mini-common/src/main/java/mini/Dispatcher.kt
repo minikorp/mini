@@ -17,7 +17,7 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
     private val subscriptionCaller: Chain = object : Chain {
         override fun proceed(action: Any): Any {
             synchronized(subscriptions) {
-                val types = actionTypes[action::class] ?: listOf(action::class.java)
+                val types = actionTypes[action::class] ?: listOf(action::class)
                 types.forEach { type ->
                     subscriptions[type]?.forEach { it.fn(action) }
                 }
@@ -29,7 +29,7 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
     private val interceptors: MutableList<Interceptor> = ArrayList()
     private var interceptorChain: Chain = buildChain()
     private var dispatching: Any? = null
-    val subscriptions: MutableMap<Class<*>, MutableSet<Registration>> = HashMap()
+    internal val subscriptions: MutableMap<KClass<*>, MutableSet<DispatcherSubscription>> = HashMap()
 
     private fun buildChain(): Chain {
         return interceptors.fold(subscriptionCaller) { chain, interceptor ->
@@ -55,15 +55,15 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
         }
     }
 
-    inline fun <reified A : Any> register(priority: Int = 100, noinline callback: (A) -> Unit): Registration {
-        return register(A::class, priority, callback)
+    inline fun <reified A : Any> subscribe(priority: Int = 100, noinline callback: (A) -> Unit): Closeable {
+        return subscribe(A::class, priority, callback)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> register(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Registration {
+    fun <T : Any> subscribe(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Closeable {
         synchronized(subscriptions) {
-            val reg = Registration(this, clazz.java, priority, callback as (Any) -> Unit)
-            val set = subscriptions.getOrPut(clazz.java) {
+            val reg = DispatcherSubscription(this, clazz, priority, callback as (Any) -> Unit)
+            val set = subscriptions.getOrPut(clazz) {
                 TreeSet(kotlin.Comparator { a, b ->
                     //Sort by priority, then by id for equal priority
                     val p = a.priority.compareTo(b.priority)
@@ -76,7 +76,7 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
         }
     }
 
-    fun unregister(registration: Registration) {
+    fun unregister(registration: DispatcherSubscription) {
         synchronized(subscriptions) {
             subscriptions[registration.type]?.remove(registration)
         }
@@ -97,8 +97,19 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
         }
     }
 
-    @Suppress("NOTHING_TO_INLINE") //Inlined so it doesn't appear in stack trace
-    private inline fun doDispatch(action: Any) {
+    /**
+     * Post an event that will dispatch the action on the UI thread
+     * and return immediately.
+     */
+    fun dispatchAsync(action: Any) {
+        if (isAndroid) {
+            onUi { dispatch(action) }
+        } else {
+            dispatch(action) //Just dispatch it
+        }
+    }
+
+    private fun doDispatch(action: Any) {
         if (dispatching != null) {
             throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
                                         "$dispatching. Nested action: $action ")
@@ -109,19 +120,11 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) 
     }
 
     /**
-     * Post an event that will dispatch the action on the UI thread
-     * and return immediately.
-     */
-    fun dispatchAsync(action: Any) {
-        onUi { dispatch(action) }
-    }
-
-    /**
      * Handle for a dispatcher subscription.
      */
-    data class Registration(val dispatcher: Dispatcher,
-                            val type: Class<*>,
-                            val priority: Int, val fn: (Any) -> Unit) : Closeable {
+    data class DispatcherSubscription internal constructor(val dispatcher: Dispatcher,
+                                                           val type: KClass<*>,
+                                                           val priority: Int, val fn: (Any) -> Unit) : Closeable {
         companion object {
             private val idCounter = AtomicInteger()
         }

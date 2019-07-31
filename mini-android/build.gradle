@@ -24,11 +24,11 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     api project(":mini-common")
-    
+
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.1"
     api "androidx.appcompat:appcompat:1.0.2"
     api "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-alpha02"
-    
+
     testImplementation "junit:junit:4.12"
     androidTestImplementation "androidx.test:runner:1.2.0"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.2.0"
