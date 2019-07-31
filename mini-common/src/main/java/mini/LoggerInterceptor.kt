@@ -1,7 +1,9 @@
 package mini
 
-import io.reactivex.Completable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 /** Actions implementing this interface won't log anything */
 @Action interface SilentAction
@@ -11,6 +13,7 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
                                     private val logInBackground: Boolean = false,
                                     private val tag: String = "MiniLog") : Interceptor {
 
+    private val coroutineDispatcher by lazy { Executors.newSingleThreadExecutor().asCoroutineDispatcher() }
     private val stores = stores.toList()
     private var lastActionTime = System.currentTimeMillis()
     private var actionCounter: Long = 0
@@ -26,11 +29,13 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
         val timeSinceLastAction = Math.min(start - lastActionTime, 9999)
         lastActionTime = start
         actionCounter++
+
+        //Pass it down
         val out = chain.proceed(action)
         val processTime = System.currentTimeMillis() - start
         stores.forEachIndexed { idx, store -> afterStates[idx] = store.state }
 
-        Completable.fromAction {
+        val logRunnable = Runnable {
             val sb = StringBuilder()
             sb.append('\n')
             sb.append("┌────────────────────────────────────────────\n")
@@ -47,14 +52,17 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
                     sb.append(String.format("│   %s", line)).append("\n")
                 }
             }
-
             sb.append("└────────────────────────────────────────────\n")
             logFn(tag, sb.toString())
-        }.let {
-            if (logInBackground) it.subscribeOn(Schedulers.single())
-            else it
-        }.subscribe()
+        }
 
+        if (logInBackground) {
+            GlobalScope.launch(coroutineDispatcher) {
+                logRunnable.run()
+            }
+        } else {
+            logRunnable.run()
+        }
         return out
     }
 }

@@ -1,10 +1,14 @@
 package mini.processor
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asTypeName
+import mini.CompositeCloseable
 import mini.Dispatcher
 import mini.Reducer
-import mini.Store
+import java.io.Closeable
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 
@@ -12,59 +16,61 @@ object ReducersGenerator {
 
     fun generate(container: TypeSpec.Builder, elements: Set<Element>) {
         val reducers = elements.map { ReducerModel(it) }
-            .groupBy { it.storeName }
+            .groupBy { it.containerName }
+
+        val reducerContainerType = Any::class.asTypeName()
+        val reducerContainerListType = List::class.asTypeName().parameterizedBy(reducerContainerType)
 
         val whenBlock = CodeBlock.builder()
-            //⇤⇥«»
-            .addStatement("when (store) {").indent()
+            .addStatement("val c = %T()", CompositeCloseable::class)
+            .addStatement("when (container) {").indent()
             .apply {
-                reducers.forEach { (storeName, reducers) ->
-                    addStatement("is %T -> {", storeName).indent()
-                    reducers.forEach { reducer ->
-                        addStatement("dispatcher.register<%T>(priority=%L) { store.%N(it) }",
-                            reducer.function.parameters[0].asType(), //Action type
-                            reducer.priority, //Priority
-                            reducer.function.simpleName //Function name
+                reducers.forEach { (containerName, reducerFunctions) ->
+                    addStatement("is %T -> {", containerName).indent()
+                    reducerFunctions.forEach { function ->
+                        addStatement("c.add(dispatcher.register<%T>(priority=%L) { container.%N(it) })",
+                            function.function.parameters[0].asType(), //Action type
+                            function.priority, //Priority
+                            function.function.simpleName //Function name
                         )
                     }
                     unindent().addStatement("}")
                 }
             }
-            .unindent().addStatement("}")
-            .build()
-
-        val storeTypeName = Store::class.asTypeName().parameterizedBy(STAR)
-        val listOfStoresTypeName = List::class.asTypeName().parameterizedBy(storeTypeName)
-
-        val registerListFn = FunSpec.builder("register")
-            .addModifiers(KModifier.PRIVATE)
-            .addParameter("dispatcher", Dispatcher::class)
-            .addParameter("stores", listOfStoresTypeName)
-            .beginControlFlow("stores.forEach { store ->")
-            .addStatement("register(dispatcher, store)")
-            .endControlFlow()
+            .addStatement("else -> throw IllegalArgumentException(\"Container \$container has no reducers\")")
+            .unindent()
+            .addStatement("}") //Close when
+            .addStatement("return c")
             .build()
 
         val registerOneFn = FunSpec.builder("register")
-            .addModifiers(KModifier.PRIVATE)
             .addParameter("dispatcher", Dispatcher::class)
-            .addParameter("store", storeTypeName)
+            .addParameter("container", reducerContainerType)
+            .returns(Closeable::class)
             .addCode(whenBlock)
             .build()
 
-        val initDispatcherFn = FunSpec.builder("initialize")
-            .addModifiers(KModifier.OVERRIDE)
+        val registerListFn = FunSpec.builder("register")
             .addParameter("dispatcher", Dispatcher::class)
-            .addParameter("stores", listOfStoresTypeName)
+            .addParameter("containers", reducerContainerListType)
+            .returns(Closeable::class)
+            .addStatement("val c = %T()", CompositeCloseable::class)
+            .beginControlFlow("containers.forEach { container ->")
+            .addStatement("c.add(register(dispatcher, container))")
+            .endControlFlow()
+            .addStatement("return c")
+            .build()
+
+        val initDispatcherFn = FunSpec.builder("newDispatcher")
+            .returns(Dispatcher::class)
             .addCode(CodeBlock.builder()
-                .addStatement("dispatcher.actionTypes = actionTypes")
-                .addStatement("register(dispatcher, stores)")
+                .addStatement("return Dispatcher(actionTypes)")
                 .build())
             .build()
 
+        container.addFunction(initDispatcherFn)
         container.addFunction(registerOneFn)
         container.addFunction(registerListFn)
-        container.addFunction(initDispatcherFn)
 
     }
 }
@@ -72,6 +78,6 @@ object ReducersGenerator {
 class ReducerModel(val element: Element) {
     val priority = element.getAnnotation(Reducer::class.java).priority
     val function = element as ExecutableElement
-    val store = element.enclosingElement.asType()
-    val storeName = store.asTypeName()
+    val container = element.enclosingElement.asType()
+    val containerName = container.asTypeName()
 }

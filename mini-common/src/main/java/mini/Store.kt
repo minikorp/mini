@@ -1,7 +1,10 @@
 package mini
 
-import io.reactivex.Flowable
-import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 import org.jetbrains.annotations.TestOnly
 import java.lang.reflect.ParameterizedType
 
@@ -10,15 +13,7 @@ import java.lang.reflect.ParameterizedType
  */
 abstract class Store<S : Any> {
 
-    companion object {
-        const val INITIALIZE_ORDER_PROP = "store.init.order"
-    }
-
-    init {
-    }
-
-    val properties: MutableMap<String, Any?> = HashMap()
-
+    private val channel = BroadcastChannel<S>(Channel.UNLIMITED)
     private var _state: S? = null
 
     /** Set new state, equivalent to [asNewState]*/
@@ -51,12 +46,6 @@ abstract class Store<S : Any> {
             return _state!!
         }
 
-    private val processor: PublishProcessor<S> = PublishProcessor.create()
-
-    init {
-        properties[INITIALIZE_ORDER_PROP] = 100
-    }
-
     /**
      * Initialize the store after dependency injection is complete.
      */
@@ -77,16 +66,20 @@ abstract class Store<S : Any> {
         }
     }
 
-    fun flowable(): Flowable<S> {
-        return processor.startWith(state)
-    }
-
     private fun setStateInternal(newState: S) {
         //State mutation should to happen on UI thread
         if (newState != _state) {
             _state = newState
-            processor.onNext(_state)
+            channel.offer(newState)
         }
+    }
+
+    fun flow(): Flow<S> {
+        return channel.openSubscription().consumeAsFlow()
+    }
+
+    fun channel(): ReceiveChannel<S> {
+        return channel.openSubscription()
     }
 
     /** Test only method, don't use in app code */

@@ -1,6 +1,6 @@
 package mini
 
-import io.reactivex.disposables.Disposable
+import java.io.Closeable
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -12,14 +12,12 @@ import kotlin.reflect.KClass
  * If map is empty, the runtime type itself will be used. If using code generation,
  * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
  */
-class Dispatcher {
-
-    var actionTypes: Map<Class<*>, List<Class<*>>> = emptyMap()
+class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) {
 
     private val subscriptionCaller: Chain = object : Chain {
         override fun proceed(action: Any): Any {
             synchronized(subscriptions) {
-                val types = actionTypes[action::class.java] ?: listOf(action::class.java)
+                val types = actionTypes[action::class] ?: listOf(action::class.java)
                 types.forEach { type ->
                     subscriptions[type]?.forEach { it.fn(action) }
                 }
@@ -57,7 +55,6 @@ class Dispatcher {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified A : Any> register(priority: Int = 100, noinline callback: (A) -> Unit): Registration {
         return register(A::class, priority, callback)
     }
@@ -87,8 +84,10 @@ class Dispatcher {
 
     /**
      * Dispatch an action on the main thread synchronously.
-     * This method will block the caller if it's not
-     * the main thread.
+     * This method will block the caller until all listeners have handled the event,
+     * usually the main thread.
+     *
+     * Use [dispatchAsync] to avoid this.
      */
     fun dispatch(action: Any) {
         if (isAndroid) {
@@ -120,36 +119,23 @@ class Dispatcher {
     /**
      * Handle for a dispatcher subscription.
      */
-    class Registration(val dispatcher: Dispatcher,
-                       val type: Class<*>,
-                       val priority: Int, val fn: (Any) -> Unit) : Disposable {
-
+    data class Registration(val dispatcher: Dispatcher,
+                            val type: Class<*>,
+                            val priority: Int, val fn: (Any) -> Unit) : Closeable {
         companion object {
             private val idCounter = AtomicInteger()
         }
 
-        val id = idCounter.getAndIncrement()
-        var disposed = false
-
-        @Synchronized
-        override fun isDisposed(): Boolean = disposed
-
-        @Synchronized
-        override fun dispose() {
+        override fun close() {
+            if (disposed) return
             dispatcher.unregister(this)
             disposed = true
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            other as Registration
-            if (id != other.id) return false
-            return true
-        }
+        //Alias for close
+        fun dispose() = close()
 
-        override fun hashCode(): Int {
-            return id
-        }
+        val id = idCounter.getAndIncrement()
+        var disposed = false
     }
 }

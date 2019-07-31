@@ -7,18 +7,25 @@ buildscript {
 }
 
 apply plugin: 'kotlin'
-apply plugin: 'kotlin-kapt'
 apply from: "../jitpack.gradle"
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    //Rx
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-RC'
+
     compileOnly group: 'com.google.android', name: 'android', version: '4.1.1.4'
-    compile "io.reactivex.rxjava2:rxjava:$rx_version"
 
     testCompile 'junit:junit:4.12'
     testImplementation "org.amshove.kluent:kluent:1.44"
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlin.Experimental",
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-Xuse-experimental=kotlinx.coroutines.FlowPreview",
+    ]
 }
 
 apply plugin: 'idea'

@@ -3,7 +3,6 @@ package mini.processor
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import mini.Action
-import mini.MiniInitializer
 import mini.Reducer
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
@@ -36,7 +35,6 @@ class MiniProcessor : AbstractProcessor() {
         val className = "MiniGen"
         val file = FileSpec.builder("mini", className)
         val container = TypeSpec.objectBuilder(className)
-            .addSuperinterface(MiniInitializer::class)
             .addKdoc("Automatically generated, do not edit.\n")
 
         //Get non-abstract actions

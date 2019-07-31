@@ -3,7 +3,6 @@ package mini
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
-
 private val actionTagsCache = HashMap<Class<*>, Set<Class<*>>>()
 
 /**
@@ -18,9 +17,10 @@ val Action.reflectedTags: Set<Class<*>>
 
 internal fun reflectActionTypes(type: KClass<*>): Set<Class<*>> {
     return type.supertypes
-            .map { (it.jvmErasure.java as Class<*>).kotlin }
-            .map { reflectActionTypes(it) }
-            .flatten()
-            .plus(type.java)
-            .toSet()
+        .asSequence()
+        .map { (it.jvmErasure.java as Class<*>).kotlin }
+        .map { reflectActionTypes(it) }
+        .flatten()
+        .plus(type.java)
+        .toSet()
 }

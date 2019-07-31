@@ -1,15 +1,14 @@
 package org.sample
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
-import kotlinx.android.synthetic.main.home_activity.*
+import com.mini.android.FluxActivity
 import mini.*
 
-class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscriptionTracker() {
+class SampleActivity : FluxActivity() {
 
-    private val dispatcher = Dispatcher()
+    private val dispatcher = MiniGen.newDispatcher()
     private val dummyStore = DummyStore()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,16 +17,16 @@ class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscr
         Grove.plant(ConsoleLogTree())
         val stores = listOf(dummyStore)
 
-        //MiniGen.initialize(dispatcher, stores)
-        MiniRuntime.initialize(dispatcher, stores)
+        MiniGen.register(dispatcher, stores)
 
         dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
             Grove.tag(tag).d { msg }
         }))
 
-        dummyStore.flowable().subscribe {
-            email.text = it.text
-        }.track()
+        dummyStore.flow()
+            .collectOnUi {
+                it.text
+            }
 
         dispatcher.dispatch(ActionOne("1"))
         dispatcher.dispatch(ActionTwo("2"))
@@ -35,7 +34,6 @@ class SampleActivity : AppCompatActivity(), SubscriptionTracker by DefaultSubscr
 
     override fun onDestroy() {
         super.onDestroy()
-        cancelSubscriptions()
     }
 }
 
@@ -52,7 +50,8 @@ data class ActionOne(override val text: String) : ActionInterface, SampleAbstrac
 data class DummyState(val text: String = "dummy")
 class DummyStore : Store<DummyState>() {
 
-    @Reducer fun onInterfaceAction(a: ActionInterface) {
+    @Reducer
+    fun onInterfaceAction(a: ActionInterface) {
 
     }
 
