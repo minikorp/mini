@@ -14,9 +14,15 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
     val isFailure: Boolean get() = value is Failure
     val isLoading: Boolean get() = value is Loading<*>
 
-    internal class Empty
-    internal class Failure(val exception: Throwable?)
-    internal class Loading<U>(val value: U? = null)
+    internal class Empty {
+        override fun toString(): String = "Empty()"
+    }
+
+    @PublishedApi
+    internal data class Failure(val exception: Throwable?)
+
+    @PublishedApi
+    internal data class Loading<U>(val value: U? = null)
 
     /**
      * Get the current value if successful, or null for other cases.
@@ -31,12 +37,6 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
         when (value) {
             is Failure -> value.exception
             else -> null
-        }
-
-    override fun toString(): String =
-        when (value) {
-            is Failure -> value.toString() // "Failure($exception)"
-            else -> "Success($value)"
         }
 
     companion object {
@@ -67,23 +67,23 @@ inline fun <T> Resource<T>.onSuccess(crossinline action: (data: T) -> Unit): Res
     return this
 }
 
-inline fun <T> Resource<T>.onFailure(crossinline action: (data: T) -> Unit): Resource<T> {
-    if (isFailure) action(value as T)
+inline fun <T> Resource<T>.onFailure(crossinline action: (error: Throwable?) -> Unit): Resource<T> {
+    if (isFailure) action((value as Resource.Failure).exception)
     return this
 }
 
-inline fun <T> Resource<T>.onLoading(crossinline action: (data: T) -> Unit): Resource<T> {
-    if (isLoading) action(value as T)
+inline fun <T> Resource<T>.onLoading(crossinline action: (data: T?) -> Unit): Resource<T> {
+    if (isLoading) action((value as Resource.Loading<T>).value)
     return this
 }
 
 inline fun Task.onIdle(crossinline action: () -> Unit): Task {
-    onEmpty { action() }
+    if (isEmpty) action()
     return this
 }
 
-inline fun <T> Resource<T>.onEmpty(crossinline action: (data: T) -> Unit): Resource<T> {
-    if (isEmpty) action(value as T)
+inline fun <T> Resource<T>.onEmpty(crossinline action: () -> Unit): Resource<T> {
+    if (isEmpty) action()
     return this
 }
 
