@@ -19,10 +19,14 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
     }
 
     @PublishedApi
-    internal data class Failure(val exception: Throwable?)
+    internal data class Failure(val exception: Throwable?) {
+        override fun toString(): String = "Failure($exception)"
+    }
 
     @PublishedApi
-    internal data class Loading<U>(val value: U? = null)
+    internal data class Loading<U>(val value: U? = null) {
+        override fun toString(): String = "Loading($value)"
+    }
 
     /**
      * Get the current value if successful, or null for other cases.
@@ -45,6 +49,10 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
         fun <T> loading(value: T? = null): Resource<T> = Resource(Loading(value))
         fun <T> empty(): Resource<T> = Resource(Empty())
     }
+
+    override fun toString(): String {
+        return value.toString()
+    }
 }
 
 /**
@@ -59,6 +67,16 @@ class Task(value: Any?) : Resource<Unit>(value) {
         fun idle(): Task = Task(Empty())
         fun loading(): Task = Task(Loading<Unit>())
         fun failure(exception: Throwable? = null): Task = Task(Failure(exception))
+    }
+
+    override fun toString(): String {
+        return when {
+            isSuccess -> "Success"
+            isFailure -> "Failure"
+            isLoading -> "Loading"
+            isIdle -> "Idle"
+            else -> value.toString()
+        }
     }
 }
 
