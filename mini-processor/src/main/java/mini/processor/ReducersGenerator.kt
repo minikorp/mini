@@ -1,10 +1,7 @@
 package mini.processor
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
 import mini.CompositeCloseable
 import mini.Dispatcher
 import mini.Reducer
@@ -44,6 +41,7 @@ object ReducersGenerator {
             .build()
 
         val registerOneFn = FunSpec.builder("subscribe")
+            .addModifiers(KModifier.PRIVATE)
             .addParameter("dispatcher", Dispatcher::class)
             .addParameter("container", reducerContainerType)
             .returns(Closeable::class)

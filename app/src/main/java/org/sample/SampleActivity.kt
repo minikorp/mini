@@ -5,7 +5,10 @@ import com.mini.android.FluxActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
 import kotlinx.android.synthetic.main.home_activity.*
-import mini.*
+import mini.Action
+import mini.LoggerInterceptor
+import mini.MiniGen
+import mini.Store
 
 class SampleActivity : FluxActivity() {
 
@@ -29,32 +32,17 @@ class SampleActivity : FluxActivity() {
             Grove.tag(tag).d { msg }
         }))
 
-        dispatcher.dispatch(ActionOne(""))
         dispatcher.dispatch(ActionTwo("2"))
     }
 }
 
+@Action
 interface ActionInterface {
     val text: String
 }
 
-abstract class SampleAbstractAction : BaseAction()
-
-data class ActionOne(override val text: String) : ActionInterface, SampleAbstractAction()
-
-@Action class ActionTwo(val text: String)
+@Action
+class ActionTwo(override val text: String) : ActionInterface
 
 data class DummyState(val text: String = "dummy")
-class DummyStore : Store<DummyState>() {
-
-    @Reducer fun onInterfaceAction(a: ActionInterface) {
-    }
-
-    @Reducer fun onSampleAction(a: ActionOne) {
-        newState = state.copy(text = a.text)
-    }
-
-    @Reducer fun anotherAction(a: ActionTwo) {
-        state.copy(text = a.text).asNewState()
-    }
-}
+class DummyStore : Store<DummyState>()
