@@ -9,7 +9,7 @@ class DispatcherTest {
 
     @Test
     fun `subscriptions are added`() {
-        val dispatcher = Dispatcher()
+        val dispatcher = TestDispatcher()
         var called = 0
         dispatcher.subscribe<TestAction> {
             called++
@@ -20,7 +20,7 @@ class DispatcherTest {
 
     @Test
     fun `order is respected for same priority`() {
-        val dispatcher = Dispatcher()
+        val dispatcher = TestDispatcher()
         val calls = ArrayList<Int>()
         dispatcher.subscribe<TestAction> {
             calls.add(0)
@@ -35,7 +35,7 @@ class DispatcherTest {
 
     @Test
     fun `order is respected for different priority`() {
-        val dispatcher = Dispatcher()
+        val dispatcher = TestDispatcher()
         val calls = ArrayList<Int>()
         dispatcher.subscribe<TestAction>(priority = 10) {
             calls.add(0)
@@ -50,7 +50,7 @@ class DispatcherTest {
 
     @Test
     fun `disposing registration removes subscription`() {
-        val dispatcher = Dispatcher()
+        val dispatcher = TestDispatcher()
         var called = 0
         dispatcher.subscribe<TestAction> {
             called++
@@ -61,7 +61,7 @@ class DispatcherTest {
 
     @Test
     fun `interceptors are called`() {
-        val dispatcher = Dispatcher()
+        val dispatcher = TestDispatcher()
         var called = 0
         val interceptor: Interceptor = { action, chain ->
             called++

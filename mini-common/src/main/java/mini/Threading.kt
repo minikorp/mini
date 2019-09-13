@@ -8,13 +8,6 @@ val uiHandler by lazy {
     Handler(Looper.getMainLooper())
 }
 
-fun assertNotOnUiThread() {
-    if (!isAndroid) return
-    if (Looper.myLooper() != Looper.getMainLooper()) {
-        error("This method can not be called from the main application thread")
-    }
-}
-
 fun assertOnUiThread() {
     if (!isAndroid) return
     if (Looper.myLooper() != Looper.getMainLooper()) {

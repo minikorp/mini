@@ -6,18 +6,23 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
- * Hub for actions.
+ * Hub for actions. Use code generation with ```MiniGen.newDispatcher()```
+ * or provide action type map information.
  *
  * @param actionTypes All types an action can be observed as.
  * If map is empty, the runtime type itself will be used. If using code generation,
  * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
  */
-class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>> = emptyMap()) {
+class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
 
     private val subscriptionCaller: Chain = object : Chain {
         override fun proceed(action: Any): Any {
             synchronized(subscriptions) {
-                val types = actionTypes[action::class] ?: listOf(action::class)
+                val types = actionTypes[action::class]
+                            ?: error("Object $action [${action::class}] is not action, " +
+                                     "register it in type map or use ```MiniGen.newDispatcher``` " +
+                                     "if using " +
+                                     "code generation")
                 types.forEach { type ->
                     subscriptions[type]?.forEach { it.fn(action) }
                 }
