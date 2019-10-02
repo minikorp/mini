@@ -1,20 +1,18 @@
 package mini
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import kotlin.math.min
 
 /** Actions implementing this interface won't log anything */
-@Action interface SilentAction
+@Action
+interface SilentAction
 
 class LoggerInterceptor constructor(stores: Collection<Store<*>>,
                                     private val logFn: (tag: String, msg: String) -> Unit,
                                     private val logInBackground: Boolean = false,
                                     private val tag: String = "MiniLog") : Interceptor {
 
-    private val coroutineDispatcher by lazy { Executors.newSingleThreadExecutor().asCoroutineDispatcher() }
+    private val executor by lazy { Executors.newSingleThreadExecutor() }
     private val stores = stores.toList()
     private var lastActionTime = System.currentTimeMillis()
     private var actionCounter: Long = 0
@@ -41,8 +39,8 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
             sb.append('\n')
             sb.append("┌────────────────────────────────────────────\n")
             sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
-                action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
-                .append("\n")
+                    action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
+                    .append("\n")
 
             for (i in beforeStates.indices) {
                 val oldState = beforeStates[i]
@@ -58,9 +56,7 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
         }
 
         if (logInBackground) {
-            GlobalScope.launch(coroutineDispatcher) {
-                logRunnable.run()
-            }
+            executor.submit(logRunnable)
         } else {
             logRunnable.run()
         }

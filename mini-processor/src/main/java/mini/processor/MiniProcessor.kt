@@ -7,7 +7,10 @@ import mini.Reducer
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
 
+@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.ISOLATING)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions("kapt.kotlin.generated")
 class MiniProcessor : AbstractProcessor() {
@@ -20,8 +23,8 @@ class MiniProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Reducer::class.java, Action::class.java)
-            .map { it.canonicalName }
-            .toMutableSet()
+                .map { it.canonicalName }
+                .toMutableSet()
     }
 
     override fun process(set: MutableSet<out TypeElement>,
@@ -35,7 +38,7 @@ class MiniProcessor : AbstractProcessor() {
         val className = "MiniGen"
         val file = FileSpec.builder("mini", className)
         val container = TypeSpec.objectBuilder(className)
-            .addKdoc("Automatically generated, do not edit.\n")
+                .addKdoc("Automatically generated, do not edit.\n")
 
         //Get non-abstract actions
         ActionTypesGenerator.generate(container, roundActions)

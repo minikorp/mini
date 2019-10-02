@@ -8,6 +8,7 @@ import kotlinx.android.synthetic.main.home_activity.*
 import mini.Action
 import mini.LoggerInterceptor
 import mini.MiniGen
+import mini.Reducer
 import mini.Store
 
 class SampleActivity : FluxActivity() {
@@ -45,4 +46,10 @@ interface ActionInterface {
 class ActionTwo(override val text: String) : ActionInterface
 
 data class DummyState(val text: String = "dummy")
-class DummyStore : Store<DummyState>()
+class DummyStore : Store<DummyState>() {
+
+    @Reducer
+    fun hello(action: ActionInterface) {
+
+    }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="mini.flow.FlowUtilsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2019-10-02T12:19:41" hostname="macpro-pablo-movo.local" time="0.109">
+  <properties/>
+  <testcase name="flow sends updates to all" classname="mini.flow.FlowUtilsTest" time="0.09"/>
+  <testcase name="flow sends updates" classname="mini.flow.FlowUtilsTest" time="0.016"/>
+  <testcase name="channel sends updates" classname="mini.flow.FlowUtilsTest" time="0.001"/>
+  <testcase name="flow sends initial state on collection" classname="mini.flow.FlowUtilsTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
