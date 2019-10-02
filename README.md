@@ -1,3 +1,5 @@
+[![Release](https://jitpack.io/v/minikorp/mini.svg)](https://jitpack.io/#minikorp/mini)
+
 # Mini
 Mini is a minimal Flux architecture written in Kotlin that also adds a mix of useful features to build UIs fast.
 
