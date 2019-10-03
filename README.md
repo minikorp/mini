@@ -94,7 +94,6 @@ both for Android and kapt.
 
 ```groovy
 android {
-
     compileOptions {
         sourceCompatibility "1.8"
         targetCompatibility "1.8"
