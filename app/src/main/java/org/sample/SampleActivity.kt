@@ -49,7 +49,7 @@ data class DummyState(val text: String = "dummy")
 class DummyStore : Store<DummyState>() {
 
     @Reducer
-    fun hello(action: ActionInterface) {
+    fun didIChange(action: ActionInterface) {
 
     }
 }

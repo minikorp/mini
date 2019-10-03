@@ -75,7 +75,7 @@ class ResourceTest {
     @Test
     fun exceptionOrNull() {
         Resource.failure<Any>(RuntimeException()).exceptionOrNull().`should not be null`()
-        Resource.success<Any>("abc").exceptionOrNull(). `should be null` ()
+        Resource.success<Any>("abc").exceptionOrNull().`should be null`()
     }
 
     @Test

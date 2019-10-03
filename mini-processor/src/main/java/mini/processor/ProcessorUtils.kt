@@ -18,25 +18,13 @@ lateinit var elementUtils: Elements
 lateinit var typeUtils: Types
 
 val Element.isMethod: Boolean get() = this.kind == ElementKind.METHOD
-
 val Element.isClass: Boolean get() = this.kind == ElementKind.CLASS
 
 fun TypeMirror.asElement(): Element = asElementOrNull()!!
-
 fun TypeMirror.asElementOrNull(): Element? = typeUtils.asElement(this)
-
 fun TypeMirror.getSupertypes(): MutableList<out TypeMirror> = typeUtils.directSupertypes(this)
-
-fun TypeMirror.qualifiedName(): String {
-    //toString returns the full name
-    return toString()
-}
-
-fun Element.qualifiedName(): String {
-    //toString returns the full name
-    return toString()
-}
-
+fun TypeMirror.qualifiedName(): String = toString()
+fun Element.qualifiedName(): String = toString()
 fun Element.getPackageName(): String {
     //xxx.xxx.simpleName
     //xxx.xxx
@@ -45,13 +33,8 @@ fun Element.getPackageName(): String {
     return fullName.dropLast(simpleNameLength)
 }
 
-infix fun TypeMirror.assignableTo(base: TypeMirror): Boolean {
-    return typeUtils.isAssignable(base, this)
-}
-
-infix fun TypeMirror.isSubtypeOf(base: TypeMirror): Boolean {
-    return typeUtils.isSubtype(this, base)
-}
+infix fun TypeMirror.assignableTo(base: TypeMirror): Boolean = typeUtils.isAssignable(base, this)
+infix fun TypeMirror.isSubtypeOf(base: TypeMirror): Boolean = typeUtils.isSubtype(this, base)
 
 fun Element.asTypeElement(): TypeElement = asTypeElementOrNull()!!
 fun Element.asTypeElementOrNull(): TypeElement? = this as? TypeElement
@@ -68,16 +51,23 @@ infix fun TypeMirror.isSameType(other: TypeMirror?): Boolean {
 }
 
 fun Element.getSuperClass() = asTypeElement().superclass.asElement()
-fun Element.getSuperClassTypeParameter(position: Int) = asTypeElement().superclass.asDeclaredType().typeArguments[position].asElement()
+fun Element.getSuperClassTypeParameter(position: Int) = asTypeElement()
+    .superclass.asDeclaredType().typeArguments[position].asElement()
 
-fun compileCheck(message: String = "Compilation error", check: Boolean, element: Element? = null) {
-    if (check) return
-    else logError(message, element)
+
+class CompilerException : IllegalStateException()
+
+fun compilePrecondition(element: Element?,
+                        check: Boolean,
+                        lazyMessage: () -> String) {
+    if (!check) {
+        logError(lazyMessage(), element)
+        throw CompilerException()
+    }
 }
 
 fun logError(message: String, element: Element? = null) {
     logMessage(Diagnostic.Kind.ERROR, message, element)
-    error("Compilation aborted. Reason : $message")
 }
 
 fun logWarning(message: String, element: Element? = null) {
@@ -85,14 +75,14 @@ fun logWarning(message: String, element: Element? = null) {
 }
 
 fun logMessage(kind: Diagnostic.Kind, message: String, element: Element? = null) {
-    if (DEBUG_MODE) env.messager.printMessage(kind, message, element)
+    env.messager.printMessage(kind, message, element)
 }
 
 //KotlinPoet utils
 
-fun FileSpec.writeToFile() {
+fun FileSpec.writeToFile(vararg sourceElements: Element) {
     val kotlinFileObject = env.filer
-        .createResource(StandardLocation.SOURCE_OUTPUT, packageName, "$name.kt")
+        .createResource(StandardLocation.SOURCE_OUTPUT, packageName, "$name.kt", *sourceElements)
     val openWriter = kotlinFileObject.openWriter()
     writeTo(openWriter)
     openWriter.close()

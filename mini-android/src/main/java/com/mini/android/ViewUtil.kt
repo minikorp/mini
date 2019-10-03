@@ -24,8 +24,8 @@ fun toggleViewsVisibility(
         when {
             resource.isSuccess -> Triple(View.VISIBLE, invisibilityType, invisibilityType)
             resource.isLoading -> Triple(invisibilityType, View.VISIBLE, invisibilityType)
-            resource.isEmpty -> Triple(invisibilityType, invisibilityType, View.VISIBLE)
-            else -> return
+            resource.isEmpty   -> Triple(invisibilityType, invisibilityType, View.VISIBLE)
+            else               -> return
         }
     contentView.visibility = content
     loadingView.visibility = loading

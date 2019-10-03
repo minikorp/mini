@@ -34,13 +34,13 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
     fun getOrNull(): T? =
         when {
             isSuccess -> value as T?
-            else -> null
+            else      -> null
         }
 
     fun exceptionOrNull(): Throwable? =
         when (value) {
             is Failure -> value.exception
-            else -> null
+            else       -> null
         }
 
     companion object {
@@ -74,8 +74,8 @@ class Task(value: Any?) : Resource<Unit>(value) {
             isSuccess -> "Success"
             isFailure -> "Failure"
             isLoading -> "Loading"
-            isIdle -> "Idle"
-            else -> value.toString()
+            isIdle    -> "Idle"
+            else      -> value.toString()
         }
     }
 }

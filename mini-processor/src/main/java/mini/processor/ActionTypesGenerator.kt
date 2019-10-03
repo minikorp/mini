@@ -1,7 +1,13 @@
 package mini.processor
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 import javax.lang.model.type.TypeMirror
@@ -42,10 +48,10 @@ object ActionTypesGenerator {
     }
 }
 
-class ActionModel(val element: Element) {
-    val type = element.asType()
+class ActionModel(element: Element) {
+    private val type = element.asType()
     val typeName = type.asTypeName()
-    val superTypes = collectTypes(type)
+    private val superTypes = collectTypes(type)
         .sortedBy { it.depth }
         //Ignore base types
         .filter { it.mirror.qualifiedName() != "java.lang.Object" }
@@ -66,7 +72,7 @@ class ActionModel(val element: Element) {
     }
 
     class ActionSuperType(val mirror: TypeMirror, val depth: Int) {
-        val element = mirror.asElement()
+        private val element = mirror.asElement()
         val qualifiedName = element.qualifiedName()
 
         override fun equals(other: Any?): Boolean {

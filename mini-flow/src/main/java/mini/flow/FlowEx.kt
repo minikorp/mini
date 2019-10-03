@@ -2,7 +2,11 @@ package mini.flow
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import mini.Store
 
 /**
@@ -32,7 +36,8 @@ fun <T, R : Any> Flow<T>.selectNotNull(mapper: suspend (T) -> R?): Flow<R> {
  * @param hotStart emit current state when starting.
  */
 @FlowPreview
-fun <S : Any> Store<S>.channel(hotStart: Boolean = true, capacity: Int = Channel.BUFFERED): Channel<S> {
+fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
+                               capacity: Int = Channel.BUFFERED): Channel<S> {
     val channel = Channel<S>(capacity)
     val subscription = subscribe(hotStart) {
         channel.offer(it)

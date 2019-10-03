@@ -78,3 +78,47 @@ dependencies {
     implementation "com.github.minikorp.mini:mini-android:$mini_version" //Android utilities
 }
 ```
+
+## Issues
+
+Jetifier might crash your build without reason, 
+add this line to gradle.properties to exclude the compiler or fully disable it.
+
+```properties
+android.jetifier.blacklist=mini-processor.*\\.jar #Blacklist
+android.enableJetifier=false #Or disable
+```
+
+Compiling JDK >8 might fail, make sure you set compatibility to java 8
+both for Android and kapt. 
+
+```groovy
+android {
+
+    compileOptions {
+        sourceCompatibility "1.8"
+        targetCompatibility "1.8"
+    }
+}
+
+kapt {
+    javacOptions {
+        option("-source", "8")
+        option("-target", "8")
+    }
+}
+```
+
+## Build performance
+
+Make sure to enable incremental apt and worker api for faster builds with kapt.
+
+```properties
+# Some performance improvements
+org.gradle.parallel=true
+org.gradle.configureondemand=true
+org.gradle.caching=true
+org.gradle.daemon=true
+kapt.incremental.apt=true
+kapt.use.worker.api=true
+``` 

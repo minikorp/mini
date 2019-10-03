@@ -39,8 +39,8 @@ class LoggerInterceptor constructor(stores: Collection<Store<*>>,
             sb.append('\n')
             sb.append("┌────────────────────────────────────────────\n")
             sb.append(String.format("├─> %s %dms [+%dms][%d] - %s",
-                    action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
-                    .append("\n")
+                action.javaClass.simpleName, processTime, timeSinceLastAction, actionCounter % 10, action))
+                .append("\n")
 
             for (i in beforeStates.indices) {
                 val oldState = beforeStates[i]

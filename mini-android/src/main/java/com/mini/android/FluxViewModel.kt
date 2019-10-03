@@ -6,7 +6,7 @@ import mini.CloseableTracker
 import mini.DefaultCloseableTracker
 
 abstract class FluxViewModel : ViewModel(),
-    CloseableTracker by DefaultCloseableTracker() {
+                               CloseableTracker by DefaultCloseableTracker() {
 
     @CallSuper
     override fun onCleared() {

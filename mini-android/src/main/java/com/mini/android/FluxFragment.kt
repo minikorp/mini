@@ -8,8 +8,8 @@ import mini.DefaultCloseableTracker
 import kotlin.coroutines.CoroutineContext
 
 abstract class FluxFragment : Fragment(),
-    CloseableTracker by DefaultCloseableTracker(),
-    CoroutineScope {
+                              CloseableTracker by DefaultCloseableTracker(),
+                              CoroutineScope {
 
     override val coroutineContext: CoroutineContext
         get() = lifecycleScope.coroutineContext

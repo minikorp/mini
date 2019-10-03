@@ -19,10 +19,10 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
         override fun proceed(action: Any): Any {
             synchronized(subscriptions) {
                 val types = actionTypes[action::class]
-                            ?: error("Object $action [${action::class}] is not action, " +
-                                     "register it in type map or use ```MiniGen.newDispatcher``` " +
-                                     "if using " +
-                                     "code generation")
+                    ?: error("Object $action [${action::class}] is not action, " +
+                        "register it in type map or use ```MiniGen.newDispatcher``` " +
+                        "if using " +
+                        "code generation")
                 types.forEach { type ->
                     subscriptions[type]?.forEach { it.fn(action) }
                 }
@@ -60,12 +60,15 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
         }
     }
 
-    inline fun <reified A : Any> subscribe(priority: Int = 100, noinline callback: (A) -> Unit): Closeable {
+    inline fun <reified A : Any> subscribe(priority: Int = 100,
+                                           noinline callback: (A) -> Unit): Closeable {
         return subscribe(A::class, priority, callback)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> subscribe(clazz: KClass<T>, priority: Int = 100, callback: (T) -> Unit): Closeable {
+    fun <T : Any> subscribe(clazz: KClass<T>,
+                            priority: Int = 100,
+                            callback: (T) -> Unit): Closeable {
         synchronized(subscriptions) {
             val reg = DispatcherSubscription(this, clazz, priority, callback as (Any) -> Unit)
             val set = subscriptions.getOrPut(clazz) {
@@ -117,7 +120,7 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
     private fun doDispatch(action: Any) {
         if (dispatching != null) {
             throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
-                                        "$dispatching. Nested action: $action ")
+                "$dispatching. Nested action: $action ")
         }
         dispatching = action
         interceptorChain.proceed(action)
@@ -129,7 +132,8 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
      */
     data class DispatcherSubscription internal constructor(val dispatcher: Dispatcher,
                                                            val type: KClass<*>,
-                                                           val priority: Int, val fn: (Any) -> Unit) : Closeable {
+                                                           val priority: Int,
+                                                           val fn: (Any) -> Unit) : Closeable {
         companion object {
             private val idCounter = AtomicInteger()
         }
