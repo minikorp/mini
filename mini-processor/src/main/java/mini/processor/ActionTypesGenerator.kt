@@ -1,7 +1,6 @@
 package mini.processor
 
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
@@ -27,7 +26,6 @@ object ActionTypesGenerator {
                 .parameterizedBy(anyClassTypeName, listTypeName)
 
             val prop = PropertySpec.builder("actionTypes", mapType)
-                .addModifiers(KModifier.PRIVATE)
                 //⇤⇥«»
                 .initializer(CodeBlock.builder()
                     .add("mapOf(\n⇥")

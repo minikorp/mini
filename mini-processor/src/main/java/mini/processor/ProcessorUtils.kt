@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.FileSpec
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
@@ -19,6 +20,10 @@ lateinit var typeUtils: Types
 
 val Element.isMethod: Boolean get() = this.kind == ElementKind.METHOD
 val Element.isClass: Boolean get() = this.kind == ElementKind.CLASS
+
+fun ExecutableElement.isSuspending(): Boolean {
+    return parameters.last().asType().toString().startsWith("kotlin.coroutines.Continuation")
+}
 
 fun TypeMirror.asElement(): Element = asElementOrNull()!!
 fun TypeMirror.asElementOrNull(): Element? = typeUtils.asElement(this)

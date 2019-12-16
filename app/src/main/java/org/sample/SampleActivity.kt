@@ -1,21 +1,29 @@
 package org.sample
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import com.mini.android.FluxActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
 import kotlinx.android.synthetic.main.home_activity.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mini.Action
-import mini.LoggerInterceptor
+import mini.Dispatcher
+import mini.LoggerMiddleware
 import mini.MiniGen
 import mini.Reducer
+import mini.Saga
 import mini.Store
 
 class SampleActivity : FluxActivity() {
 
-    private val dispatcher = MiniGen.newDispatcher()
-    private val dummyStore = DummyStore()
+    override val dispatcher = Dispatcher(MiniGen.actionTypes)
+    private val dummyStore = DummyStore(dispatcher)
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_activity)
@@ -25,17 +33,25 @@ class SampleActivity : FluxActivity() {
         stores.forEach { it.initialize() }
 
         dummyStore.subscribe {
-            demo_text.text = it.text
+            demo_text.text = "${it.loginState} - ${it.user}"
         }
 
         Grove.plant(ConsoleLogTree())
-        dispatcher.addInterceptor(LoggerInterceptor(stores, { tag, msg ->
+        dispatcher.addMiddleware(LoggerMiddleware(dispatcher, stores, { tag, msg ->
             Grove.tag(tag).d { msg }
         }))
 
-        dispatcher.dispatch(ActionTwo("2"))
+        val job = dispatch(LoginAction()) {
+            Grove.d { "Login complete!" }
+        }
+
+        lifecycleScope.launch {
+            delay(2000)
+            job.cancel()
+        }
     }
 }
+
 
 @Action
 interface ActionInterface {
@@ -45,11 +61,39 @@ interface ActionInterface {
 @Action
 class ActionTwo(override val text: String) : ActionInterface
 
-data class DummyState(val text: String = "dummy")
-class DummyStore : Store<DummyState>() {
+@Action
+class LoginAction
 
-    @Reducer
-    fun didIChange(action: ActionInterface) {
+@Action
+class LoginStartAction
 
+@Action
+data class LoginCompleteAction(val state: String)
+
+data class DummyState(
+    val text: String = "dummy",
+    val user: String = "Anon",
+    val loginState: String = "idle"
+)
+
+class DummyStore(private val dispatcher: Dispatcher) : Store<DummyState>() {
+
+    @Saga suspend fun onLogin(action: LoginAction) {
+        dispatcher.dispatch(LoginStartAction())
+        try {
+            delay(5000) //Login for 5 seconds
+            dispatcher.dispatch(LoginCompleteAction("success"))
+        } catch (ex: Throwable) {
+            //Job was cancelled, so we can't dispatch on the same context, start new one
+            dispatcher.dispatch(LoginCompleteAction("failure"), Job())
+        }
+    }
+
+    @Reducer fun onLoginStarted(action: LoginStartAction) {
+        newState = state.copy(loginState = "running")
+    }
+
+    @Reducer fun onLoginComplete(action: LoginCompleteAction) {
+        newState = state.copy(loginState = action.state, user = "Mini")
     }
 }

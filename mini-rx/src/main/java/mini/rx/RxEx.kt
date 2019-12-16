@@ -6,6 +6,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import io.reactivex.subjects.PublishSubject
+import mini.Resource
 import mini.Store
 
 /**
@@ -35,6 +36,13 @@ inline fun <T, U> Flowable<T>.select(crossinline fn: (T) -> U?): Flowable<U> {
 inline fun <T, U> Observable<T>.select(crossinline fn: (T) -> U?): Observable<U> {
     return mapNotNull(fn).distinctUntilChanged()
 }
+
+inline fun <T, U : Resource<*>> Observable<T>.nextTerminalState(crossinline fn: (T) -> U?): Observable<U> {
+    return mapNotNull(fn).distinctUntilChanged().filter {
+        it.isSuccess || it.isFailure
+    }.take(1)
+}
+
 
 interface SubscriptionTracker {
     /**

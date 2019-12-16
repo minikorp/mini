@@ -65,14 +65,6 @@ object ReducersGenerator {
             .addStatement("return c")
             .build()
 
-        val initDispatcherFn = FunSpec.builder("newDispatcher")
-            .returns(Dispatcher::class)
-            .addCode(CodeBlock.builder()
-                .addStatement("return Dispatcher(actionTypes)")
-                .build())
-            .build()
-
-        container.addFunction(initDispatcherFn)
         container.addFunction(registerOneFn)
         container.addFunction(registerListFn)
 
@@ -86,7 +78,8 @@ class ReducerModel(element: Element) {
     val containerName = container.asTypeName()
 
     init {
-        compilePrecondition(element, function.parameters.size == 1) {
+        val expectedParams = if (function.isSuspending()) 2 else 1
+        compilePrecondition(element, function.parameters.size == expectedParams) {
             "Reducer functions expect exactly one parameter (action), " +
                 "found ${function.parameters.size}: [${function.parameters}]"
         }

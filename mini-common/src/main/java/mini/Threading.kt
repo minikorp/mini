@@ -15,6 +15,13 @@ fun assertOnUiThread() {
     }
 }
 
+fun assertOnBgThread() {
+    if (!isAndroid) return
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+        error("This method can only be called from non UI threads")
+    }
+}
+
 @JvmOverloads
 inline fun onUi(delayMs: Long = 0, crossinline block: () -> Unit) {
     if (delayMs > 0) uiHandler.postDelayed({ block() }, delayMs)

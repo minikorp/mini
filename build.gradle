@@ -1,4 +1,4 @@
-apply plugin: 'maven-publish'
+apply plugin: 'maven'
 
 buildscript {
     ext {
@@ -13,7 +13,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath 'com.android.tools.build:gradle:3.5.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.junit.platform:junit-platform-gradle-plugin:1.0.0"
         classpath "com.github.dcendents:android-maven-gradle-plugin:2.1"

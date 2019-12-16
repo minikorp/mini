@@ -9,18 +9,18 @@ class DispatcherTest {
 
     @Test
     fun `subscriptions are added`() {
-        val dispatcher = TestDispatcher()
+        val dispatcher = newTestDispatcher()
         var called = 0
         dispatcher.subscribe<TestAction> {
             called++
         }
-        dispatcher.dispatch(TestAction())
+        dispatcher.dispatchSync(TestAction())
         called `should be equal to` 1
     }
 
     @Test
     fun `order is respected for same priority`() {
-        val dispatcher = TestDispatcher()
+        val dispatcher = newTestDispatcher()
         val calls = ArrayList<Int>()
         dispatcher.subscribe<TestAction> {
             calls.add(0)
@@ -28,14 +28,14 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction> {
             calls.add(1)
         }
-        dispatcher.dispatch(TestAction())
+        dispatcher.dispatchSync(TestAction())
         calls[0] `should be equal to` 0
         calls[1] `should be equal to` 1
     }
 
     @Test
     fun `order is respected for different priority`() {
-        val dispatcher = TestDispatcher()
+        val dispatcher = newTestDispatcher()
         val calls = ArrayList<Int>()
         dispatcher.subscribe<TestAction>(priority = 10) {
             calls.add(0)
@@ -43,32 +43,34 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction>(priority = 0) {
             calls.add(1)
         }
-        dispatcher.dispatch(TestAction())
+        dispatcher.dispatchSync(TestAction())
         calls[0] `should be equal to` 1
         calls[1] `should be equal to` 0
     }
 
     @Test
     fun `disposing registration removes subscription`() {
-        val dispatcher = TestDispatcher()
+        val dispatcher = newTestDispatcher()
         var called = 0
         dispatcher.subscribe<TestAction> {
             called++
         }.close()
-        dispatcher.dispatch(TestAction())
+        dispatcher.dispatchSync(TestAction())
         called `should be equal to` 0
     }
 
     @Test
     fun `interceptors are called`() {
-        val dispatcher = TestDispatcher()
+        val dispatcher = newTestDispatcher()
         var called = 0
-        val interceptor: Interceptor = { action, chain ->
-            called++
-            chain.proceed(action)
+        val interceptor = object : Middleware {
+            override suspend fun intercept(action: Any, chain: Chain): Any {
+                called++
+                return chain.proceed(action)
+            }
         }
-        dispatcher.addInterceptor(interceptor)
-        dispatcher.dispatch(TestAction())
+        dispatcher.addMiddleware(interceptor)
+        dispatcher.dispatchSync(TestAction())
         called `should be equal to` 1
     }
 }

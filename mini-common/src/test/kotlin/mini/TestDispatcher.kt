@@ -1,10 +1,11 @@
 package mini
 
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
-fun TestDispatcher(): Dispatcher {
-    return Dispatcher(newReflectiveMap())
+fun newTestDispatcher(): Dispatcher {
+    return Dispatcher(newReflectiveMap(), EmptyCoroutineContext)
 }
 
 private fun reflectActionTypes(type: KClass<*>, depth: Int = 0): List<ReflectedType> {

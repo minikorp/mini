@@ -1,9 +1,17 @@
 package mini
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
+
+private typealias DispatchCallback = suspend (Any) -> Unit
+
 
 /**
  * Hub for actions. Use code generation with ```MiniGen.newDispatcher()```
@@ -12,65 +20,68 @@ import kotlin.reflect.KClass
  * @param actionTypes All types an action can be observed as.
  * If map is empty, the runtime type itself will be used. If using code generation,
  * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
+ *
+ * @param strictMode Verify calling thread, only disable in production!
+ *
  */
-class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
+class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
+                 private val actionDispatchContext: CoroutineContext = Dispatchers.Main,
+                 private val strictMode: Boolean = false) {
 
     private val subscriptionCaller: Chain = object : Chain {
-        override fun proceed(action: Any): Any {
-            synchronized(subscriptions) {
-                val types = actionTypes[action::class]
-                    ?: error("Object $action [${action::class}] is not action, " +
-                        "register it in type map or use ```MiniGen.newDispatcher``` " +
-                        "if using " +
-                        "code generation")
-                types.forEach { type ->
-                    subscriptions[type]?.forEach { it.fn(action) }
-                }
+        override suspend fun proceed(action: Any): Any {
+            val types = actionTypes[action::class]
+                ?: error("${action::class.simpleName} is not action")
+            //Ensure reducer is called on Main dispatcher
+            types.forEach { type ->
+                subscriptions[type]?.forEach { it.fn(action) }
             }
             return action
         }
     }
 
-    private val interceptors: MutableList<Interceptor> = ArrayList()
-    private var interceptorChain: Chain = buildChain()
-    private var dispatching: Any? = null
+    private val middlewares: MutableList<Middleware> = ArrayList()
+    private var middlewareChain: Chain = buildChain()
+    private val actionStack: Stack<Any> = Stack()
+    val lastAction: Any? get() = actionStack.firstOrNull()
+
     internal val subscriptions: MutableMap<KClass<*>, MutableSet<DispatcherSubscription>> = HashMap()
 
     private fun buildChain(): Chain {
-        return interceptors.fold(subscriptionCaller) { chain, interceptor ->
+        return middlewares.fold(subscriptionCaller) { chain, middleware ->
             object : Chain {
-                override fun proceed(action: Any): Any {
-                    return interceptor(action, chain)
+                override suspend fun proceed(action: Any): Any {
+                    return middleware.intercept(action, chain)
                 }
             }
         }
     }
 
-    fun addInterceptor(interceptor: Interceptor) {
+    fun addMiddleware(middleware: Middleware) {
         synchronized(this) {
-            interceptors += interceptor
-            interceptorChain = buildChain()
+            middlewares += middleware
+            middlewareChain = buildChain()
         }
     }
 
-    fun removeInterceptor(interceptor: Interceptor) {
+    fun removeInterceptor(middleware: Middleware) {
         synchronized(this) {
-            interceptors -= interceptor
-            interceptorChain = buildChain()
+            middlewares -= middleware
+            middlewareChain = buildChain()
         }
     }
 
     inline fun <reified A : Any> subscribe(priority: Int = 100,
-                                           noinline callback: (A) -> Unit): Closeable {
+                                           noinline callback: suspend (A) -> Unit): Closeable {
         return subscribe(A::class, priority, callback)
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> subscribe(clazz: KClass<T>,
                             priority: Int = 100,
-                            callback: (T) -> Unit): Closeable {
+                            callback: suspend (T) -> Unit): Closeable {
         synchronized(subscriptions) {
-            val reg = DispatcherSubscription(this, clazz, priority, callback as (Any) -> Unit)
+            val reg = DispatcherSubscription(this, clazz, priority, callback as DispatchCallback)
             val set = subscriptions.getOrPut(clazz) {
                 TreeSet(kotlin.Comparator { a, b ->
                     //Sort by priority, then by id for equal priority
@@ -91,40 +102,34 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
     }
 
     /**
-     * Dispatch an action on the main thread synchronously.
-     * This method will block the caller until all listeners have handled the event,
-     * usually the main thread.
+     * Dispatch an action using the provided [actionDispatchContext],
+     * defaults to [Dispatchers.Main] for Android.
      *
-     * Use [dispatchAsync] to avoid this.
+     * @see [dispatchSync].
      */
-    fun dispatch(action: Any) {
-        if (isAndroid) {
-            onUiSync { doDispatch(action) }
-        } else {
+    suspend fun dispatch(action: Any, context: CoroutineContext = EmptyCoroutineContext) {
+        withContext(context + actionDispatchContext) {
             doDispatch(action)
         }
     }
 
     /**
-     * Post an event that will dispatch the action on the UI thread
-     * and return immediately.
+     * Dispatch an action, blocking the thread until it's complete.
+     *
+     * Calling from UI thread will result will throw an exception since it can potentially result
+     * in ANR error.
      */
-    fun dispatchAsync(action: Any) {
-        if (isAndroid) {
-            onUi { dispatch(action) }
-        } else {
-            dispatch(action) //Just dispatch it
+    fun dispatchSync(action: Any, context: CoroutineContext = EmptyCoroutineContext) {
+        if (strictMode) assertOnBgThread()
+        runBlocking {
+            dispatch(action, context = context)
         }
     }
 
-    private fun doDispatch(action: Any) {
-        if (dispatching != null) {
-            throw IllegalStateException("Nested dispatch calls. Currently dispatching: " +
-                "$dispatching. Nested action: $action ")
-        }
-        dispatching = action
-        interceptorChain.proceed(action)
-        dispatching = null
+    private suspend fun doDispatch(action: Any) {
+        actionStack.push(action)
+        middlewareChain.proceed(action)
+        actionStack.pop()
     }
 
     /**
@@ -133,7 +138,7 @@ class Dispatcher(val actionTypes: Map<KClass<*>, List<KClass<*>>>) {
     data class DispatcherSubscription internal constructor(val dispatcher: Dispatcher,
                                                            val type: KClass<*>,
                                                            val priority: Int,
-                                                           val fn: (Any) -> Unit) : Closeable {
+                                                           val fn: DispatchCallback) : Closeable {
         companion object {
             private val idCounter = AtomicInteger()
         }
