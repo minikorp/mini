@@ -14,8 +14,10 @@ import mini.Action
 import mini.Dispatcher
 import mini.LoggerMiddleware
 import mini.MiniGen
+import mini.ObjectDiff
 import mini.Reducer
 import mini.Saga
+import mini.SagaAction
 import mini.Store
 
 class SampleActivity : FluxActivity() {
@@ -34,12 +36,14 @@ class SampleActivity : FluxActivity() {
 
         dummyStore.subscribe {
             demo_text.text = "${it.loginState} - ${it.user}"
-        }
+        }.track()
 
         Grove.plant(ConsoleLogTree())
-        dispatcher.addMiddleware(LoggerMiddleware(dispatcher, stores, { tag, msg ->
-            Grove.tag(tag).d { msg }
-        }))
+        dispatcher.addMiddleware(LoggerMiddleware(stores,
+            diffFunction = { a, b -> ObjectDiff.computeDiff(a, b) },
+            logger = { p, tag, msg ->
+                Grove.tag(tag).log(p) { msg }
+            }))
 
         val job = dispatch(LoginAction()) {
             Grove.d { "Login complete!" }
@@ -47,7 +51,7 @@ class SampleActivity : FluxActivity() {
 
         lifecycleScope.launch {
             delay(2000)
-            job.cancel()
+            //job.cancel()
         }
     }
 }
@@ -62,7 +66,7 @@ interface ActionInterface {
 class ActionTwo(override val text: String) : ActionInterface
 
 @Action
-class LoginAction
+class LoginAction : SagaAction
 
 @Action
 class LoginStartAction

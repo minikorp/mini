@@ -16,6 +16,14 @@ const val DEFAULT_PRIORITY = 100
 annotation class Action
 
 /**
+ * Actions implementing this interface are not supposed to change state, just wrap
+ * other dispatch calls, state diff won't be logged
+ */
+@Action
+interface SagaAction
+
+
+/**
  * Mark function as reducer function for codegen.
  * One argument for action is expected, and any return value will be ignored.
  *
@@ -31,9 +39,3 @@ annotation class Reducer(val priority: Int = DEFAULT_PRIORITY)
  * Alias for [Reducer] for better readability.
  */
 typealias Saga = Reducer
-
-/**
- * Alias for [Reducer] for better readability.
- */
-typealias Epic = Reducer
-

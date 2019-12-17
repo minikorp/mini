@@ -5,8 +5,6 @@ import org.junit.Test
 
 class DispatcherTest {
 
-    class TestAction : BaseAction()
-
     @Test
     fun `subscriptions are added`() {
         val dispatcher = newTestDispatcher()

@@ -1,26 +1,43 @@
 package mini
 
-/** Actions implementing this interface won't log anything */
+import android.util.Log
+import java.util.concurrent.atomic.AtomicInteger
+
+/** Actions implementing this interface won't log anything, including nested calls */
 @Action
 interface SilentAction
 
 /**
  * Action logging for stores.
  */
-class LoggerMiddleware constructor(val dispatcher: Dispatcher,
-                                   stores: Collection<Store<*>>,
-                                   private val logFn: (tag: String, msg: String) -> Unit,
-                                   private val tag: String = "MiniLog") : Middleware {
+class LoggerMiddleware(stores: Collection<Store<*>>,
+                       private val tag: String = "MiniLog",
+                       private val diffFunction: ((a: Any?, b: Any?) -> String)? = null,
+                       private val logger: (priority: Int, tag: String, msg: String) -> Unit) :
+
+    Middleware {
+
+    private var actionCounter = AtomicInteger(0)
 
     private val stores = stores.toList()
 
     override suspend fun intercept(action: Any, chain: Chain): Any {
         if (action is SilentAction) chain.proceed(action) //Do nothing
-
+        val isSaga = action is SagaAction
         val beforeStates: Array<Any?> = Array(stores.size) { Unit }
         val afterStates: Array<Any?> = Array(stores.size) { Unit }
 
         stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
+
+        val (upCorner, downCorner) = if (isSaga) {
+            "╔═════ " to "╚════> "
+        } else {
+            "┌── " to "└─> "
+        }
+
+        val prelude = "[${"${actionCounter.getAndIncrement() % 100}".padStart(2, '0')}] "
+
+        logger(Log.DEBUG, tag, "$prelude$upCorner$action")
 
         //Pass it down
         val start = System.nanoTime()
@@ -29,20 +46,22 @@ class LoggerMiddleware constructor(val dispatcher: Dispatcher,
 
         stores.forEachIndexed { idx, store -> afterStates[idx] = store.state }
 
-        logFn(tag, "┌────────────────────────────────────────────")
-        logFn(tag, "├─> ${action.javaClass.simpleName} $processTime $action")
-
-        for (i in beforeStates.indices) {
-            val oldState = beforeStates[i]
-            val newState = afterStates[i]
-            if (oldState !== newState) {
-                //This operation is costly, don't do it in prod
-                val line = "${stores[i].javaClass.simpleName}: $newState"
-                logFn(tag, "│   $line")
+        if (!isSaga) {
+            for (i in beforeStates.indices) {
+                val oldState = beforeStates[i]
+                val newState = afterStates[i]
+                if (oldState !== newState) {
+                    val line = "${stores[i].javaClass.simpleName}: $newState"
+                    logger(Log.VERBOSE, tag, "$prelude│ $line")
+                    diffFunction?.invoke(oldState, newState)?.let {
+                        logger(Log.DEBUG, tag, "$prelude│ $it")
+                    }
+                }
             }
         }
 
-        logFn(tag, "└────────────────────────────────────────────")
+        logger(Log.DEBUG, tag, "$prelude$downCorner" +
+            "${action.javaClass.simpleName} ${processTime}ms")
 
         return outAction
     }

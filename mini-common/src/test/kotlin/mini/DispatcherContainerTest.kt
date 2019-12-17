@@ -23,7 +23,7 @@ class DispatcherContainerTest {
         val dispatchSignals = Channel<Unit>(0)
 
         var called = false
-        dispatcher.subscribe<DispatcherTest.TestAction> {
+        dispatcher.subscribe<TestAction> {
             dispatchSignals.send(Unit)
             delay(300)
             dispatchSignals.send(Unit)
@@ -31,7 +31,7 @@ class DispatcherContainerTest {
         }
 
         runBlocking {
-            container.dispatch(DispatcherTest.TestAction()) {
+            container.dispatch(TestAction()) {
                 called.`should be true`()
             }
             dispatchSignals.receive() //Wait for dispatch to start
