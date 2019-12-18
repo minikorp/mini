@@ -1,3 +1,6 @@
+Latest version: [![Release](https://jitpack.io/v/minikorp/mini.svg)](https://jitpack.io/#minikorp/mini)
+
+
 # Mini
 Mini is a minimal Flux architecture written in Kotlin that also adds a mix of useful features to build UIs fast.
 
@@ -63,7 +66,6 @@ Mini includes a custom `LoggerInterceptor` to log any change in your `Store` sta
 ## Gradle
 
 [![Release](https://jitpack.io/v/minikorp/mini.svg)](https://jitpack.io/#minikorp/mini)
-[![](https://jitci.com/gh/minikorp/mini/svg)](https://jitci.com/gh/minikorp/mini)
 
 ```groovy
 apply plugin: kotlin
