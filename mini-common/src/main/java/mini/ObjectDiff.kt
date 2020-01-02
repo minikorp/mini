@@ -28,7 +28,7 @@ object ObjectDiff {
             is String, is Number -> {
                 diffMap[propertyName] = "$a => $b"
             }
-            is Map<*, *>         -> {
+            is Map<*, *> -> {
                 b as Map<*, *>
                 val out = DiffMap()
                 b.entries.forEach { (k, v) ->
@@ -48,7 +48,7 @@ object ObjectDiff {
 
                 diffMap[propertyName] = out
             }
-            else                 -> {
+            else -> {
                 if (a::class.isData) {
                     val props = a::class.memberProperties
                     val out = DiffMap()

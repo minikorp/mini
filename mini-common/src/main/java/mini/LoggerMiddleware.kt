@@ -10,7 +10,7 @@ interface SilentAction
 /**
  * Action logging for stores.
  */
-class LoggerMiddleware(stores: Collection<Store<*>>,
+class LoggerMiddleware(stores: Collection<StateContainer<*>>,
                        private val tag: String = "MiniLog",
                        private val diffFunction: ((a: Any?, b: Any?) -> String)? = null,
                        private val logger: (priority: Int, tag: String, msg: String) -> Unit) :
@@ -23,6 +23,7 @@ class LoggerMiddleware(stores: Collection<Store<*>>,
 
     override suspend fun intercept(action: Any, chain: Chain): Any {
         if (action is SilentAction) chain.proceed(action) //Do nothing
+
         val isSaga = action is SagaAction
         val beforeStates: Array<Any?> = Array(stores.size) { Unit }
         val afterStates: Array<Any?> = Array(stores.size) { Unit }
@@ -51,10 +52,10 @@ class LoggerMiddleware(stores: Collection<Store<*>>,
                 val oldState = beforeStates[i]
                 val newState = afterStates[i]
                 if (oldState !== newState) {
-                    val line = "${stores[i].javaClass.simpleName}: $newState"
-                    logger(Log.VERBOSE, tag, "$prelude│ $line")
-                    diffFunction?.invoke(oldState, newState)?.let {
-                        logger(Log.DEBUG, tag, "$prelude│ $it")
+                    val line = "$prelude│ ${stores[i].javaClass.simpleName}"
+                    logger(Log.VERBOSE, tag, "$line: $newState")
+                    diffFunction?.invoke(oldState, newState)?.let { diff ->
+                        logger(Log.DEBUG, tag, "$line: $diff")
                     }
                 }
             }

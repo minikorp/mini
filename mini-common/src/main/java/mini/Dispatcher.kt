@@ -25,7 +25,7 @@ private typealias DispatchCallback = suspend (Any) -> Unit
  *
  */
 class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
-                 private val actionDispatchContext: CoroutineContext = Dispatchers.Main,
+                 private val actionDispatchContext: CoroutineContext = Dispatchers.Main.immediate,
                  private val strictMode: Boolean = false) {
 
     private val subscriptionCaller: Chain = object : Chain {

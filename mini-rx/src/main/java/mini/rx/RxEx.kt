@@ -4,7 +4,6 @@ import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.processors.PublishProcessor
 import io.reactivex.subjects.PublishSubject
 import mini.Resource
 import mini.Store
@@ -65,20 +64,13 @@ class DefaultSubscriptionTracker : SubscriptionTracker {
     }
 }
 
-fun <S> Store<S>.flowable(hotStart: Boolean = true): Flowable<S> {
-    val processor = PublishProcessor.create<S>()
-    val subscription = subscribe(hotStart = false) {
-        processor.offer(it)
-    }
-    return processor.doOnTerminate { subscription.close() }
-        .let { if (hotStart) it.startWith(state) else it }
-}
-
 fun <S> Store<S>.observable(hotStart: Boolean = true): Observable<S> {
     val subject = PublishSubject.create<S>()
     val subscription = subscribe(hotStart = false) {
         subject.onNext(it)
     }
-    return subject.doOnTerminate { subscription.close() }
+    return subject
+        .doOnDispose { subscription.close() }
+        .doOnTerminate { subscription.close() }
         .let { if (hotStart) it.startWith(state) else it }
 }

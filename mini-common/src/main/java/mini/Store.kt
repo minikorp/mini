@@ -8,7 +8,7 @@ import java.util.*
 /**
  * State holder.
  */
-abstract class Store<S> : Closeable {
+abstract class Store<S> : Closeable, StateContainer<S> {
 
     companion object {
         val NO_STATE = Any()
@@ -48,7 +48,7 @@ abstract class Store<S> : Closeable {
         return StoreSubscription(this, fn)
     }
 
-    val state: S
+    override val state: S
         get() {
             if (_state === NO_STATE) {
                 synchronized(this) {

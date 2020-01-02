@@ -7,17 +7,20 @@ import com.mini.android.FluxActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
 import kotlinx.android.synthetic.main.home_activity.*
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mini.Action
+import mini.BaseSaga
 import mini.Dispatcher
 import mini.LoggerMiddleware
 import mini.MiniGen
 import mini.ObjectDiff
 import mini.Reducer
 import mini.Saga
-import mini.SagaAction
 import mini.Store
 
 class SampleActivity : FluxActivity() {
@@ -38,6 +41,8 @@ class SampleActivity : FluxActivity() {
             demo_text.text = "${it.loginState} - ${it.user}"
         }.track()
 
+
+
         Grove.plant(ConsoleLogTree())
         dispatcher.addMiddleware(LoggerMiddleware(stores,
             diffFunction = { a, b -> ObjectDiff.computeDiff(a, b) },
@@ -45,13 +50,14 @@ class SampleActivity : FluxActivity() {
                 Grove.tag(tag).log(p) { msg }
             }))
 
-        val job = dispatch(LoginAction()) {
-            Grove.d { "Login complete!" }
-        }
 
-        lifecycleScope.launch {
-            delay(2000)
-            //job.cancel()
+        //Perform login
+
+        container.setOnClickListener {
+            val job = lifecycleScope.launch {
+                dispatcher.dispatch(LoginAction())
+                Grove.d { "Login complete!" }
+            }
         }
     }
 }
@@ -63,10 +69,7 @@ interface ActionInterface {
 }
 
 @Action
-class ActionTwo(override val text: String) : ActionInterface
-
-@Action
-class LoginAction : SagaAction
+class LoginAction : BaseSaga()
 
 @Action
 class LoginStartAction
@@ -84,12 +87,16 @@ class DummyStore(private val dispatcher: Dispatcher) : Store<DummyState>() {
 
     @Saga suspend fun onLogin(action: LoginAction) {
         dispatcher.dispatch(LoginStartAction())
-        try {
-            delay(5000) //Login for 5 seconds
-            dispatcher.dispatch(LoginCompleteAction("success"))
-        } catch (ex: Throwable) {
-            //Job was cancelled, so we can't dispatch on the same context, start new one
-            dispatcher.dispatch(LoginCompleteAction("failure"), Job())
+        withContext(Dispatchers.IO + SupervisorJob()) {
+            try {
+                delay(5000) //Login for 5 seconds
+                dispatcher.dispatch(LoginCompleteAction("success"))
+            } catch (ex: Throwable) {
+                withContext(NonCancellable) {
+                    //Job was cancelled or failed, so we can't dispatch on the same context, start new one
+                    dispatcher.dispatch(LoginCompleteAction("failure"))
+                }
+            }
         }
     }
 
