@@ -1,8 +1,11 @@
 package mini.flow
 
-import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -16,30 +19,17 @@ class FlowExTest {
     @Test(timeout = 1000)
     fun `flow sends initial state on collection`(): Unit = runBlocking {
         val store = SampleStore()
-        store.updateState("abc") //Set before collect
-        var sentState = ""
-        val job = GlobalScope.launch {
-            store.flow(hotStart = true).take(1).collect {
-                sentState = it
-            }
-        }
-        job.join()
-        sentState `should be equal to` "abc"
-        Unit
-    }
+        var observedState = SampleStore.INITIAL_STATE
 
-    @Test(timeout = 1000)
-    fun `flow sends updates`(): Unit = runBlocking {
-        val store = SampleStore()
-        var sentState = ""
-        val job = GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            store.flow(hotStart = false).take(1).collect {
-                sentState = it
-            }
-        }
-        store.updateState("abc")
+        val job = store.flow(hotStart = false)
+            .onEach { observedState = it }
+            .take(1)
+            .launchIn(GlobalScope)
+
+        store.updateState("abc") //Set before collect
+
         job.join()
-        sentState `should be equal to` "abc"
+        observedState `should be equal to` "abc"
         Unit
     }
 
@@ -47,22 +37,24 @@ class FlowExTest {
     fun `flow sends updates to all`(): Unit = runBlocking {
         val store = SampleStore()
         val called = intArrayOf(0, 0)
-        val job = GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            launch(start = CoroutineStart.UNDISPATCHED) {
-                store.flow(hotStart = false).take(1).collect {
-                    called[0]++
-                }
-            }
-            launch(start = CoroutineStart.UNDISPATCHED) {
-                store.flow(hotStart = false).take(1).collect {
-                    called[1]++
-                }
-            }
-        }
+
+        val job1 = store.flow()
+            .onEach { called[0]++ }
+            .take(2)
+            .launchIn(GlobalScope)
+
+        val job2 = store.flow()
+            .onEach { called[1]++ }
+            .take(2)
+            .launchIn(GlobalScope)
+
         store.updateState("abc")
-        job.join()  //Wait for both to have their values
-        //Each called two times, one for initial state, another for sent state
-        called.`should equal`(intArrayOf(1, 1))
+
+        job1.join()
+        job2.join()
+
+        //Called two times, on for initial state, one for updated stated
+        called.`should equal`(intArrayOf(2, 2))
         Unit
     }
 
@@ -76,6 +68,25 @@ class FlowExTest {
         store.updateState("abc")
         job.join()
         sentState `should be equal to` "abc"
+        Unit
+    }
+
+    @Test(timeout = 1000)
+    fun `flow closes`(): Unit = runBlocking {
+        val store = SampleStore()
+        var observedState = store.state
+
+        val scope = CoroutineScope(Job())
+        store.flow()
+            .onEach {
+                observedState = it
+            }
+            .launchIn(scope)
+
+        scope.cancel() //Cancel the scope
+        store.updateState("abc")
+
+        observedState `should be equal to` SampleStore.INITIAL_STATE
         Unit
     }
 }

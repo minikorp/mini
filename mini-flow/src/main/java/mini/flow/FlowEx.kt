@@ -35,7 +35,6 @@ fun <T, R : Any> Flow<T>.selectNotNull(mapper: suspend (T) -> R?): Flow<R> {
  *
  * @param hotStart emit current state when starting.
  */
-@FlowPreview
 fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
                                capacity: Int = Channel.BUFFERED): Channel<S> {
     val channel = Channel<S>(capacity)
@@ -53,7 +52,6 @@ fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
  *
  * @param hotStart emit current state when starting.
  */
-@FlowPreview
 fun <S : Any> Store<S>.flow(hotStart: Boolean = true, capacity: Int = Channel.BUFFERED): Flow<S> {
     return channel(hotStart = hotStart, capacity = capacity).consumeAsFlow()
 }
