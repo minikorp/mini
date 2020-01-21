@@ -1,3 +1,4 @@
 package mini
 
-class TestAction : BaseAction()
+@Action
+class TestAction

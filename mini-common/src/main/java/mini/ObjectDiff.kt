@@ -7,6 +7,11 @@ private typealias DiffMap = MutableMap<Any, Any?>
 @Suppress("FunctionName")
 private fun DiffMap() = HashMap<Any, Any?>()
 
+/**
+ * Perform diff between two objects and generates human readable string as result.
+ *
+ * Requires kotlin full reflection library, you should avoid using in production builds.
+ */
 object ObjectDiff {
 
     fun <T : Any> computeDiff(a: T?, b: T?): String {

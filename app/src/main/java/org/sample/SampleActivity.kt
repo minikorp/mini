@@ -2,8 +2,6 @@ package org.sample
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.lifecycle.lifecycleScope
-import com.mini.android.FluxActivity
 import com.minikorp.grove.ConsoleLogTree
 import com.minikorp.grove.Grove
 import kotlinx.android.synthetic.main.home_activity.*
@@ -14,25 +12,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mini.Action
-import mini.BaseSaga
 import mini.Dispatcher
 import mini.LoggerMiddleware
 import mini.MiniGen
 import mini.ObjectDiff
 import mini.Reducer
-import mini.Saga
+import mini.SagaAction
 import mini.Store
+import mini.android.FluxActivity
 
 class SampleActivity : FluxActivity() {
 
-    override val dispatcher = Dispatcher(MiniGen.actionTypes)
+    private val dispatcher = Dispatcher(MiniGen.actionTypes)
     private val dummyStore = DummyStore(dispatcher)
 
     @SuppressLint("SetTextI18n")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override suspend fun whenCreated(savedInstanceState: Bundle?) {
         setContentView(R.layout.home_activity)
-
         val stores = listOf(dummyStore)
         MiniGen.subscribe(dispatcher, stores).track()
         stores.forEach { it.initialize() }
@@ -42,7 +38,6 @@ class SampleActivity : FluxActivity() {
         }.track()
 
 
-
         Grove.plant(ConsoleLogTree())
         dispatcher.addMiddleware(LoggerMiddleware(stores,
             diffFunction = { a, b -> ObjectDiff.computeDiff(a, b) },
@@ -50,11 +45,10 @@ class SampleActivity : FluxActivity() {
                 Grove.tag(tag).log(p) { msg }
             }))
 
-
         //Perform login
 
         container.setOnClickListener {
-            val job = lifecycleScope.launch {
+            launch {
                 dispatcher.dispatch(LoginAction())
                 Grove.d { "Login complete!" }
             }
@@ -64,12 +58,7 @@ class SampleActivity : FluxActivity() {
 
 
 @Action
-interface ActionInterface {
-    val text: String
-}
-
-@Action
-class LoginAction : BaseSaga()
+class LoginAction : SagaAction
 
 @Action
 class LoginStartAction
@@ -85,7 +74,7 @@ data class DummyState(
 
 class DummyStore(private val dispatcher: Dispatcher) : Store<DummyState>() {
 
-    @Saga suspend fun onLogin(action: LoginAction) {
+    @Reducer suspend fun onLogin(action: LoginAction) {
         dispatcher.dispatch(LoginStartAction())
         withContext(Dispatchers.IO + SupervisorJob()) {
             try {

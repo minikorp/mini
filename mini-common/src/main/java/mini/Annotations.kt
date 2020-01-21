@@ -8,19 +8,12 @@ const val DEFAULT_PRIORITY = 100
  * Mark a type as action for code generation. All actions must include this annotation
  * or dispatcher won't work properly.
  *
- * This action is inherited by [BaseAction] or just added directly.
+ * This action is inherited by [FluxAction] or just added directly.
  */
 @Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
 annotation class Action
-
-/**
- * Actions implementing this interface are not supposed to change state, just wrap
- * other dispatch calls, state diff won't be logged
- */
-@Action
-interface SagaAction
 
 
 /**
@@ -35,7 +28,4 @@ interface SagaAction
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Reducer(val priority: Int = DEFAULT_PRIORITY)
 
-/**
- * Alias for [Reducer] for better readability.
- */
-typealias Saga = Reducer
+

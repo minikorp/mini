@@ -1,4 +1,4 @@
-package com.mini.android
+package mini.android
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -9,19 +9,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import mini.CloseableTracker
 import mini.DefaultCloseableTracker
-import mini.DispatcherContainer
 import kotlin.coroutines.CoroutineContext
 
 abstract class FluxActivity : AppCompatActivity(),
                               CloseableTracker by DefaultCloseableTracker(),
-                              CoroutineScope,
-                              DispatcherContainer {
+                              CoroutineScope {
 
     override val coroutineContext: CoroutineContext
         get() = lifecycleScope.coroutineContext
-
-    override val defaultDispatchScope: CoroutineScope
-        get() = lifecycleScope
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

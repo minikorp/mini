@@ -22,7 +22,7 @@ buildscript {
 
 allprojects {
     version = mini_version
-    group = "com.mini"
+    group = "mini"
 
     repositories {
         jcenter()

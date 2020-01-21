@@ -1,4 +1,4 @@
-package com.mini.android
+package mini.android
 
 import android.content.res.Resources
 import android.view.LayoutInflater

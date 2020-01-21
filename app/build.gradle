@@ -44,7 +44,7 @@ android {
     buildToolsVersion '28.0.3'
 
     defaultConfig {
-        applicationId "com.minivac.mini"
+        applicationId "com.minikorp.mini"
         minSdkVersion 21
         targetSdkVersion target_sdk_version
         versionCode 1
@@ -103,6 +103,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     testImplementation 'junit:junit:4.12'
+    testImplementation "org.amshove.kluent:kluent:1.44"
     androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha4'
     androidTestImplementation 'com.agoda.kakao:kakao:1.4.0'

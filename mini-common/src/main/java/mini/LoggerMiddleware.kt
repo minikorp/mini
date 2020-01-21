@@ -4,8 +4,10 @@ import android.util.Log
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Actions implementing this interface won't log anything, including nested calls */
-@Action
 interface SilentAction
+
+/** Actions implementing this interface will log nested actions visually */
+interface SagaAction
 
 /**
  * Action logging for stores.

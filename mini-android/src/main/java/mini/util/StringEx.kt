@@ -1,4 +1,4 @@
-package com.mini.util
+package mini.util
 
 import android.annotation.SuppressLint
 
