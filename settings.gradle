@@ -1,1 +1,1 @@
-include ':mini-processor', ':mini-common', ':mini-android', ':mini-rx', 'mini-flow', ':app'
+include ':mini-processor', ':mini-common', ':mini-android', ':mini-rx', ':mini-flow', ':app'
