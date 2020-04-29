@@ -57,7 +57,7 @@ infix fun TypeMirror.isSameType(other: TypeMirror?): Boolean {
 
 fun Element.getSuperClass() = asTypeElement().superclass.asElement()
 fun Element.getSuperClassTypeParameter(position: Int) = asTypeElement()
-    .superclass.asDeclaredType().typeArguments[position].asElement()
+        .superclass.asDeclaredType().typeArguments[position].asElement()
 
 
 class CompilerException : IllegalStateException()
@@ -87,7 +87,7 @@ fun logMessage(kind: Diagnostic.Kind, message: String, element: Element? = null)
 
 fun FileSpec.writeToFile(vararg sourceElements: Element) {
     val kotlinFileObject = env.filer
-        .createResource(StandardLocation.SOURCE_OUTPUT, packageName, "$name.kt", *sourceElements)
+            .createResource(StandardLocation.SOURCE_OUTPUT, packageName, "$name.kt", *sourceElements)
     val openWriter = kotlinFileObject.openWriter()
     writeTo(openWriter)
     openWriter.close()
