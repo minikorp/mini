@@ -7,8 +7,12 @@ import kotlinx.coroutines.flow.take
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should equal`
 import org.junit.Test
+import java.util.concurrent.Executors
 
 class StoreFlowTest {
+
+    private val testScope =
+            CoroutineScope(Executors.newScheduledThreadPool(1).asCoroutineDispatcher())
 
     @Test(timeout = 1000)
     fun `flow sends initial state on collection`(): Unit = runBlocking {
@@ -18,7 +22,7 @@ class StoreFlowTest {
         val job = store.flow(hotStart = false)
                 .onEach { observedState = it }
                 .take(1)
-                .launchIn(GlobalScope)
+                .launchIn(testScope)
 
         store.setState("abc") //Set before collect
 
@@ -35,12 +39,12 @@ class StoreFlowTest {
         val job1 = store.flow()
                 .onEach { called[0]++ }
                 .take(2)
-                .launchIn(GlobalScope)
+                .launchIn(testScope)
 
         val job2 = store.flow()
                 .onEach { called[1]++ }
                 .take(2)
-                .launchIn(GlobalScope)
+                .launchIn(testScope)
 
         store.setState("abc")
 
@@ -55,13 +59,14 @@ class StoreFlowTest {
     @Test(timeout = 1000)
     fun `channel sends updates`(): Unit = runBlocking {
         val store = SampleStore()
-        var sentState = ""
-        val job = GlobalScope.launch {
-            sentState = store.channel().receive()
+        var observedState = ""
+        val scope = CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+        val job = scope.launch {
+            observedState = store.channel().receive()
         }
         store.setState("abc")
         job.join()
-        sentState `should be equal to` "abc"
+        observedState `should be equal to` "abc"
         Unit
     }
 

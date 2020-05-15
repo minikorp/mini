@@ -3,7 +3,7 @@ package com.minikorp.mini
 import org.jetbrains.annotations.TestOnly
 import java.io.Closeable
 import java.lang.reflect.ParameterizedType
-import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * State holder.
@@ -22,7 +22,7 @@ abstract class Store<S> : Closeable, StateContainer<S> {
     }
 
     private var _state: Any? = NoState
-    private val listeners = Vector<(S) -> Unit>()
+    private val listeners = CopyOnWriteArrayList<(S) -> Unit>()
 
     /**
      * Set new state and notify listeners, only callable from the main thread.
