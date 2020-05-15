@@ -21,13 +21,3 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {
             "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
     )
 }
-
-publishing {
-    publications {
-        this.register("mavenJava", MavenPublication::class) {
-            from(components["java"])
-            artifact(tasks.findByName("sourcesJar"))
-        }
-    }
-}
-

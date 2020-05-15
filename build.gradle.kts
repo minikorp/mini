@@ -21,23 +21,50 @@ fun runCommand(command: String): String {
     return stream.reader().readText().trim()
 }
 
-allprojects {
 
+subprojects {
+
+    apply(plugin = "maven-publish")
     version = runCommand("$rootDir/scripts/latest-version.sh")
     group = "com.minikorp"
 
-    apply(plugin = "maven-publish")
+    afterEvaluate {
+        val modules = arrayOf("mini-common", "mini-processor", "mini-android")
+        if (this.name !in modules) return@afterEvaluate
 
-    tasks.register("sourcesJar", Jar::class.java) {
-        @Suppress("UnstableApiUsage")
-        archiveClassifier.set("sources")
-        try {
-            from(sourceSets["main"].allSource)
-        } catch (e: Throwable) {
-            //Will throw for android libs
+        if (tasks.findByName("sourcesJar") == null) {
+            println("Registered sourcesJar for $name")
+            val sourcesJar by this.tasks.creating(Jar::class) {
+                archiveClassifier.set("sources")
+                from(sourceSets["main"].allSource)
+            }
+        }
+
+        this.publishing {
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/minikorp/mini")
+                    credentials {
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+
+            publications {
+                if (publications.findByName("gpr") == null) {
+                    register("gpr", MavenPublication::class) {
+                        from(components["java"])
+                        artifact(tasks.findByName("sourcesJar"))
+                    }
+                }
+            }
         }
     }
+}
 
+
+allprojects {
     repositories {
         jcenter()
         mavenCentral()

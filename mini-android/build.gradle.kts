@@ -42,17 +42,22 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {
     )
 }
 
-val androidSourcesJar by tasks.registering(Jar::class) {
+println("ANDROID")
+println("ANDROID")
+println("ANDROID")
+println("ANDROID")
+
+val sourcesJar by tasks.registering(Jar::class) {
     @Suppress("UnstableApiUsage")
     archiveClassifier.set("sources")
     from(android.sourceSets["main"].java.sourceFiles)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("aar") {
-                artifact(tasks.findByName("androidSourcesJar"))
+publishing {
+    publications {
+        create<MavenPublication>("gpr") {
+            artifact(tasks.findByName("sourcesJar"))
+            afterEvaluate {
                 from(components["release"])
             }
         }

@@ -11,12 +11,3 @@ dependencies {
     testImplementation("junit:junit:4.12")
     testImplementation("com.google.testing.compile:compile-testing:0.15")
 }
-
-publishing {
-    publications {
-        this.register("mavenJava", MavenPublication::class) {
-            from(components["java"])
-            artifact(tasks.findByName("sourcesJar"))
-        }
-    }
-}
