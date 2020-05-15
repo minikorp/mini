@@ -31,4 +31,4 @@ jobs:
           chmod +x gradlew
           ./gradlew publish
         env:
-          token: ${{ secrets.GPR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
