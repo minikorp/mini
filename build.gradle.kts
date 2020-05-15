@@ -45,7 +45,7 @@ subprojects {
                     name = "GitHubPackages"
                     url = uri("https://maven.pkg.github.com/minikorp/mini")
                     credentials {
-                        username = "Minikorp"
+                        username = "minikorp"
                         password = System.getenv("GITHUB_TOKEN")
                     }
                 }
