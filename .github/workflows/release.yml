@@ -17,11 +17,17 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
 
-    # Runs a set of commands using the runners shell
-    - name: generate release
-      run: |
-        cd $GITHUB_WORKSPACE
-        sh scripts/release.sh
+      # Runs a set of commands using the runners shell
+      - name: build project
+        run: |
+          cd $GITHUB_WORKSPACE
+          sh scripts/release.sh
+      - name: maven publish
+        run: |
+          cd $GITHUB_WORKSPACE
+          sh gradlew publish
+        env:
+          token: ${{ secrets.GITHUB_TOKEN }}

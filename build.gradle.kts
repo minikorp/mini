@@ -33,8 +33,7 @@ subprojects {
         if (this.name !in modules) return@afterEvaluate
 
         if (tasks.findByName("sourcesJar") == null) {
-            println("Registered sourcesJar for $name")
-            val sourcesJar by this.tasks.creating(Jar::class) {
+            tasks.register("sourcesJar", Jar::class) {
                 archiveClassifier.set("sources")
                 from(sourceSets["main"].allSource)
             }
@@ -46,6 +45,7 @@ subprojects {
                     name = "GitHubPackages"
                     url = uri("https://maven.pkg.github.com/minikorp/mini")
                     credentials {
+                        username = "Minikorp"
                         password = System.getenv("GITHUB_TOKEN")
                     }
                 }

@@ -42,11 +42,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {
     )
 }
 
-println("ANDROID")
-println("ANDROID")
-println("ANDROID")
-println("ANDROID")
-
 val sourcesJar by tasks.registering(Jar::class) {
     @Suppress("UnstableApiUsage")
     archiveClassifier.set("sources")
