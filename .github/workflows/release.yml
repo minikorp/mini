@@ -28,6 +28,7 @@ jobs:
       - name: maven publish
         run: |
           cd $GITHUB_WORKSPACE
-          sh gradlew publish
+          chmod +x gradlew
+          ./gradlew publish
         env:
           token: ${{ secrets.GITHUB_TOKEN }}
