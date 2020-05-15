@@ -23,8 +23,8 @@ fun runCommand(command: String): String {
 
 allprojects {
 
-    version = runCommand("scripts/latest-version.sh")
-    group = "mini"
+    version = runCommand("$rootDir/scripts/latest-version.sh")
+    group = "com.minikorp"
 
     apply(plugin = "maven-publish")
 
