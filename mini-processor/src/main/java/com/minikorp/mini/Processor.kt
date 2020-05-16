@@ -31,7 +31,7 @@ class Processor {
         val file = FileSpec.builder(className.packageName, className.simpleName)
         val container = TypeSpec.objectBuilder(className)
                 .addKdoc("Automatically generated, do not edit.\n")
-                .addSuperinterface(StaticDispatcher::class)
+                .addSuperinterface(AutoDispatcher::class)
 
         //Get non-abstract actions
         try {

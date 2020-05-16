@@ -14,7 +14,7 @@ private typealias DispatchCallback = suspend (Any) -> Unit
 
 
 /**
- * Hub for actions. Use code generation with [StaticDispatcher.create]
+ * Hub for actions. Use code generation with [AutoDispatcher.create]
  * or provide action type map information and manually handle subscriptions.
  *
  * @param actionTypes All types an action can be observed as.

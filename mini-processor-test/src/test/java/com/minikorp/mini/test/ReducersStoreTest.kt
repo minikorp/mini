@@ -1,6 +1,6 @@
 package com.minikorp.mini.test
 
-import com.minikorp.mini.StaticDispatcher
+import com.minikorp.mini.AutoDispatcher
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.`should equal`
 import org.junit.Test
@@ -9,7 +9,7 @@ import org.junit.Test
 internal class ReducersStoreTest {
 
     private val store = ReducersStore()
-    private val dispatcher = StaticDispatcher.create(listOf(store))
+    private val dispatcher = AutoDispatcher.create(listOf(store))
 
     @Test
     fun `pure reducers are called`() {

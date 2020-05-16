@@ -48,8 +48,9 @@ open class Resource<out T> @PublishedApi internal constructor(val value: Any?) {
         fun <T> failure(exception: Throwable? = null): Resource<T> = Resource(Failure(exception))
         fun <T> loading(value: T? = null): Resource<T> = Resource(Loading(value))
         fun <T> empty(): Resource<T> = Resource(Empty())
-        fun success(): Task = Resource(null)
-        fun loading(): Task = Resource(Loading(null))
+
+        /** Alias for loading */
+        fun <T> idle(value: T? = null): Resource<T> = Resource(Loading(value))
     }
 
     override fun toString(): String {
