@@ -9,6 +9,10 @@ interface SilentAction
 /** Actions implementing this interface will log nested actions visually */
 interface SagaAction
 
+internal fun extractClassName(clazz: Class<*>): String {
+    return clazz.name.substringAfterLast(".")
+}
+
 /**
  * Action logging for stores.
  */
@@ -52,7 +56,7 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
                 val oldState = beforeStates[i]
                 val newState = afterStates[i]
                 if (oldState !== newState) {
-                    val line = "$prelude│ ${stores[i].javaClass.simpleName}"
+                    val line = "$prelude│ ${stores[i].javaClass.name}"
                     logger(Log.VERBOSE, tag, "$line: $newState")
                     diffFunction?.invoke(oldState, newState)?.let { diff ->
                         logger(Log.DEBUG, tag, "$line: $diff")
@@ -62,7 +66,7 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
         }
 
         logger(Log.DEBUG, tag, "$prelude$downCorner" +
-                "${action.javaClass.simpleName} ${processTime}ms")
+                "${extractClassName(action.javaClass)} ${processTime}ms")
 
         return outAction
     }
