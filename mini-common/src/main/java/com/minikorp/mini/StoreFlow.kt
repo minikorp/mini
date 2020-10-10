@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.*
  * Combination of [Flow.map] and [Flow.distinctUntilChanged].
  */
 fun <T, R> Flow<T>.select(mapper: suspend (T) -> R): Flow<R> {
-    return this
-            .map { mapper(it) }
+    return this.map { mapper(it) }
             .distinctUntilChanged()
 }
 
@@ -16,8 +15,7 @@ fun <T, R> Flow<T>.select(mapper: suspend (T) -> R): Flow<R> {
  * Combination of [Flow.map] and [Flow.distinctUntilChanged] ignoring null values.
  */
 fun <T, R : Any> Flow<T>.selectNotNull(mapper: suspend (T) -> R?): Flow<R> {
-    return this
-            .map { mapper(it) }
+    return this.map { mapper(it) }
             .filterNotNull()
             .distinctUntilChanged()
 }
@@ -33,6 +31,7 @@ fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
     val subscription = subscribe(hotStart) {
         channel.offer(it)
     }
+    @Suppress("EXPERIMENTAL_API_USAGE")
     channel.invokeOnClose {
         subscription.close()
     }
@@ -45,5 +44,5 @@ fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
  * @param hotStart emit current state when starting.
  */
 fun <S : Any> Store<S>.flow(hotStart: Boolean = true, capacity: Int = Channel.BUFFERED): Flow<S> {
-    return channel(hotStart = hotStart, capacity = capacity).consumeAsFlow()
+    return channel(hotStart = hotStart, capacity = capacity).receiveAsFlow()
 }

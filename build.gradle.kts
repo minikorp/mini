@@ -5,19 +5,24 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.3.72"))
-        classpath("com.android.tools.build:gradle:3.6.3")
+        classpath(kotlin("gradle-plugin", version = "1.4.10"))
+        classpath("com.android.tools.build:gradle:3.6.4")
     }
 }
 
 plugins {
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.10"
     `maven-publish`
 }
 
 fun runCommand(command: String): String {
-    val stream = Runtime.getRuntime().exec(command)
-            .apply { waitFor() }.inputStream
+    val runtime = Runtime.getRuntime()
+    val process = if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        runtime.exec("bash $command")
+    } else {
+        runtime.exec(command)
+    }
+    val stream = process.apply { waitFor() }.inputStream
     return stream.reader().readText().trim()
 }
 

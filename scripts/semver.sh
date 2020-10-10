@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Orignal author fsaintjacques: https://github.com/fsaintjacques/semver-tool
 

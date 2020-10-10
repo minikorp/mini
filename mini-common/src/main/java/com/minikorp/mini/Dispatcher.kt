@@ -14,7 +14,7 @@ private typealias DispatchCallback = suspend (Any) -> Unit
 
 
 /**
- * Hub for actions. Use code generation with [AutoDispatcher.create]
+ * Hub for actions. Use code generation with [AutoDispatcher]
  * or provide action type map information and manually handle subscriptions.
  *
  * @param actionTypes All types an action can be observed as.
@@ -91,12 +91,12 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
         synchronized(subscriptions) {
             val reg = DispatcherSubscription(this, clazz, priority, callback as DispatchCallback)
             val set = subscriptions.getOrPut(clazz) {
-                TreeSet(kotlin.Comparator { a, b ->
+                TreeSet { a, b ->
                     //Sort by priority, then by id for equal priority
                     val p = a.priority.compareTo(b.priority)
                     if (p == 0) a.id.compareTo(b.id)
                     else p
-                })
+                }
             }
             set.add(reg)
             return reg
@@ -124,7 +124,7 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
     /**
      * Dispatch an action, blocking the thread until it's complete.
      *
-     * Calling from UI thread will result will throw an exception since it can potentially result
+     * Calling from UI thread will throw an exception since it can potentially result
      * in ANR error.
      */
     fun dispatchSync(action: Any, context: CoroutineContext = EmptyCoroutineContext) {

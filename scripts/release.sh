@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 require_clean_work_tree() {
   # Update the index
