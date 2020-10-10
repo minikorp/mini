@@ -31,6 +31,7 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
         val isSaga = action is SagaAction
         val beforeStates: Array<Any?> = Array(stores.size) { Unit }
         val afterStates: Array<Any?> = Array(stores.size) { Unit }
+        val actionName = extractClassName(action.javaClass)
 
         stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
 
@@ -42,7 +43,8 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
 
         val prelude = "[${"${actionCounter.getAndIncrement() % 100}".padStart(2, '0')}] "
 
-        logger(Log.DEBUG, tag, "$prelude$upCorner$action")
+        logger(Log.DEBUG, tag, "$prelude$upCorner$actionName")
+        logger(Log.DEBUG, tag, "$prelude$action")
 
         //Pass it down
         val start = System.nanoTime()
@@ -65,8 +67,7 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
             }
         }
 
-        logger(Log.DEBUG, tag, "$prelude$downCorner" +
-                "${extractClassName(action.javaClass)} ${processTime}ms")
+        logger(Log.DEBUG, tag, "$prelude$downCorner$actionName ${processTime}ms")
 
         return outAction
     }

@@ -2,4 +2,4 @@ package com.minikorp.mini
 
 
 @Action
-class TestAction
+data class TestAction(val value: String = "dummy")

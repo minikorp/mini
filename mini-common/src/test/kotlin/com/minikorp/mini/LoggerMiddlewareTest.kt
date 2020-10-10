@@ -5,7 +5,6 @@ import org.junit.Test
 
 class LoggerMiddlewareTest {
 
-
     @Test
     fun `logs are printed`() {
         val store = SampleStore()
