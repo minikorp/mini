@@ -13,7 +13,7 @@ interface StateContainer<S> {
         /**
          * Token to mark a state as not initialized.
          */
-        internal object NoState
+        object NoState
     }
 
     val state: S
