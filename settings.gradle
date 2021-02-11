@@ -1,1 +1,2 @@
+include ':sample'
 include ':mini-processor', ':mini-common', ':mini-android', ':mini-processor-test'

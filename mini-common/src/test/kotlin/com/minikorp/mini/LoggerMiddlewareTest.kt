@@ -19,7 +19,7 @@ class LoggerMiddlewareTest {
                     println("[$priority][$tag] $msg")
                     out.append(priority).append(tag).append(msg)
                 }))
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         out.toString().`should not be empty`()
     }
 

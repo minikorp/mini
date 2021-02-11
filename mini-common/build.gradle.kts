@@ -10,7 +10,7 @@ dependencies {
     val coroutines = "1.3.9"
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
 
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.1")
     testImplementation("org.amshove.kluent:kluent:1.44")
 }
 

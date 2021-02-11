@@ -47,18 +47,16 @@ MiniGen.subscribe(dispatcher, stores)
 Each ``Store`` exposes a custom `StoreCallback` though the method `subscribe` or a `Flowable` if you wanna make use of RxJava. Both of them emits changes produced on their states, allowing the view to listen reactive the state changes. Being able to update the UI according to the new `Store` state.
 
 ```kotlin
-  //Using RxJava  
+  //Using Flow
   userStore
-          .flowable()
-          .map { it.name }
-          .subscribe { updateUserName(it) }
+          .flow()
+          .onEach { updateUserName(it.name) }
+          .launchIn(lifecycleScope)
           
   // Default callback      
   userStore
           .subscribe { state -> updateUserName(state.name) }
 ```  
-
-If you make use of the RxJava methods, you can make use of the `SubscriptionTracker` interface to keep track of the `Disposables` used on your activities and fragments.
 
 ### Logging
 Mini includes a custom `LoggerInterceptor` to log any change in your `Store` states produced from an `Action`. This will allow you to keep track of your actions, changes and side-effects more easily. 

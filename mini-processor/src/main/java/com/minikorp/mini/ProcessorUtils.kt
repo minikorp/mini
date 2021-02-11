@@ -1,6 +1,9 @@
 package com.minikorp.mini
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asTypeName
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import javax.annotation.processing.ProcessingEnvironment
@@ -107,4 +110,15 @@ fun FileSpec.writeToFile(vararg sourceElements: Element) {
     val openWriter = kotlinFileObject.openWriter()
     writeTo(openWriter)
     openWriter.close()
+}
+
+/**
+ * Map [java.lang.Object] to [Any]
+ */
+fun TypeName.safeAnyTypeName(): TypeName {
+    return if (this is ClassName && this == ClassName("java.lang", "Object")) {
+        Any::class.asTypeName()
+    } else {
+        this
+    }
 }

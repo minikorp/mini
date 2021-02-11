@@ -2,12 +2,7 @@ package com.minikorp.mini
 
 import java.io.Closeable
 
-interface CloseableTracker {
-    /**
-     * Clear all closeables.
-     */
-    fun clearCloseables()
-
+interface CloseableTracker : Closeable {
     /**
      * Start tracking a disposable.
      */
@@ -16,7 +11,7 @@ interface CloseableTracker {
 
 class DefaultCloseableTracker : CloseableTracker {
     private val closeables = CompositeCloseable()
-    override fun clearCloseables() = closeables.close()
+    override fun close() = closeables.close()
     override fun <T : Closeable> T.track(): T {
         closeables.add(this)
         return this

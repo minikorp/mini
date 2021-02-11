@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion(29)
-    buildToolsVersion("29.0.2")
+    compileSdkVersion(30)
+    buildToolsVersion("29.0.3")
 
     defaultConfig {
         minSdkVersion(14)
-        targetSdkVersion(29)
+        targetSdkVersion(30)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -25,13 +25,18 @@ android {
 dependencies {
     api(project(":mini-common"))
 
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.4")
-    api("androidx.appcompat:appcompat:1.1.0")
-    api("androidx.lifecycle:lifecycle-runtime-ktx:2.3.0-alpha02")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
+    api("androidx.appcompat:appcompat:1.2.0")
 
-    testImplementation("junit:junit:4.12")
-    androidTestImplementation("androidx.test:runner:1.2.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.2.0")
+    val lifecycleVersion = "2.3.0-rc01"
+    api("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    api("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    api("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
+
+
+    testImplementation("junit:junit:4.13.1")
+    androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {

@@ -89,7 +89,7 @@ class ReducerModel(element: Element) {
 
         if (returnTypeName == UNIT) {
             isPure = false
-            actionTypeName = function.parameters[0].asType().asTypeName()
+            actionTypeName = function.parameters[0].asType().asTypeName().safeAnyTypeName()
             compilePrecondition(
                     check = parameters.size == 1,
                     message = "Expected exactly one action parameter",
@@ -103,7 +103,7 @@ class ReducerModel(element: Element) {
                     element = element
             )
             val stateTypeName = parameters[0]
-            actionTypeName = parameters[1]
+            actionTypeName = parameters[1].safeAnyTypeName()
 
             compilePrecondition(
                     check = stateTypeName == container.stateTypeName,
@@ -117,6 +117,7 @@ class ReducerModel(element: Element) {
                     element = element
             )
         }
+
     }
 
     fun generateCallBlock(containerParam: String, actionParam: String): CodeBlock {

@@ -6,8 +6,11 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Actions implementing this interface won't log anything, including nested calls */
 interface SilentAction
 
-/** Actions implementing this interface will log nested actions visually */
-interface SagaAction
+/**
+ * Actions implementing this interface will log nested actions visually since they will
+ * most likely dispatch other actions.
+ */
+interface SuspendingAction
 
 internal fun extractClassName(clazz: Class<*>): String {
     return clazz.name.substringAfterLast(".")
@@ -28,14 +31,14 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
     override suspend fun intercept(action: Any, chain: Chain): Any {
         if (action is SilentAction) chain.proceed(action) //Do nothing
 
-        val isSaga = action is SagaAction
-        val beforeStates: Array<Any?> = Array(stores.size) { Unit }
-        val afterStates: Array<Any?> = Array(stores.size) { Unit }
+        val isSuspending = action is SuspendingAction
+        val beforeStates: Array<Any?> = Array(stores.size) { }
+        val afterStates: Array<Any?> = Array(stores.size) { }
         val actionName = extractClassName(action.javaClass)
 
         stores.forEachIndexed { idx, store -> beforeStates[idx] = store.state }
 
-        val (upCorner, downCorner) = if (isSaga) {
+        val (upCorner, downCorner) = if (isSuspending) {
             "╔═════ " to "╚════> "
         } else {
             "┌── " to "└─> "
@@ -53,7 +56,7 @@ class LoggerMiddleware(stores: Collection<StateContainer<*>>,
 
         stores.forEachIndexed { idx, store -> afterStates[idx] = store.state }
 
-        if (!isSaga) {
+        if (!isSuspending) {
             for (i in beforeStates.indices) {
                 val oldState = beforeStates[i]
                 val newState = afterStates[i]

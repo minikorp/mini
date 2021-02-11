@@ -1,8 +1,6 @@
 package com.minikorp.mini
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -14,28 +12,29 @@ private typealias DispatchCallback = suspend (Any) -> Unit
 
 
 /**
- * Hub for actions. Use code generation with [AutoDispatcher]
+ * Hub for actions. Use code generation with [Mini]
  * or provide action type map information and manually handle subscriptions.
- *
- * @param actionTypes All types an action can be observed as.
- * If map is empty, the runtime type itself will be used. If using code generation,
- * Mini.actionTypes will contain a map with all super types of @Action annotated classes.
  *
  * @param strictMode Verify calling thread, only disable in production!
  *
  */
-class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
-                 actionDispatchContext: CoroutineContext? = null,
-                 private val strictMode: Boolean = false) {
+class Dispatcher(private val strictMode: Boolean = false) {
 
-    private val actionDispatchContext: CoroutineContext = actionDispatchContext
-            ?: if (isAndroid) {
-                Dispatchers.Main.immediate
-            } else Dispatchers.Default
+    /**
+     * All types an action can be observed as.
+     * If map is empty, the runtime type itself will be used. If using code generation,
+     * [Mini.actionTypes] will contain a map with all super types of @[Action] annotated classes.
+     */
+    var actionTypeMap: Map<KClass<*>, List<KClass<*>>> = emptyMap()
+
+    /**
+     * Action at the top of the dispatch stack.
+     */
+    val lastAction: Any? get() = actionStack.firstOrNull()
 
     private val subscriptionCaller: Chain = object : Chain {
         override suspend fun proceed(action: Any): Any {
-            val types = actionTypes[action::class]
+            val types = actionTypeMap[action::class]
                     ?: error("${action::class.simpleName} is not action")
             //Ensure reducer is called on Main dispatcher
             types.forEach { type ->
@@ -48,7 +47,6 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
     private val middlewares: MutableList<Middleware> = ArrayList()
     private var middlewareChain: Chain = buildChain()
     private val actionStack: Stack<Any> = Stack()
-    val lastAction: Any? get() = actionStack.firstOrNull()
 
     internal val subscriptions: MutableMap<KClass<*>, MutableSet<DispatcherSubscription>> = HashMap()
 
@@ -74,9 +72,6 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
             middlewares -= middleware
             middlewareChain = buildChain()
         }
-    }
-
-    fun registerReducers() {
     }
 
     inline fun <reified A : Any> subscribe(priority: Int = 100,
@@ -109,14 +104,15 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
         }
     }
 
+
     /**
-     * Dispatch an action using the provided [actionDispatchContext],
-     * defaults to [Dispatchers.Main] for Android.
-     *
-     * @see [dispatchSync].
+     * Dispatch an action on the main thread using an unconfined dispatcher
+     * so it's safe for even loops.
      */
-    suspend fun dispatch(action: Any, context: CoroutineContext = EmptyCoroutineContext) {
-        withContext(context + actionDispatchContext) {
+    suspend fun dispatch(action: Any) {
+        if (isAndroid) {
+            withContext(Dispatchers.Main.immediate) { doDispatch(action) }
+        } else {
             doDispatch(action)
         }
     }
@@ -127,10 +123,10 @@ class Dispatcher(private val actionTypes: Map<KClass<*>, List<KClass<*>>>,
      * Calling from UI thread will throw an exception since it can potentially result
      * in ANR error.
      */
-    fun dispatchSync(action: Any, context: CoroutineContext = EmptyCoroutineContext) {
+    fun dispatchBlocking(action: Any) {
         if (strictMode) assertOnBgThread()
         runBlocking {
-            dispatch(action, context = context)
+            dispatch(action)
         }
     }
 

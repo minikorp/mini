@@ -36,11 +36,11 @@ abstract class FluxActivity : AppCompatActivity(),
 
     override fun onDestroy() {
         lifecycleScope.launch { whenDestroyed() }
-        clearCloseables()
+        close()
         super.onDestroy()
     }
 
-    fun <T> Flow<T>.launchOnUi() {
+    fun <T> Flow<T>.launchInLifecycleScope() {
         launchIn(lifecycleScope)
     }
 

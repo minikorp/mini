@@ -35,7 +35,7 @@ abstract class FluxFragment : Fragment(),
 
     override fun onDestroy() {
         lifecycleScope.launch { whenDestroyed() }
-        clearCloseables()
+        close()
         super.onDestroy()
     }
 

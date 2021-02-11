@@ -1,18 +1,14 @@
 package com.minikorp.mini
 
-import org.jetbrains.annotations.TestOnly
 import java.io.Closeable
-import java.lang.reflect.ParameterizedType
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * State holder.
+ * Basic state holder.
  */
-abstract class Store<S> : Closeable, StateContainer<S> {
-
-    companion object {
-        private object NoState
-    }
+abstract class Store<S> : Closeable,
+        StateContainer<S>,
+        CloseableTracker by DefaultCloseableTracker() {
 
     class StoreSubscription internal constructor(private val store: Store<*>,
                                                  private val fn: Any) : Closeable {
@@ -21,8 +17,15 @@ abstract class Store<S> : Closeable, StateContainer<S> {
         }
     }
 
-    private var _state: Any? = NoState
+    private var _state: Any? = StateContainer.Companion.NoState
     private val listeners = CopyOnWriteArrayList<(S) -> Unit>()
+
+    /**
+     * Initialize the store after dependency injection is complete.
+     */
+    open fun initialize() {
+        //No-op
+    }
 
     /**
      * Set new state and notify listeners, only callable from the main thread.
@@ -32,7 +35,7 @@ abstract class Store<S> : Closeable, StateContainer<S> {
         performStateChange(newState)
     }
 
-    fun subscribe(hotStart: Boolean = true, fn: (S) -> Unit): Closeable {
+    override fun subscribe(hotStart: Boolean, fn: (S) -> Unit): Closeable {
         listeners.add(fn)
         if (hotStart) fn(state)
         return StoreSubscription(this, fn)
@@ -40,9 +43,9 @@ abstract class Store<S> : Closeable, StateContainer<S> {
 
     override val state: S
         get() {
-            if (_state === NoState) {
+            if (_state === StateContainer.Companion.NoState) {
                 synchronized(this) {
-                    if (_state === NoState) {
+                    if (_state === StateContainer.Companion.NoState) {
                         _state = initialState()
                     }
                 }
@@ -51,29 +54,9 @@ abstract class Store<S> : Closeable, StateContainer<S> {
             return _state as S
         }
 
-    /**
-     * Initialize the store after dependency injection is complete.
-     */
-    open fun initialize() {
-        //No-op
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    open fun initialState(): S {
-        val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
-                as Class<S>
-        try {
-            val constructor = type.getDeclaredConstructor()
-            constructor.isAccessible = true
-            return constructor.newInstance()
-        } catch (e: Exception) {
-            throw RuntimeException("Missing default no-args constructor for the state $type", e)
-        }
-    }
-
     private fun performStateChange(newState: S) {
         //State mutation should to happen on UI thread
-        if (newState != _state) {
+        if (_state != newState) {
             _state = newState
             listeners.forEach {
                 it(newState)
@@ -81,26 +64,9 @@ abstract class Store<S> : Closeable, StateContainer<S> {
         }
     }
 
-    /**
-     * Test only method, don't use in app code.
-     * Will force state change on UI so it can be called from
-     * espresso thread.
-     */
-    @TestOnly
-    fun setTestState(s: S) {
-        if (isAndroid) {
-            onUiSync {
-                performStateChange(s)
-            }
-        } else {
-            performStateChange(s)
-        }
-    }
-
-    final override fun close() {
+    override fun close() {
         listeners.clear() //Remove all listeners
-        onClose()
+        close()
     }
 
-    open fun onClose() = Unit
 }

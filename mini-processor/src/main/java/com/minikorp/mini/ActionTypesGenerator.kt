@@ -20,7 +20,7 @@ object ActionTypesGenerator {
                     .asClassName()
                     .parameterizedBy(anyClassTypeName, listTypeName)
 
-            val prop = PropertySpec.builder(AutoDispatcher::actionTypes.name, mapType)
+            val prop = PropertySpec.builder(Mini::actionTypes.name, mapType)
                     .addModifiers(KModifier.OVERRIDE)
                     .initializer(CodeBlock.builder()
                             .add("mapOf(\n⇥")

@@ -27,11 +27,11 @@ class Processor {
 
         if (roundActions.isEmpty()) return false
 
-        val className = ClassName.bestGuess(AUTO_STATIC_DISPATCHER)
+        val className = ClassName.bestGuess(DISPATCHER_FACTORY_CLASS_NAME)
         val file = FileSpec.builder(className.packageName, className.simpleName)
         val container = TypeSpec.objectBuilder(className)
                 .addKdoc("Automatically generated, do not edit.\n")
-                .addSuperinterface(AutoDispatcher::class)
+                .superclass(Mini::class)
 
         //Get non-abstract actions
         try {
@@ -47,7 +47,7 @@ class Processor {
         }
 
         file.addType(container.build())
-        file.build().writeToFile(sourceElements = *((roundActions + roundReducers).toTypedArray()))
+        file.build().writeToFile(sourceElements = ((roundActions + roundReducers).toTypedArray()))
 
         return true
     }

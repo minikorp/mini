@@ -1,7 +1,7 @@
 package com.minikorp.mini.test
 
-import com.minikorp.mini.AutoDispatcher
 import com.minikorp.mini.Dispatcher
+import com.minikorp.mini.Mini
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.`should equal`
 import org.junit.Test
@@ -10,10 +10,8 @@ import org.junit.Test
 internal class ReducersStoreTest {
 
     private val store = ReducersStore()
-    private val dispatcher = Dispatcher(
-            actionTypes = AutoDispatcher.get().actionTypes
-    ).apply {
-        AutoDispatcher.get().subscribe(this, store)
+    private val dispatcher = Dispatcher().apply {
+        Mini.link(this, listOf(store))
     }
 
     @Test

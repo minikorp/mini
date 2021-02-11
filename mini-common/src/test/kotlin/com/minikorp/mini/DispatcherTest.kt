@@ -12,7 +12,7 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction> {
             called++
         }
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         called `should be equal to` 1
     }
 
@@ -26,7 +26,7 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction> {
             calls.add(1)
         }
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         calls[0] `should be equal to` 0
         calls[1] `should be equal to` 1
     }
@@ -41,7 +41,7 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction>(priority = 0) {
             calls.add(1)
         }
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         calls[0] `should be equal to` 1
         calls[1] `should be equal to` 0
     }
@@ -53,7 +53,7 @@ class DispatcherTest {
         dispatcher.subscribe<TestAction> {
             called++
         }.close()
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         called `should be equal to` 0
     }
 
@@ -68,7 +68,7 @@ class DispatcherTest {
             }
         }
         dispatcher.addMiddleware(interceptor)
-        dispatcher.dispatchSync(TestAction())
+        dispatcher.dispatchBlocking(TestAction())
         called `should be equal to` 1
     }
 }

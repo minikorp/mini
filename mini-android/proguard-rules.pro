@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+
+#Generated code will go on this package and is accessed using reflection
+#so keep it as is
+#noinspection ShrinkerUnresolvedReference
+-keep class com.minikorp.mini.codegen.** { *; }

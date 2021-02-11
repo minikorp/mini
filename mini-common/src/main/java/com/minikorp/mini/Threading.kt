@@ -5,6 +5,7 @@ import android.os.Looper
 import java.util.concurrent.Semaphore
 
 val uiHandler by lazy {
+    requireAndroid()
     Handler(Looper.getMainLooper())
 }
 
