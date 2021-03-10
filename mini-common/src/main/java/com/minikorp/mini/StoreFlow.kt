@@ -69,8 +69,8 @@ fun Flow<Boolean>.onEachEnable(fn: (Boolean) -> Unit): Flow<Boolean> {
  *
  * @param hotStart emit current state when starting.
  */
-fun <S : Any> StateContainer<S>.channel(hotStart: Boolean = true,
-                                        capacity: Int = Channel.BUFFERED): Channel<S> {
+fun <S : Any> Store<S>.channel(hotStart: Boolean = true,
+                                                                    capacity: Int = Channel.BUFFERED): Channel<S> {
     val channel = Channel<S>(capacity)
     val subscription = subscribe(hotStart) {
         channel.offer(it)
@@ -87,6 +87,6 @@ fun <S : Any> StateContainer<S>.channel(hotStart: Boolean = true,
  *
  * @param hotStart emit current state when starting.
  */
-fun <S : Any> StateContainer<S>.flow(hotStart: Boolean = true, capacity: Int = Channel.BUFFERED): Flow<S> {
+fun <S : Any> Store<S>.flow(hotStart: Boolean = true, capacity: Int = Channel.BUFFERED): Flow<S> {
     return channel(hotStart = hotStart, capacity = capacity).receiveAsFlow()
 }

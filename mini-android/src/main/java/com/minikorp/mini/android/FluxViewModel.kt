@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.minikorp.mini.CloseableTracker
 import com.minikorp.mini.DefaultCloseableTracker
-import com.minikorp.mini.StateContainer
+import com.minikorp.mini.TypedStore
 import com.minikorp.mini.assertOnUiThread
 import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArrayList
@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 abstract class FluxViewModel<S : Any>(
         val savedStateHandle: SavedStateHandle) :
         ViewModel(),
-        StateContainer<S>,
+        TypedStore<S>,
         CloseableTracker by DefaultCloseableTracker() {
 
 
@@ -23,14 +23,14 @@ abstract class FluxViewModel<S : Any>(
         }
     }
 
-    private var _state: Any? = StateContainer.Companion.NoState
+    private var _state: Any? = TypedStore.Companion.NoState
     private val listeners = CopyOnWriteArrayList<(S) -> Unit>()
 
     override val state: S
         get() {
-            if (_state === StateContainer.Companion.NoState) {
+            if (_state === TypedStore.Companion.NoState) {
                 synchronized(this) {
-                    if (_state === StateContainer.Companion.NoState) {
+                    if (_state === TypedStore.Companion.NoState) {
                         _state = restoreState(savedStateHandle) ?: initialState()
                     }
                 }

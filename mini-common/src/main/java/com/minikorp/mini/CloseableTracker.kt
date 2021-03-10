@@ -1,5 +1,6 @@
-package com.minikorp.mini
+package old
 
+import com.minikorp.mini.CompositeCloseable
 import java.io.Closeable
 
 interface CloseableTracker : Closeable {

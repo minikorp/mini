@@ -5,13 +5,13 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.4.21"))
-        classpath("com.android.tools.build:gradle:3.6.4")
+        classpath(kotlin("gradle-plugin", version = "1.4.31"))
+        classpath("com.android.tools.build:gradle:4.1.2")
     }
 }
 
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.4.31"
     `maven-publish`
 }
 

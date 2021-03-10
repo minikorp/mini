@@ -1,24 +1,17 @@
 package com.minikorp.mini
 
-import com.minikorp.mini.Dispatcher
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
-fun newTestDispatcher(): Dispatcher {
-    return Dispatcher().apply {
-        actionTypeMap = newReflectiveMap()
-    }
-}
 
 private fun reflectActionTypes(type: KClass<*>, depth: Int = 0): List<ReflectedType> {
     return type.supertypes
-        .asSequence()
-        .map { (it.jvmErasure.java as Class<*>).kotlin }
-        .map { reflectActionTypes(it, depth + 1) }
-        .flatten()
-        .plus(ReflectedType(type, depth))
-        .toList()
+            .asSequence()
+            .map { (it.jvmErasure.java as Class<*>).kotlin }
+            .map { reflectActionTypes(it, depth + 1) }
+            .flatten()
+            .plus(ReflectedType(type, depth))
+            .toList()
 }
 
 private class ReflectedType(val clazz: KClass<*>, val depth: Int)
@@ -37,11 +30,11 @@ private fun newReflectiveMap(): Map<KClass<*>, List<KClass<*>>> {
         override fun get(key: KClass<*>): List<KClass<*>> {
             return map.getOrPut(key) {
                 reflectActionTypes(key)
-                    .asSequence()
-                    .sortedBy { it.depth }
-                    .map { it.clazz }
-                    .filter { it !in genericTypes }
-                    .toList()
+                        .asSequence()
+                        .sortedBy { it.depth }
+                        .map { it.clazz }
+                        .filter { it !in genericTypes }
+                        .toList()
             }
         }
     }

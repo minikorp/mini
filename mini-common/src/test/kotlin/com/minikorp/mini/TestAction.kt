@@ -1,5 +1,5 @@
 package com.minikorp.mini
 
 
-@Action
+@TypedAction
 data class TestAction(val value: String = "dummy")

@@ -6,14 +6,14 @@ package com.minikorp.mini
  *
  * Call chain.proceed(action) with the new action or dispatcher chain will be broken.
  */
-interface Middleware {
-    suspend fun intercept(action: Any, chain: Chain): Any
+interface Middleware<S : Any> {
+    suspend fun intercept(context: DispatchContext<S>, chain: Chain<S>)
 }
 
 /**
  * A chain of interceptors. Call [proceed] with
  * the intercepted action or directly handle it.
  */
-interface Chain {
-    suspend fun proceed(action: Any): Any
+interface Chain<S : Any> {
+    suspend fun proceed(context: DispatchContext<S>)
 }
